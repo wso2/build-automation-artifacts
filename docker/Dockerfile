@@ -19,11 +19,12 @@
 FROM ubuntu:trusty
 
 RUN \
-useradd -m -d /home/jenkins -s /bin/sh jenkins \
+groupadd -r jenkins \
+&& useradd -m -d /home/jenkins -s /bin/sh -g jenkins jenkins \ 
 && echo "jenkins:jenkins" | chpasswd
 
 RUN \ 
-apt-get -q update && apt-get install -y openssh-server software-properties-common git ant curl unzip xvfb dbus-x11 \
+apt-get -q update && apt-get install -y openssh-server software-properties-common git ant curl unzip xvfb dbus-x11 ttf-ancient-fonts \
 && apt-get clean \
 && rm -rf /var/lib/apt/lists/* \
 && mkdir /var/run/sshd
@@ -112,7 +113,7 @@ echo "net.ipv4.ip_local_port_range=15000 61000" >> /etc/sysctl.conf \
 
 ENV SLAVE_HOME=/home/jenkins
 
-COPY .gnupg /home/jenkins/.gnupg
+VOLUME /home/jenkins/.gnupg
 
 RUN \
 chown -R ${USER}:${USER} /home/jenkins/.gnupg \
