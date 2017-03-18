@@ -1,4 +1,4 @@
-#Introduction
+# Introduction
 
 This Jenkins pipeline script automates the build/release process of 
 Ballerina repositories. This builds ballerina-parent, ballerina, 
@@ -6,7 +6,7 @@ composer, connectors, container-support, docerina, tool-swagger-ballerina
 and tools-distribution in the order they depend on each other while 
 updating the dependency versions.
 
-#Usage
+# Usage
 
 Install Pipeline Plugin[1], Pipeline Groovy Plugin[2].
 There are some required dependencies for these two plugins 
