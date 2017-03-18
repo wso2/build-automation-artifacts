@@ -11,8 +11,8 @@ updating the dependency versions.
 * Install Pipeline Plugin[1], Pipeline Groovy Plugin[2].
 There are some required dependencies for these two plugins 
 but they will be automatically installed in Jenkins.
-Also, Config File Provider Plugin[3] and Environment Injector Plugin[4]
-need to be installed.
+Also, Config File Provider Plugin[3] and Environment Injector Plugin[4],
+Credentials Plugin[5] need to be installed.
 
 * Now, go to Jenkins Dashboard -> Credentials and add your git credentials.
 Please note that you need to have commit rights to ballerina repositories
@@ -60,4 +60,5 @@ and proceed.
 [1] https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+Plugin  
 [2] https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+Groovy+Plugin  
 [3] https://wiki.jenkins-ci.org/display/JENKINS/Config+File+Provider+Plugin  
-[4] https://wiki.jenkins-ci.org/display/JENKINS/EnvInject+Plugin  
+[4] https://wiki.jenkins-ci.org/display/JENKINS/EnvInject+Plugin   
+[5] https://wiki.jenkins-ci.org/display/JENKINS/Credentials+Plugin
