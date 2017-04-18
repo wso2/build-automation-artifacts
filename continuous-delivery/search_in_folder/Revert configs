@@ -1,0 +1,296 @@
+/*
+ *Updated on 17th April 2017
+ *Staging tested all scenarios
+ *This script will revert all changes applied for the projects
+ */
+package org.wso2.build;
+import hudson.plugins.git.UserRemoteConfig;
+import hudson.plugins.git.extensions.impl.WipeWorkspace;
+import com.michelin.cio.hudson.plugins.maskpasswords.MaskPasswordsBuildWrapper;
+import hudson.plugins.git.*
+import hudson.maven.*;
+import hudson.plugins.git.util.*;
+import hudson.model.*;
+import hudson.model.Item;
+import hudson.model.Job;
+import hudson.model.Queue;
+import hudson.model.TaskListener;
+import hudson.model.queue.Tasks;
+import hudson.model.AbstractProject;
+import hudson.model.Project;
+import hudson.maven.RedeployPublisher.DescriptorImpl;
+import hudson.plugins.git.util.Build;
+import hudson.triggers.SCMTrigger;
+import hudson.triggers.Trigger;
+import hudson.triggers.TriggerDescriptor;
+import hudson.maven.AbstractMavenProject;
+import hudson.maven.MavenBuild;
+import hudson.maven.MavenModule;
+import hudson.maven.MavenModuleSet;
+import hudson.maven.MavenModuleSetBuild;
+import hudson.Extension;
+import hudson.Util;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import com.cloudbees.jenkins.*;
+import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
+import hudson.console.AnnotatedLargeText;
+import hudson.triggers.SCMTrigger;
+import hudson.triggers.Trigger;
+import hudson.triggers.TriggerDescriptor;
+import hudson.util.FormValidation;
+import hudson.util.NamingThreadFactory;
+import hudson.util.SequentialExecutionQueue;
+import hudson.util.StreamTaskListener;
+import jenkins.model.ParameterizedJobMixIn;
+import jenkins.triggers.SCMTriggerItem.SCMTriggerItems;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.jvnet.hudson.plugins.m2release.M2ReleaseBuildWrapper;
+import hudson.Extension;
+import hudson.Launcher;
+import hudson.Util;
+import hudson.maven.AbstractMavenProject;
+import hudson.maven.MavenBuild;
+import hudson.maven.MavenModule;
+import hudson.maven.MavenModuleSet;
+import hudson.maven.MavenModuleSetBuild;
+import hudson.model.Action;
+import hudson.model.BuildListener;
+import hudson.model.Result;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.Descriptor;
+import hudson.model.Hudson;
+import hudson.model.Item;
+import hudson.model.Run;
+import hudson.security.Permission;
+import hudson.security.PermissionGroup;
+import hudson.tasks.BuildWrapper;
+import hudson.tasks.BuildWrapperDescriptor;
+import hudson.tasks.Builder;
+import hudson.util.FormValidation;
+import hudson.util.RunList;
+import hudson.plugins.git.util.Build;
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Map;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.jenkinsci.plugins.github.util.JobInfoHelpers.asParameterizedJobMixIn;
+import static com.michelin.cio.hudson.plugins.maskpasswords.MaskPasswordsBuildWrapper.VarPasswordPair;
+
+//assumes that the folder plugin is installed
+import com.cloudbees.hudson.plugins.folder.Folder;
+
+try{
+jenkins = Hudson.instance
+// Define hour to compare (hour=24 will find builds that were built more than 1 day ago)
+hour=24;
+minute=60;
+second=60;
+oneDayInSecond=hour*minute*second;
+now=Calendar.instance;
+list=[];
+
+//Iterates a folder and gets all the jobs inside the folder
+jenkins.model.Jenkins.instance?.getAllItems(com.cloudbees.hudson.plugins.folder.Folder).each { folder ->
+ println "Folder - ${folder}"
+folder.getItems().each {
+ println "\t job - ${it}"   
+
+println("The build is run at ${now.time}");
+
+
+    BuildListener buildListener;
+    AbstractProject project;
+    GitSCM gitSCM;
+    List <VarPasswordPair> varPasswordPairs;
+  
+      if(it.name ==~/(.*)staging-siddhi-window(.*)/){
+
+      
+      
+          
+
+  /*
+      This section handles the mask password plugin v2.8  
+ 
+   */   
+      varPasswordPairs = new ArrayList();
+      MaskPasswordsBuildWrapper mpw =new MaskPasswordsBuildWrapper(varPasswordPairs)
+    this.varPasswordPairs=varPasswordPairs
+    
+    msk = it.getBuildWrappers().get(MaskPasswordsBuildWrapper.class);
+   
+     if(msk !=null){
+      rw = it.getBuildWrappers().clear()
+    }
+       
+      
+   
+     /*
+      This section handles the build triggers
+     */
+
+      
+      GitHubPushTrigger gitTrigger=new GitHubPushTrigger()
+    
+    
+    
+    //SCM Trigger
+    TriggerDescriptor SCM_TRIGGER_DESCRIPTOR = Hudson.instance.getDescriptorOrDie(SCMTrigger.class)
+    def scmtrigger = it.getTriggers().get(SCM_TRIGGER_DESCRIPTOR) 
+    
+    
+    TriggerDescriptor GIT_TRIGGER_DESCRIPTOR = Hudson.instance.getDescriptor(GitHubPushTrigger.class)
+    def gittrigger = it.getTriggers().get(GIT_TRIGGER_DESCRIPTOR)
+    
+   
+     if(scmtrigger == null){
+        println("SCM triggers is applied")
+        it.addTrigger(new SCMTrigger(""))
+        it.save()
+     }
+     
+     
+    if(gittrigger != null){
+        println("Build when a change is pushed to GitHub trigger removed")
+         it.removeTrigger(GIT_TRIGGER_DESCRIPTOR)
+         it.save()
+     
+     }
+      
+      
+      
+      
+     /*
+       This section handles the credentials dropdown
+      */
+      
+     //Assign the credentialsID for the required value
+     final String credentialsId=""
+      
+      
+      try{
+          AbstractBuild build=it.getLastBuild()
+
+           gitSCM = (GitSCM) build.getProject().getScm();
+     
+         }catch(Exception e){}            
+    
+  List<UserRemoteConfig> userRemoteConfigs = gitSCM.getUserRemoteConfigs();
+
+      
+     if (userRemoteConfigs.isEmpty()) {
+        println("[WSO2 Maven Release] " + "Could not find the git remote URL for the project. \n");
+     }
+     if(userRemoteConfigs.get(0).getCredentialsId() == null){
+       println("credentials applied")
+       userRemoteConfigs.get(0).credentialsId=credentialsId
+       
+       it.save()
+     }else{
+             println("credentials applied")
+              userRemoteConfigs.get(0).credentialsId=credentialsId
+              it.save()
+
+         }
+    /*
+     This section handles the post build actions
+     */
+      
+    String id="wso2.snapshots"
+    String url="http://maven.wso2.org/nexus/content/repositories/snapshots/";
+    boolean uniqueVersion=true;
+    boolean evenIfUnstable=false;
+    String releaseEnvVar="IS_M2RELEASEBUILD";
+    BuildListener listener;  
+   
+      
+   RedeployPublisher  rdp =new   RedeployPublisher(id,url,uniqueVersion,evenIfUnstable,releaseEnvVar) 
+        this.id = id;
+        this.url = url;
+        this.uniqueVersion = uniqueVersion;
+        this.evenIfUnstable = evenIfUnstable;
+        this.releaseEnvVar = releaseEnvVar;
+
+ 
+      envVarValue=it.getPublishersList().get(RedeployPublisher.class)
+     
+       if (envVarValue != null)
+          { 
+            envVarValue=it.getPublishersList().clear()
+            it.save()
+            action = "established"
+          }              
+
+      /*
+       This section handles the maven release build
+       */
+      
+      def   DEFAULT_RELEASE_GOALS = "release:clean release:prepare release:perform -P wso2-release";
+      def   DEFAULT_DRYRUN_GOALS = "release:clean release:prepare release:perform -P wso2-release";
+                                                                                                   
+      
+       M2ReleaseBuildWrapper m2obj = new M2ReleaseBuildWrapper(DEFAULT_RELEASE_GOALS,DEFAULT_DRYRUN_GOALS,false,false,false,"IS_M2RELEASEBUILD","","",0)
+                          this.releaseGoals=DEFAULT_RELEASE_GOALS
+                          this.dryRunGoals=DEFAULT_DRYRUN_GOALS
+                          this.selectCustomScmCommentPrefix=true
+                          this.selectAppendHudsonUsername=true
+                          this.selectScmCredentials=false
+                          this.releaseEnvVar=""
+                          this.scmUserEnvVar=""
+                          this.scmPasswordEnvVar=""
+                          this.numberOfReleaseBuildsToKeep=0
+              
+    build=it.getLastBuild()
+
+
+       rw = it.getBuildWrappers().get(M2ReleaseBuildWrapper.class);
+   
+ 
+  
+   
+  if (rw != null)
+    { 
+      rw = it.getBuildWrappers().clear()
+      it.save()
+      action = "established"
+    }
+      
+/*
+  this section handles the wipeout repository and force clone
+ */
+
+    AbstractBuild build2=it.getLastBuild()
+
+     WipeWorkspace work =new WipeWorkspace(); 
+    
+     gitSCM = (GitSCM) build2.getProject().getScm();
+            
+        println("XYZ"+"${gitSCM}");
+        
+     List<GitSCMExtension> gitExtensions = gitSCM.getExtensions();      
+          
+   
+     if(gitExtensions !=null){
+         gitExtensions.clear()
+         it.save()
+     }
+     
+      
+  } 
+}
+}
+
+}catch(Exception e){}
