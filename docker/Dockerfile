@@ -123,7 +123,7 @@ ENV SLAVE_HOME=/home/jenkins
 VOLUME /home/jenkins/.gnupg
 
 RUN \
-chown -R ${USER}:${USER} /home/jenkins/.gnupg \
+chown -R jenkins:jenkins /home/jenkins/.gnupg \
 && chmod -R go-rwx /home/jenkins/.gnupg
 
 EXPOSE 22
