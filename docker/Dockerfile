@@ -18,11 +18,6 @@
 
 FROM ubuntu:trusty
 
-RUN \
-groupadd -r jenkins \
-&& useradd -m -d /home/jenkins -s /bin/sh -g jenkins jenkins \ 
-&& echo "jenkins:jenkins" | chpasswd
-
 RUN \ 
 apt-get -q update && apt-get install -y openssh-server software-properties-common git ant curl unzip xvfb dbus-x11 ttf-ancient-fonts \
 && apt-get clean \
@@ -61,22 +56,24 @@ wget -P /build/software/maven https://archive.apache.org/dist/maven/maven-2/2.2.
 
 RUN \
 mkdir -p /build/software/java \
-&& wget -P /build/software/java --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u45-b14/jdk-8u45-linux-x64.tar.gz \
-&& tar -xvzf /build/software/java/jdk-8u45-linux-x64.tar.gz --directory /build/software/java \
-&& rm /build/software/java/jdk-8u45-linux-x64.tar.gz \
+&& wget -P /build/software/java --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz \
+&& tar -xvzf /build/software/java/jdk-8u131-linux-x64.tar.gz --directory /build/software/java \
+&& ln -s /build/software/java/jdk1.8.0_131 /build/software/java/jdk1.8.0_45 \
+&& rm /build/software/java/jdk-8u131-linux-x64.tar.gz \
 && mkdir -p /build/software/jce \
 && wget -P /build/software/jce --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip \
 && unzip -o /build/software/jce/jce_policy-8.zip -d /build/software/jce \
-&& mv /build/software/java/jdk1.8.0_45/jre/lib/security/local_policy.jar /build/software/java/jdk1.8.0_45/jre/lib/security/local_policy-original.jar \
-&& mv /build/software/java/jdk1.8.0_45/jre/lib/security/US_export_policy.jar /build/software/java/jdk1.8.0_45/jre/lib/security/US_export_policy-original.jar \
-&& cp /build/software/jce/UnlimitedJCEPolicyJDK8/local_policy.jar /build/software/java/jdk1.8.0_45/jre/lib/security/ \
-&& cp /build/software/jce/UnlimitedJCEPolicyJDK8/US_export_policy.jar /build/software/java/jdk1.8.0_45/jre/lib/security/ \
+&& mv /build/software/java/jdk1.8.0_131/jre/lib/security/local_policy.jar /build/software/java/jdk1.8.0_131/jre/lib/security/local_policy-original.jar \
+&& mv /build/software/java/jdk1.8.0_131/jre/lib/security/US_export_policy.jar /build/software/java/jdk1.8.0_131/jre/lib/security/US_export_policy-original.jar \
+&& cp /build/software/jce/UnlimitedJCEPolicyJDK8/local_policy.jar /build/software/java/jdk1.8.0_131/jre/lib/security/ \
+&& cp /build/software/jce/UnlimitedJCEPolicyJDK8/US_export_policy.jar /build/software/java/jdk1.8.0_131/jre/lib/security/ \
 && rm  /build/software/jce/jce_policy-8.zip \
 && rm -r /build/software/jce/UnlimitedJCEPolicyJDK8
 
+COPY jdk-7u51-linux-x64.tar.gz /build/software/java
+
 RUN \
-wget -P /build/software/java --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/7u51-b13/jdk-7u51-linux-x64.tar.gz \
-&& tar -xvzf /build/software/java/jdk-7u51-linux-x64.tar.gz --directory /build/software/java \
+tar -xvzf /build/software/java/jdk-7u51-linux-x64.tar.gz --directory /build/software/java \
 && rm /build/software/java/jdk-7u51-linux-x64.tar.gz \
 && wget -P /build/software/jce --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jce/7/UnlimitedJCEPolicyJDK7.zip \
 && unzip -o /build/software/jce/UnlimitedJCEPolicyJDK7.zip -d /build/software/jce \
@@ -96,12 +93,13 @@ add-apt-repository ppa:openjdk-r/ppa -y \
 && apt-get clean \
 && rm -rf /var/lib/apt/lists/*
 
+COPY jdk-6u33-linux-x64.bin /build/software/java
+
 RUN \
-wget -P /build/software/java --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/6u31-b04/jdk-6u31-linux-x64.bin \
-&& chmod a+x /build/software/java/jdk-6u31-linux-x64.bin \
+chmod a+x /build/software/java/jdk-6u33-linux-x64.bin \
 && cd /build/software/java \
-&& echo "\n" | sh /build/software/java/jdk-6u31-linux-x64.bin \
-&& rm /build/software/java/jdk-6u31-linux-x64.bin
+&& echo "\n" | sh /build/software/java/jdk-6u33-linux-x64.bin \
+&& rm /build/software/java/jdk-6u33-linux-x64.bin
 
 RUN \
 wget -P /build/software/nodejs https://nodejs.org/dist/v6.10.0/node-v6.10.0-linux-x64.tar.xz \
@@ -118,14 +116,16 @@ echo "net.ipv4.ip_local_port_range=15000 61000" >> /etc/sysctl.conf \
 && echo "*	soft	nproc	65535" >> /etc/security/limits.conf \
 && echo "*	hard	nproc	65535" >> /etc/security/limits.conf
 
-ENV SLAVE_HOME=/home/jenkins
-
-VOLUME /home/jenkins/.gnupg
-
 RUN \
-chown -R jenkins:jenkins /home/jenkins/.gnupg \
-&& chmod -R go-rwx /home/jenkins/.gnupg
+mkdir -p /home/jenkins
+
+RUN mkdir -p /build/gpg-keys/.gnupg 
+ADD .gnupg /build/gpg-keys/.gnupg
 
 EXPOSE 22
+
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 CMD ["/usr/sbin/sshd", "-D"]
