@@ -122,6 +122,14 @@ wget -P /build/software/nodejs https://nodejs.org/dist/v6.10.0/node-v6.10.0-linu
 && tar -xvf /build/software/nodejs/node-v6.10.0-linux-x64.tar.xz --directory /build/software/nodejs \
 && rm /build/software/nodejs/node-v6.10.0-linux-x64.tar.xz
 
+RUN \
+sudo apt-get -y install python-pip \
+&& sudo pip --version \
+&& sudo apt-get -y install build-essential python-dev \
+&& sudo pip install mkdocs && mkdocs --version \
+&& sudo pip install mkdocs-material
+
+
 ENV PATH=$PATH:/build/software/nodejs/node-v6.10.0-linux-x64/bin
 
 RUN \
