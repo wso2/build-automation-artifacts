@@ -42,8 +42,6 @@ echo ""
 echo ""
 sudo apt-get -y install curl
 
-
-
 #Xvfb configuration
 echo ""
 echo ""
@@ -84,7 +82,7 @@ echo "**************************************************************************
 echo ""
 
 tar -zxvf /build/jenkins-home/slaveSetupFile/jdk-7u51-linux-x64.tar.gz -C /build/jenkins-home/software/java
-tar -zxvf /build/jenkins-home/slaveSetupFile/jdk-8u45-linux-x64.tar.gz -C /build/jenkins-home/software/java
+#tar -zxvf /build/jenkins-home/slaveSetupFile/jdk-8u45-linux-x64.tar.gz -C /build/jenkins-home/software/java
 
 
 
@@ -120,8 +118,6 @@ mv /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security/US_export_poli
 mv /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/local_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/local_policy-original.jar
 mv /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/US_export_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/US_export_policy-original.jar
 
-
-
 #copy jce files
 
 cp /build/jenkins-home/software/jce/UnlimitedJCEPolicy/local_policy.jar /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security/
@@ -130,10 +126,6 @@ cp /build/jenkins-home/software/jce/UnlimitedJCEPolicy/US_export_policy.jar /bui
 
 cp /build/jenkins-home/software/jce/UnlimitedJCEPolicyJDK8/local_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/
 cp /build/jenkins-home/software/jce/UnlimitedJCEPolicyJDK8/US_export_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/
-
-
-
-
 
 #/etc/sysctl.conf
 
@@ -149,7 +141,6 @@ else
 	command
         command
 fi
-
 
 #/etc/pam.d/su
  
@@ -173,93 +164,7 @@ fi
 # For appfactory integration test 
 
 #backup file
-sudo cp /etc/hosts /etc/hosts.backup.$(date +%F_%R)
-
-#adding Configuration
-if ! (( $(grep -c "203.94.95.51 mysql1.appfactory.private.wso2.com
-203.94.95.51 mysql2.appfactory.private.wso2.com
-203.94.95.51 appfactoryelb.appfactory.private.wso2.com
-203.94.95.51 ldap.appfactory.private.wso2.com
-203.94.95.51 identity.appfactory.private.wso2.com
-203.94.95.51 cloudmgt.appfactory.private.wso2.com
-203.94.95.51 issuetracker.appfactory.private.wso2.com
-203.94.95.51 ues.appfactory.private.wso2.com
-203.94.95.51 apps.appfactory.private.wso2.com
-203.94.95.51 appfactory.private.wso2.com
-203.94.95.51 messaging.appfactory.private.wso2.com
-203.94.95.51 process.appfactory.private.wso2.com
-203.94.95.51 jenkins.appfactory.private.wso2.com
-203.94.95.51 storage.appfactory.private.wso2.com
-203.94.95.51 git.appfactory.private.wso2.com
-203.94.95.51 s2git.appfactory.private.wso2.com
-203.94.95.51 dashboards.appfactory.private.wso2.com
-203.94.95.51 keymanager.apimanager.appfactory.private.wso2.com
-203.94.95.51 gateway.apimanager.appfactory.private.wso2.com
-203.94.95.51 apimanager.appfactory.private.wso2.com
-203.94.95.51 bam.appfactory.private.wso2.com
-203.94.95.51 receiver1.appfactory.private.wso2.com
-203.94.95.51 node0.cassandra.appfactory.private.wso2.com
-203.94.95.51 hadoop0.appfactory.private.wso2.com
-203.94.95.51 sc.dev.appfactory.private.wso2.com
-203.94.95.51 sc.test.appfactory.private.wso2.com
-203.94.95.51 sc.prod.appfactory.private.wso2.com
-203.94.95.51 sc.appfactory.private.wso2.com
-203.94.95.51 paas.appfactory.private.wso2.com
-203.94.95.51 cc.stratos.apache.org
-203.94.95.51 as.stratos.apache.org
-203.94.95.51 autoscaler.stratos.apache.org
-203.94.95.51 mysql-dev-01.appfactory.private.wso2.com
-203.94.95.51 mysql-test-01.appfactory.private.wso2.com
-203.94.95.51 mysql-prod-01.appfactory.private.wso2.com
-192.168.18.235 appserver.dev.appfactory.private.wso2.com
-192.168.18.241 appserver.test.appfactory.private.wso2.com
-192.168.18.242 appserver.appfactory.private.wso2.com" /etc/hosts) )) ; 
-then
-	 sudo sh -c "cat>/etc/hosts<<DELIM
-203.94.95.51 mysql1.appfactory.private.wso2.com
-203.94.95.51 mysql2.appfactory.private.wso2.com
-203.94.95.51 appfactoryelb.appfactory.private.wso2.com
-203.94.95.51 ldap.appfactory.private.wso2.com
-203.94.95.51 identity.appfactory.private.wso2.com
-203.94.95.51 cloudmgt.appfactory.private.wso2.com
-203.94.95.51 issuetracker.appfactory.private.wso2.com
-203.94.95.51 ues.appfactory.private.wso2.com
-203.94.95.51 apps.appfactory.private.wso2.com
-203.94.95.51 appfactory.private.wso2.com
-203.94.95.51 messaging.appfactory.private.wso2.com
-203.94.95.51 process.appfactory.private.wso2.com
-203.94.95.51 jenkins.appfactory.private.wso2.com
-203.94.95.51 storage.appfactory.private.wso2.com
-203.94.95.51 git.appfactory.private.wso2.com
-203.94.95.51 s2git.appfactory.private.wso2.com
-203.94.95.51 dashboards.appfactory.private.wso2.com
-203.94.95.51 keymanager.apimanager.appfactory.private.wso2.com
-203.94.95.51 gateway.apimanager.appfactory.private.wso2.com
-203.94.95.51 apimanager.appfactory.private.wso2.com
-203.94.95.51 bam.appfactory.private.wso2.com
-203.94.95.51 receiver1.appfactory.private.wso2.com
-203.94.95.51 node0.cassandra.appfactory.private.wso2.com
-203.94.95.51 hadoop0.appfactory.private.wso2.com
-203.94.95.51 sc.dev.appfactory.private.wso2.com
-203.94.95.51 sc.test.appfactory.private.wso2.com
-203.94.95.51 sc.prod.appfactory.private.wso2.com
-203.94.95.51 sc.appfactory.private.wso2.com
-203.94.95.51 paas.appfactory.private.wso2.com
-203.94.95.51 cc.stratos.apache.org
-203.94.95.51 as.stratos.apache.org
-203.94.95.51 autoscaler.stratos.apache.org
-203.94.95.51 mysql-dev-01.appfactory.private.wso2.com
-203.94.95.51 mysql-test-01.appfactory.private.wso2.com
-203.94.95.51 mysql-prod-01.appfactory.private.wso2.com
-192.168.18.235 appserver.dev.appfactory.private.wso2.com
-192.168.18.241 appserver.test.appfactory.private.wso2.com
-192.168.18.242 appserver.appfactory.private.wso2.com
-DELIM"
-
-else
-	command
-        command
-fi
+#sudo cp /etc/hosts /etc/hosts.backup.$(date +%F_%R)
 
 #reboot node
 # sudo reboot
