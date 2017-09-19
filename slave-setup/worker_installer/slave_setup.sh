@@ -41,6 +41,13 @@ echo "Installing curl.......................................,"
 echo ""
 echo ""
 sudo apt-get -y install curl
+# Installing xz-utils
+echo ""
+echo ""
+echo "Installing xz-utills........................................,"
+echo ""
+echo ""
+sudo apt-get -y install xz-utils
 
 #Xvfb configuration
 echo ""
@@ -73,6 +80,16 @@ mkdir -p software/maven
 mkdir -p software/jce
 cd
 
+# defining JDK and MAVEN variables
+JDK7x=jdk-7u51-linux-x64.tar.gz
+JDK8x=jdk-8u45-linux-x64.tar.gz
+JDK81x=jdk-8u144-linux-x64.tar.gz
+
+APACHE_MAVEN_22x=apache-maven-2.2.1-bin.tar.gz
+APACHE_MAVEN_30x=apache-maven-3.0.5-bin.tar.gz
+APACHE_MAVEN_31x=apache-maven-3.1.1-bin.zip
+APACHE_MAVEN_32x=apache-maven-3.2.2-bin.tar.gz
+
 # unzip installation file
 #unzip java files
 echo ""
@@ -81,9 +98,9 @@ echo "*                            Extracting Java files                        
 echo "*****************************************************************************"
 echo ""
 
-tar -zxvf /build/jenkins-home/slaveSetupFile/jdk-7u51-linux-x64.tar.gz -C /build/jenkins-home/software/java
+tar -zxvf /build/jenkins-home/slaveSetupFile/$JDK7x -C /build/jenkins-home/software/java
 #tar -zxvf /build/jenkins-home/slaveSetupFile/jdk-8u45-linux-x64.tar.gz -C /build/jenkins-home/software/java
-
+tar -zxvf /build/jenkins-home/slaveSetupFile/$JDK81x -C /build/jenkins-home/software/java
 
 
 #unzip maven
@@ -92,11 +109,11 @@ echo "**************************************************************************
 echo "*                           Extracting Maven files                          *"
 echo "*****************************************************************************"
 echo ""
-tar -zxvf /build/jenkins-home/slaveSetupFile/apache-maven-2.2.1-bin.tar.gz -C /build/jenkins-home/software/maven
-tar -zxvf /build/jenkins-home/slaveSetupFile/apache-maven-3.0.5-bin.tar.gz -C /build/jenkins-home/software/maven
-tar -zxvf /build/jenkins-home/slaveSetupFile/apache-maven-3.2.2-bin.tar.gz -C /build/jenkins-home/software/maven
+tar -zxvf /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_22x -C /build/jenkins-home/software/maven
+tar -zxvf /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_30x -C /build/jenkins-home/software/maven
+tar -zxvf /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_32x -C /build/jenkins-home/software/maven
 
-unzip -o /build/jenkins-home/slaveSetupFile/apache-maven-3.1.1-bin.zip -d /build/jenkins-home/software/maven
+unzip -o /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_31x -d /build/jenkins-home/software/maven
 
 
 #unzip jce
@@ -120,12 +137,12 @@ mv /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/US_export_poli
 
 #copy jce files
 
-cp /build/jenkins-home/software/jce/UnlimitedJCEPolicy/local_policy.jar /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security/
-cp /build/jenkins-home/software/jce/UnlimitedJCEPolicy/US_export_policy.jar /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security/
+cp /build/jenkins-home/software/jce/UnlimitedJCEPolicy/local_policy.jar /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security
+cp /build/jenkins-home/software/jce/UnlimitedJCEPolicy/US_export_policy.jar /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security
 
 
-cp /build/jenkins-home/software/jce/UnlimitedJCEPolicyJDK8/local_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/
-cp /build/jenkins-home/software/jce/UnlimitedJCEPolicyJDK8/US_export_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/
+cp /build/jenkins-home/software/jce/UnlimitedJCEPolicyJDK8/local_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security
+cp /build/jenkins-home/software/jce/UnlimitedJCEPolicyJDK8/US_export_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security
 
 #/etc/sysctl.conf
 
