@@ -133,6 +133,9 @@ APACHE_MAVEN_31x=apache-maven-3.1.1-bin.zip
 APACHE_MAVEN_32x=apache-maven-3.2.2-bin.tar.gz
 APACHE_MAVEN_33x=apache-maven-3.3.9-bin.zip
 
+JCE7=UnlimitedJCEPolicyJDK7.zip
+JCE8=jce_policy-8.zip
+
 NODEJSv6=node-v6.10.0-linux-x64.tar.xz
 
 # unzip installation file
@@ -169,8 +172,8 @@ echo "*                            Extracting JCE files                         
 echo "*****************************************************************************"
 echo ""
 echo ""
-unzip -o /build/jenkins-home/slaveSetupFile/jce_policy-8.zip -d /build/jenkins-home/software/jce
-unzip -o /build/jenkins-home/slaveSetupFile/UnlimitedJCEPolicyJDK7.zip -d /build/jenkins-home/software/jce
+unzip -o /build/jenkins-home/slaveSetupFile/$JCE8 -d /build/jenkins-home/software/jce
+unzip -o /build/jenkins-home/slaveSetupFile/$JCE7 -d /build/jenkins-home/software/jce
 
 #rename policy.jar
 #jdk7
