@@ -72,15 +72,57 @@ sudo apt-get -y install xvfb
 echo "Installing dbus-x11.......................................,"
 sudo apt-get -y install dbus-x11
 
+#mkdocs configuration
+# Installing python-pip
+echo ""
+echo ""
+echo "Installing pip..............................................,"
+echo ""
+echo ""
+sudo apt-get -y install python-pip
+echo ""
+echo ""
+sudo pip --version
+echo ""
+echo ""
+# Installing build-essential
+echo ""
+echo ""
+echo "Installing build-essential..................................,"
+echo ""
+echo ""
+sudo apt-get -y install build-essential python-dev
+echo ""
+echo ""
+# Installing mkdocs
+echo ""
+echo ""
+echo "Installing mkdocs..............................................,"
+echo ""
+echo ""
+sudo pip install mkdocs && mkdocs --version
+echo ""
+echo ""
+# Installing mkdocs-material
+echo ""
+echo ""
+echo "Installing mkdocs-material....................................,"
+echo ""
+echo ""
+sudo pip install mkdocs-material
+echo ""
+echo ""
+
 
 #Creating Directories
 cd /build/jenkins-home
 mkdir -p software/java
 mkdir -p software/maven
 mkdir -p software/jce
+mkdir -p software/nodejs
 cd
 
-# defining JDK and MAVEN variables
+# defining JDK, MAVEN and NODEJS variables
 JDK7x=jdk-7u51-linux-x64.tar.gz
 JDK8x=jdk-8u45-linux-x64.tar.gz
 JDK81x=jdk-8u144-linux-x64.tar.gz
@@ -89,6 +131,9 @@ APACHE_MAVEN_22x=apache-maven-2.2.1-bin.tar.gz
 APACHE_MAVEN_30x=apache-maven-3.0.5-bin.tar.gz
 APACHE_MAVEN_31x=apache-maven-3.1.1-bin.zip
 APACHE_MAVEN_32x=apache-maven-3.2.2-bin.tar.gz
+APACHE_MAVEN_33x=apache-maven-3.3.9-bin.zip
+
+NODEJSv6=node-v6.10.0-linux-x64.tar.xz
 
 # unzip installation file
 #unzip java files
@@ -114,7 +159,7 @@ tar -zxvf /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_30x -C /build/jenkins
 tar -zxvf /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_32x -C /build/jenkins-home/software/maven
 
 unzip -o /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_31x -d /build/jenkins-home/software/maven
-
+unzip -o /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_33x -d /build/jenkins-home/software/maven
 
 #unzip jce
 echo ""
@@ -132,17 +177,35 @@ unzip -o /build/jenkins-home/slaveSetupFile/UnlimitedJCEPolicyJDK7.zip -d /build
 mv /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security/local_policy.jar /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security/local_policy-original.jar
 mv /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security/US_export_policy.jar /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security/US_export_policy-original.jar
 #jdk8
-mv /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/local_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/local_policy-original.jar
-mv /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/US_export_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/US_export_policy-original.jar
+#mv /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/local_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/local_policy-original.jar
+#mv /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/US_export_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/US_export_policy-original.jar
 
 #copy jce files
-
+#jdk7
 cp /build/jenkins-home/software/jce/UnlimitedJCEPolicy/local_policy.jar /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security
 cp /build/jenkins-home/software/jce/UnlimitedJCEPolicy/US_export_policy.jar /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security
-
-
+#jdk8
 cp /build/jenkins-home/software/jce/UnlimitedJCEPolicyJDK8/local_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security
 cp /build/jenkins-home/software/jce/UnlimitedJCEPolicyJDK8/US_export_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security
+
+#copying gpg-keys
+echo ""
+echo ""
+echo "*****************************************************************************"
+echo "*                            Extracting GPG files                           *"
+echo "*****************************************************************************"
+echo ""
+echo ""
+mv /build/jenkins-home/slaveSetupFile/gpg-keys /build/
+
+# unzip installation file
+#unzip nodejs files 
+echo ""
+echo "*****************************************************************************"
+echo "*                            Extracting NodeJS files                          *"
+echo "*****************************************************************************"
+echo ""
+tar -xf /build/jenkins-home/slaveSetupFile/$NODEJSv6 -C /build/jenkins-home/software/nodejs
 
 #/etc/sysctl.conf
 
