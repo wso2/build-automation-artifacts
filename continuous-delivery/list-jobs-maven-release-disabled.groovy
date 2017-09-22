@@ -1,7 +1,7 @@
 package org.wso2.build;
 
 
-import com.cloudbees.hudson.plugins.folder.*
+import com.cloudbees.hudson.plugins.folder.Folder;
 import org.jvnet.hudson.plugins.m2release.M2ReleaseBuildWrapper;
 
 println("List of build jobs with maven release build option disabled: ")

@@ -1,8 +1,8 @@
 package org.wso2.build;
 
-import com.cloudbees.hudson.plugins.folder.*
+import com.cloudbees.hudson.plugins.folder.Folder;
 import org.jvnet.hudson.plugins.m2release.M2ReleaseBuildWrapper;
-import com.cloudbees.jenkins.*;
+import com.cloudbees.jenkins.GitHubPushTrigger;
 import hudson.triggers.TriggerDescriptor;
 
 println("List of build jobs with maven release build enabled and github trigger disabled: ");
@@ -36,7 +36,7 @@ void listGitTriggerDisabledJobs(Item item) {
     try {
         rw = item.getBuildWrappers().get(M2ReleaseBuildWrapper.class);
         TriggerDescriptor GIT_TRIGGER_DESCRIPTOR = Hudson.instance.getDescriptor(GitHubPushTrigger.class);
-        def gittrigger = item.getTriggers().get(GIT_TRIGGER_DESCRIPTOR);
+        gittrigger = item.getTriggers().get(GIT_TRIGGER_DESCRIPTOR);
         if (rw != null && gittrigger == null) {
             count += 1;
             println(item.name);
