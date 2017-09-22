@@ -122,7 +122,7 @@ mkdir -p software/jce
 mkdir -p software/nodejs
 cd
 
-# defining JDK, MAVEN and NODEJS variables
+# defining JDK, MAVEN, JCE and NODEJS variables. please change here when required to add JDK/MAVEN and etc..
 JDK7x=jdk-7u51-linux-x64.tar.gz
 JDK8x=jdk-8u45-linux-x64.tar.gz
 JDK81x=jdk-8u144-linux-x64.tar.gz
