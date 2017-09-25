@@ -208,6 +208,7 @@ echo "**************************************************************************
 echo "*                            Extracting NodeJS files                          *"
 echo "*****************************************************************************"
 echo ""
+wget -P /build/jenkins-home/slaveSetupFile https://nodejs.org/dist/v6.10.0/node-v6.10.0-linux-x64.tar.xz
 tar -xf /build/jenkins-home/slaveSetupFile/$NODEJSv6 -C /build/jenkins-home/software/nodejs
 
 #/etc/sysctl.conf
