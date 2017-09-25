@@ -41,8 +41,13 @@ echo "Installing curl.......................................,"
 echo ""
 echo ""
 sudo apt-get -y install curl
-
-
+# Installing xz-utils
+echo ""
+echo ""
+echo "Installing xz-utills........................................,"
+echo ""
+echo ""
+sudo apt-get -y install xz-utils
 
 #Xvfb configuration
 echo ""
@@ -67,13 +72,71 @@ sudo apt-get -y install xvfb
 echo "Installing dbus-x11.......................................,"
 sudo apt-get -y install dbus-x11
 
+#mkdocs configuration
+# Installing python-pip
+echo ""
+echo ""
+echo "Installing pip..............................................,"
+echo ""
+echo ""
+sudo apt-get -y install python-pip
+echo ""
+echo ""
+sudo pip --version
+echo ""
+echo ""
+# Installing build-essential
+echo ""
+echo ""
+echo "Installing build-essential..................................,"
+echo ""
+echo ""
+sudo apt-get -y install build-essential python-dev
+echo ""
+echo ""
+# Installing mkdocs
+echo ""
+echo ""
+echo "Installing mkdocs..............................................,"
+echo ""
+echo ""
+sudo pip install mkdocs && mkdocs --version
+echo ""
+echo ""
+# Installing mkdocs-material
+echo ""
+echo ""
+echo "Installing mkdocs-material....................................,"
+echo ""
+echo ""
+sudo pip install mkdocs-material
+echo ""
+echo ""
+
 
 #Creating Directories
 cd /build/jenkins-home
 mkdir -p software/java
 mkdir -p software/maven
 mkdir -p software/jce
+mkdir -p software/nodejs
 cd
+
+# defining JDK, MAVEN, JCE and NODEJS variables. please change here when required to add JDK/MAVEN and etc..
+JDK7x=jdk-7u51-linux-x64.tar.gz
+JDK8x=jdk-8u45-linux-x64.tar.gz
+JDK81x=jdk-8u144-linux-x64.tar.gz
+
+APACHE_MAVEN_22x=apache-maven-2.2.1-bin.tar.gz
+APACHE_MAVEN_30x=apache-maven-3.0.5-bin.tar.gz
+APACHE_MAVEN_31x=apache-maven-3.1.1-bin.zip
+APACHE_MAVEN_32x=apache-maven-3.2.2-bin.tar.gz
+APACHE_MAVEN_33x=apache-maven-3.3.9-bin.zip
+
+JCE7=UnlimitedJCEPolicyJDK7.zip
+JCE8=jce_policy-8.zip
+
+NODEJSv6=node-v6.10.0-linux-x64.tar.xz
 
 # unzip installation file
 #unzip java files
@@ -83,9 +146,9 @@ echo "*                            Extracting Java files                        
 echo "*****************************************************************************"
 echo ""
 
-tar -zxvf /build/jenkins-home/slaveSetupFile/jdk-7u51-linux-x64.tar.gz -C /build/jenkins-home/software/java
-tar -zxvf /build/jenkins-home/slaveSetupFile/jdk-8u45-linux-x64.tar.gz -C /build/jenkins-home/software/java
-
+tar -zxvf /build/jenkins-home/slaveSetupFile/$JDK7x -C /build/jenkins-home/software/java
+#tar -zxvf /build/jenkins-home/slaveSetupFile/jdk-8u45-linux-x64.tar.gz -C /build/jenkins-home/software/java
+tar -zxvf /build/jenkins-home/slaveSetupFile/$JDK81x -C /build/jenkins-home/software/java
 
 
 #unzip maven
@@ -94,12 +157,12 @@ echo "**************************************************************************
 echo "*                           Extracting Maven files                          *"
 echo "*****************************************************************************"
 echo ""
-tar -zxvf /build/jenkins-home/slaveSetupFile/apache-maven-2.2.1-bin.tar.gz -C /build/jenkins-home/software/maven
-tar -zxvf /build/jenkins-home/slaveSetupFile/apache-maven-3.0.5-bin.tar.gz -C /build/jenkins-home/software/maven
-tar -zxvf /build/jenkins-home/slaveSetupFile/apache-maven-3.2.2-bin.tar.gz -C /build/jenkins-home/software/maven
+tar -zxvf /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_22x -C /build/jenkins-home/software/maven
+tar -zxvf /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_30x -C /build/jenkins-home/software/maven
+tar -zxvf /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_32x -C /build/jenkins-home/software/maven
 
-unzip -o /build/jenkins-home/slaveSetupFile/apache-maven-3.1.1-bin.zip -d /build/jenkins-home/software/maven
-
+unzip -o /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_31x -d /build/jenkins-home/software/maven
+unzip -o /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_33x -d /build/jenkins-home/software/maven
 
 #unzip jce
 echo ""
@@ -109,31 +172,43 @@ echo "*                            Extracting JCE files                         
 echo "*****************************************************************************"
 echo ""
 echo ""
-unzip -o /build/jenkins-home/slaveSetupFile/jce_policy-8.zip -d /build/jenkins-home/software/jce
-unzip -o /build/jenkins-home/slaveSetupFile/UnlimitedJCEPolicyJDK7.zip -d /build/jenkins-home/software/jce
+unzip -o /build/jenkins-home/slaveSetupFile/$JCE8 -d /build/jenkins-home/software/jce
+unzip -o /build/jenkins-home/slaveSetupFile/$JCE7 -d /build/jenkins-home/software/jce
 
 #rename policy.jar
 #jdk7
 mv /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security/local_policy.jar /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security/local_policy-original.jar
 mv /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security/US_export_policy.jar /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security/US_export_policy-original.jar
 #jdk8
-mv /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/local_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/local_policy-original.jar
-mv /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/US_export_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/US_export_policy-original.jar
-
-
+#mv /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/local_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/local_policy-original.jar
+#mv /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/US_export_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/US_export_policy-original.jar
 
 #copy jce files
+#jdk7
+cp /build/jenkins-home/software/jce/UnlimitedJCEPolicy/local_policy.jar /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security
+cp /build/jenkins-home/software/jce/UnlimitedJCEPolicy/US_export_policy.jar /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security
+#jdk8
+cp /build/jenkins-home/software/jce/UnlimitedJCEPolicyJDK8/local_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security
+cp /build/jenkins-home/software/jce/UnlimitedJCEPolicyJDK8/US_export_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security
 
-cp /build/jenkins-home/software/jce/UnlimitedJCEPolicy/local_policy.jar /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security/
-cp /build/jenkins-home/software/jce/UnlimitedJCEPolicy/US_export_policy.jar /build/jenkins-home/software/java/jdk1.7.0_51/jre/lib/security/
+#copying gpg-keys
+echo ""
+echo ""
+echo "*****************************************************************************"
+echo "*                            Extracting GPG files                           *"
+echo "*****************************************************************************"
+echo ""
+echo ""
+mv /build/jenkins-home/slaveSetupFile/gpg-keys /build/
 
-
-cp /build/jenkins-home/software/jce/UnlimitedJCEPolicyJDK8/local_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/
-cp /build/jenkins-home/software/jce/UnlimitedJCEPolicyJDK8/US_export_policy.jar /build/jenkins-home/software/java/jdk1.8.0_45/jre/lib/security/
-
-
-
-
+# unzip installation file
+#unzip nodejs files 
+echo ""
+echo "*****************************************************************************"
+echo "*                            Extracting NodeJS files                          *"
+echo "*****************************************************************************"
+echo ""
+tar -xf /build/jenkins-home/slaveSetupFile/$NODEJSv6 -C /build/jenkins-home/software/nodejs
 
 #/etc/sysctl.conf
 
@@ -149,7 +224,6 @@ else
 	command
         command
 fi
-
 
 #/etc/pam.d/su
  
@@ -173,93 +247,7 @@ fi
 # For appfactory integration test 
 
 #backup file
-sudo cp /etc/hosts /etc/hosts.backup.$(date +%F_%R)
-
-#adding Configuration
-if ! (( $(grep -c "203.94.95.51 mysql1.appfactory.private.wso2.com
-203.94.95.51 mysql2.appfactory.private.wso2.com
-203.94.95.51 appfactoryelb.appfactory.private.wso2.com
-203.94.95.51 ldap.appfactory.private.wso2.com
-203.94.95.51 identity.appfactory.private.wso2.com
-203.94.95.51 cloudmgt.appfactory.private.wso2.com
-203.94.95.51 issuetracker.appfactory.private.wso2.com
-203.94.95.51 ues.appfactory.private.wso2.com
-203.94.95.51 apps.appfactory.private.wso2.com
-203.94.95.51 appfactory.private.wso2.com
-203.94.95.51 messaging.appfactory.private.wso2.com
-203.94.95.51 process.appfactory.private.wso2.com
-203.94.95.51 jenkins.appfactory.private.wso2.com
-203.94.95.51 storage.appfactory.private.wso2.com
-203.94.95.51 git.appfactory.private.wso2.com
-203.94.95.51 s2git.appfactory.private.wso2.com
-203.94.95.51 dashboards.appfactory.private.wso2.com
-203.94.95.51 keymanager.apimanager.appfactory.private.wso2.com
-203.94.95.51 gateway.apimanager.appfactory.private.wso2.com
-203.94.95.51 apimanager.appfactory.private.wso2.com
-203.94.95.51 bam.appfactory.private.wso2.com
-203.94.95.51 receiver1.appfactory.private.wso2.com
-203.94.95.51 node0.cassandra.appfactory.private.wso2.com
-203.94.95.51 hadoop0.appfactory.private.wso2.com
-203.94.95.51 sc.dev.appfactory.private.wso2.com
-203.94.95.51 sc.test.appfactory.private.wso2.com
-203.94.95.51 sc.prod.appfactory.private.wso2.com
-203.94.95.51 sc.appfactory.private.wso2.com
-203.94.95.51 paas.appfactory.private.wso2.com
-203.94.95.51 cc.stratos.apache.org
-203.94.95.51 as.stratos.apache.org
-203.94.95.51 autoscaler.stratos.apache.org
-203.94.95.51 mysql-dev-01.appfactory.private.wso2.com
-203.94.95.51 mysql-test-01.appfactory.private.wso2.com
-203.94.95.51 mysql-prod-01.appfactory.private.wso2.com
-192.168.18.235 appserver.dev.appfactory.private.wso2.com
-192.168.18.241 appserver.test.appfactory.private.wso2.com
-192.168.18.242 appserver.appfactory.private.wso2.com" /etc/hosts) )) ; 
-then
-	 sudo sh -c "cat>/etc/hosts<<DELIM
-203.94.95.51 mysql1.appfactory.private.wso2.com
-203.94.95.51 mysql2.appfactory.private.wso2.com
-203.94.95.51 appfactoryelb.appfactory.private.wso2.com
-203.94.95.51 ldap.appfactory.private.wso2.com
-203.94.95.51 identity.appfactory.private.wso2.com
-203.94.95.51 cloudmgt.appfactory.private.wso2.com
-203.94.95.51 issuetracker.appfactory.private.wso2.com
-203.94.95.51 ues.appfactory.private.wso2.com
-203.94.95.51 apps.appfactory.private.wso2.com
-203.94.95.51 appfactory.private.wso2.com
-203.94.95.51 messaging.appfactory.private.wso2.com
-203.94.95.51 process.appfactory.private.wso2.com
-203.94.95.51 jenkins.appfactory.private.wso2.com
-203.94.95.51 storage.appfactory.private.wso2.com
-203.94.95.51 git.appfactory.private.wso2.com
-203.94.95.51 s2git.appfactory.private.wso2.com
-203.94.95.51 dashboards.appfactory.private.wso2.com
-203.94.95.51 keymanager.apimanager.appfactory.private.wso2.com
-203.94.95.51 gateway.apimanager.appfactory.private.wso2.com
-203.94.95.51 apimanager.appfactory.private.wso2.com
-203.94.95.51 bam.appfactory.private.wso2.com
-203.94.95.51 receiver1.appfactory.private.wso2.com
-203.94.95.51 node0.cassandra.appfactory.private.wso2.com
-203.94.95.51 hadoop0.appfactory.private.wso2.com
-203.94.95.51 sc.dev.appfactory.private.wso2.com
-203.94.95.51 sc.test.appfactory.private.wso2.com
-203.94.95.51 sc.prod.appfactory.private.wso2.com
-203.94.95.51 sc.appfactory.private.wso2.com
-203.94.95.51 paas.appfactory.private.wso2.com
-203.94.95.51 cc.stratos.apache.org
-203.94.95.51 as.stratos.apache.org
-203.94.95.51 autoscaler.stratos.apache.org
-203.94.95.51 mysql-dev-01.appfactory.private.wso2.com
-203.94.95.51 mysql-test-01.appfactory.private.wso2.com
-203.94.95.51 mysql-prod-01.appfactory.private.wso2.com
-192.168.18.235 appserver.dev.appfactory.private.wso2.com
-192.168.18.241 appserver.test.appfactory.private.wso2.com
-192.168.18.242 appserver.appfactory.private.wso2.com
-DELIM"
-
-else
-	command
-        command
-fi
+#sudo cp /etc/hosts /etc/hosts.backup.$(date +%F_%R)
 
 #reboot node
 # sudo reboot
