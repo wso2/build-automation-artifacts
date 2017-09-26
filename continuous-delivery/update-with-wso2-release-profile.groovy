@@ -36,7 +36,7 @@ void configureReleaseProfile(Item item) {
     try {
         //String projName="charon_3.0.x";//Uncomment this if you want to update a single project
         //if(item.name == projName) { //Uncomment this if you want to update a single project
-        if((item.name ==~ /(.*)carbon-(.*)/) || (item.name ==~ /(.*)identity-(.*)/)) {
+        if((item.name ==~ /(.*)carbon-(.*)/) || (item.name ==~ /(.*)identity-(.*)/)) {//Comment this if you are uncommenting line above.
             rw = item.getBuildWrappers().get(M2ReleaseBuildWrapper.class);
             TriggerDescriptor GIT_TRIGGER_DESCRIPTOR = Hudson.instance.getDescriptor(GitHubPushTrigger.class);
             gittrigger = item.getTriggers().get(GIT_TRIGGER_DESCRIPTOR);
@@ -69,7 +69,6 @@ void configureReleaseProfile(Item item) {
                 }
             }
         }
-       // }//Uncomment this if you want to update a single project
     } catch (MissingMethodException e) {
         println("Skipping wso2 release profile configuration for the Pipeline job : $item.name")
     }
