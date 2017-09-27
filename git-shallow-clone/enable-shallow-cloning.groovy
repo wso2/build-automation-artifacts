@@ -24,7 +24,7 @@ void processFolder(Item folder) {
 /*Configure Shallow Cloning options for a job*/
 void configureCloningOptions(Item job) {
   try {
-    AbstractBuild build = job.getLastBuild().get();
+    AbstractBuild build = job.getLastBuild();
     if (build != null) {
       GitSCM gitSCM = (GitSCM) build.getProject().getScm()
       List<GitSCMExtension> gitExtensions = gitSCM.getExtensions()
