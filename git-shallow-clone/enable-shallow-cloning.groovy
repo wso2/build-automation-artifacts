@@ -4,6 +4,12 @@ import hudson.plugins.git.extensions.GitSCMExtension
 import hudson.plugins.git.extensions.impl.CloneOption
 import org.codehaus.groovy.runtime.typehandling.GroovyCastException
 
+NO_TAGS = true
+SHALLOW_CLONE = true
+REFERENCE = null
+TIMEOUT = 10
+DEPTH = 100
+
 /*Loop through all items inside a folder*/
 void processFolder(Item folder) {
   folder.getItems().each{
@@ -18,7 +24,7 @@ void processFolder(Item folder) {
 /*Configure Shallow Cloning options for a job*/
 void configureCloningOptions(Item job) {
   try {
-    AbstractBuild build = job.getLastBuild()
+    AbstractBuild build = job.getLastBuild().get();
     if (build != null) {
       GitSCM gitSCM = (GitSCM) build.getProject().getScm()
       List<GitSCMExtension> gitExtensions = gitSCM.getExtensions()
@@ -27,13 +33,8 @@ void configureCloningOptions(Item job) {
         if (cloneOptions != null && cloneOptions.isShallow()) {
           println("Advanced Cloning options has already configured for the job: $job.name")
         } else {
-          boolean noTags = true
-          boolean shallowClone = true
-          String reference = null
-          int timeOut = 10
-          int depth = 100
-          CloneOption cloneOption =new CloneOption(shallowClone, noTags, reference, timeOut)
-          cloneOption.setDepth(depth)
+          CloneOption cloneOption = new CloneOption(SHALLOW_CLONE, NO_TAGS, REFERENCE, TIMEOUT)
+          cloneOption.setDepth(DEPTH)
           gitExtensions.add(cloneOption)
           job.save();
           println("Configured Advanced Cloning options for the job: $job.name")
@@ -43,8 +44,8 @@ void configureCloningOptions(Item job) {
       }
     }
   } catch (GroovyCastException e) {
-    println("Unable to configure Advanced cloning options for the job:  $job.name")
-  }
+    println("Unable to configure Advanced cloning options for the job:  $job.name, cause : " + e.getMessage())
+  } 
 }
 
 /*Loop through all available jenkins jobs*/

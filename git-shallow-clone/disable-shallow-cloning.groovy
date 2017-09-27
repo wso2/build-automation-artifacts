@@ -4,6 +4,8 @@ import hudson.plugins.git.extensions.GitSCMExtension
 import hudson.plugins.git.extensions.impl.CloneOption
 import org.codehaus.groovy.runtime.typehandling.GroovyCastException
 
+SHALLOW_CLONE = false
+
 /*Loop through all items inside a folder*/  
 void processFolder(Item folder) {
   folder.getItems().each{
@@ -25,14 +27,17 @@ void disableCloningOptions(Item job) {
       if (gitExtensions != null) {
         CloneOption cloneOption = gitExtensions.get(CloneOption.class)
         if (cloneOption != null && cloneOption.isShallow()) {
+          CloneOption cloneOptionNew = new CloneOption(SHALLOW_CLONE, cloneOption.isNoTags(), cloneOption.getReference(), cloneOption.getTimeout)
+          cloneOptionNew.setHonorRefspec(cloneOption.isHonorRefspec())
           gitExtensions.remove(cloneOption)
+          gitExtensions.add(cloneOptionNew)
           job.save();
-          println("Removed Advanced Cloning options for the job: $job.name")
+          println("Removed Shallow Cloning option from the job: $job.name")
         }  
       } 
     }
   } catch (GroovyCastException e) {
-    println("Unable to configure Advanced cloning options for the job:  $job.name")
+    println("Unable to remove shallow cloning options for the job:  $job.name, cause : " + e.getMessage())
   }
 }
 
