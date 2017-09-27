@@ -49,3 +49,4 @@ Jenkins.instance.getItems().each{
       disableCloningOptions(it)
   }
 }
+
