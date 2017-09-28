@@ -125,7 +125,7 @@ cd
 # defining JDK, MAVEN, JCE and NODEJS variables. please change here when required to add JDK/MAVEN and etc..
 JDK7x=jdk-7u51-linux-x64.tar.gz
 JDK8x=jdk-8u45-linux-x64.tar.gz
-JDK81x=jdk-8u144-linux-x64.tar.gz
+JDK81x=jdk-8u131-linux-x64.tar.gz
 
 APACHE_MAVEN_22x=apache-maven-2.2.1-bin.tar.gz
 APACHE_MAVEN_30x=apache-maven-3.0.5-bin.tar.gz
@@ -148,6 +148,8 @@ echo ""
 
 tar -zxvf /build/jenkins-home/slaveSetupFile/$JDK7x -C /build/jenkins-home/software/java
 #tar -zxvf /build/jenkins-home/slaveSetupFile/jdk-8u45-linux-x64.tar.gz -C /build/jenkins-home/software/java
+
+wget -P /build/jenkins-home/slaveSetupFile -c --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz
 tar -zxvf /build/jenkins-home/slaveSetupFile/$JDK81x -C /build/jenkins-home/software/java
 
 
