@@ -125,7 +125,8 @@ cd
 # defining JDK, MAVEN, JCE and NODEJS variables. please change here when required to add JDK/MAVEN and etc..
 JDK7x=jdk-7u51-linux-x64.tar.gz
 JDK8x=jdk-8u45-linux-x64.tar.gz
-JDK81x=jdk-8u131-linux-x64.tar.gz
+JDK813x=jdk-8u131-linux-x64.tar.gz
+JDK814x=jdk-8u144-linux-x64.tar.gz
 
 APACHE_MAVEN_22x=apache-maven-2.2.1-bin.tar.gz
 APACHE_MAVEN_30x=apache-maven-3.0.5-bin.tar.gz
@@ -146,11 +147,15 @@ echo "*                            Extracting Java files                        
 echo "*****************************************************************************"
 echo ""
 
+wget -P /build/jenkins-home/slaveSetupFile -c --no-cookies --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com" "http://download.oracle.com/otn-pub/java/jdk/7u51-b13/jdk-7u51-linux-x64.tar.gz"
 tar -zxvf /build/jenkins-home/slaveSetupFile/$JDK7x -C /build/jenkins-home/software/java
 #tar -zxvf /build/jenkins-home/slaveSetupFile/jdk-8u45-linux-x64.tar.gz -C /build/jenkins-home/software/java
 
 wget -P /build/jenkins-home/slaveSetupFile -c --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz
-tar -zxvf /build/jenkins-home/slaveSetupFile/$JDK81x -C /build/jenkins-home/software/java
+tar -zxvf /build/jenkins-home/slaveSetupFile/$JDK813x -C /build/jenkins-home/software/java
+
+wget -P /build/jenkins-home/slaveSetupFile -c --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u144-b01/090f390dda5b47b9b721c7dfaa008135/jdk-8u144-linux-x64.tar.gz"
+tar -zxvf /build/jenkins-home/slaveSetupFile/$JDK814x -C /build/jenkins-home/software/java
 
 
 #unzip maven
@@ -159,11 +164,19 @@ echo "**************************************************************************
 echo "*                           Extracting Maven files                          *"
 echo "*****************************************************************************"
 echo ""
+wget -P /build/jenkins-home/slaveSetupFile -c https://archive.apache.org/dist/maven/binaries/apache-maven-2.2.1-bin.tar.gz
 tar -zxvf /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_22x -C /build/jenkins-home/software/maven
+
+wget -P /build/jenkins-home/slaveSetupFile -c https://archive.apache.org/dist/maven/binaries/apache-maven-3.0.5-bin.tar.gz
 tar -zxvf /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_30x -C /build/jenkins-home/software/maven
+
+wget -P /build/jenkins-home/slaveSetupFile -c https://archive.apache.org/dist/maven/binaries/apache-maven-3.1.1-bin.zip 
+unzip -o /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_31x -d /build/jenkins-home/software/maven
+
+wget -P /build/jenkins-home/slaveSetupFile -c https://archive.apache.org/dist/maven/binaries/apache-maven-3.2.2-bin.tar.gz 
 tar -zxvf /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_32x -C /build/jenkins-home/software/maven
 
-unzip -o /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_31x -d /build/jenkins-home/software/maven
+wget -P /build/jenkins-home/slaveSetupFile -c https://archive.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.zip 
 unzip -o /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_33x -d /build/jenkins-home/software/maven
 
 #unzip jce
