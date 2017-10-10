@@ -6,7 +6,7 @@ Once you have obtained a VM;
  1. Install latest jdk
  2. Create a directory /build/jenkins-home at root level
 
-The following should be available in /build/worker_installer/slaveSetupFile location in the Jenkins master ;
+The following is downloaded to /build/worker_installer/slaveSetupFile location in the new node;
  1. jdk-7u51-linux-x64.tar.gz
  2. jdk-8u144-linux-x64.tar.gz
  3. apache-maven-2.2.1-bin.tar.gz
@@ -17,8 +17,10 @@ The following should be available in /build/worker_installer/slaveSetupFile loca
  8. UnlimitedJCEPolicyJDK7.zip
  9. jce_policy-8.zip
  10. node-v6.10.0-linux-x64.tar.xz
- 11. gpg keys
- 12. docker certs
+ 
+ While the following should be available in /build/worker_installer/slaveSetupFile location in Jenkins master;
+ 1. gpg keys
+ 2. docker certs
 
 
 
