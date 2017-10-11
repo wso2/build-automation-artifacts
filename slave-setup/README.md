@@ -15,12 +15,12 @@ The following is downloaded to /build/worker_installer/slaveSetupFile location i
  6. apache-maven-3.2.2-bin.tar.gz
  7. apache-maven-3.3.9-bin.zip
  8. UnlimitedJCEPolicyJDK7.zip
- 9. jce_policy-8.zip
- 10. node-v6.10.0-linux-x64.tar.xz
+ 9. node-v6.10.0-linux-x64.tar.xz
  
  While the following should be available in /build/worker_installer/slaveSetupFile location in Jenkins master;
  1. gpg keys
  2. docker certs
+ 3. jce_policy-8.zip
 
 
 
