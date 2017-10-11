@@ -164,6 +164,7 @@ echo "**************************************************************************
 echo "*                           Extracting Maven files                          *"
 echo "*****************************************************************************"
 echo ""
+
 wget -P /build/jenkins-home/slaveSetupFile -c https://archive.apache.org/dist/maven/binaries/apache-maven-2.2.1-bin.tar.gz
 tar -zxvf /build/jenkins-home/slaveSetupFile/$APACHE_MAVEN_22x -C /build/jenkins-home/software/maven
 
