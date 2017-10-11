@@ -5,6 +5,8 @@
 Once you have obtained a VM;
  1. Install latest jdk
  2. Create a directory /build/jenkins-home at root level
+ 3. Configure slave setup configuration in the global configuration through the Jenkins UI (Manage Jenkins >> Configure System).
+ 4. Select Manage Jenkins >> Manage Nodes >> New Node to add a new node and configure. The node will launch once node configuration is saved.
 
 The following is downloaded from /build/worker_installer/slaveSetupFile location to the new node;
  1. jdk-7u51-linux-x64.tar.gz
