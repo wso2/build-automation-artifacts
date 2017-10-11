@@ -6,7 +6,7 @@ Once you have obtained a VM;
  1. Install latest jdk
  2. Create a directory /build/jenkins-home at root level
 
-The following is downloaded to /build/worker_installer/slaveSetupFile location in the new node;
+The following is downloaded from /build/worker_installer/slaveSetupFile location to the new node;
  1. jdk-7u51-linux-x64.tar.gz
  2. jdk-8u144-linux-x64.tar.gz
  3. apache-maven-2.2.1-bin.tar.gz
@@ -17,10 +17,10 @@ The following is downloaded to /build/worker_installer/slaveSetupFile location i
  8. UnlimitedJCEPolicyJDK7.zip
  9. node-v6.10.0-linux-x64.tar.xz
  
- While the following should be available in /build/worker_installer/slaveSetupFile location in Jenkins master;
+ While the following will be copied from /build/worker_installer/slaveSetupFile location from Jenkins master to the new node;
  1. gpg keys
  2. docker certs
  3. jce_policy-8.zip
 
-
+NOTE : docker.sh is use to configure docker in Ubuntu 14.04 version.
 
