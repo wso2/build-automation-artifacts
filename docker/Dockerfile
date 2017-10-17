@@ -100,7 +100,6 @@ tar -xvzf /build/software/java/jdk-7u51-linux-x64.tar.gz --directory /build/soft
 && rm /build/software/jce/UnlimitedJCEPolicyJDK7.zip \
 && rm -r /build/software/jce/UnlimitedJCEPolicy
 
-
 RUN apt-get update && apt-get install -y openjdk-7-jdk && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN \
@@ -121,6 +120,13 @@ RUN \
 wget -P /build/software/nodejs https://nodejs.org/dist/v6.10.0/node-v6.10.0-linux-x64.tar.xz \
 && tar -xvf /build/software/nodejs/node-v6.10.0-linux-x64.tar.xz --directory /build/software/nodejs \
 && rm /build/software/nodejs/node-v6.10.0-linux-x64.tar.xz
+
+RUN \
+sudo apt-get -y install python-pip \
+&& sudo pip --version \
+&& sudo apt-get -y install build-essential python-dev \
+&& sudo pip install mkdocs && mkdocs --version \
+&& sudo pip install mkdocs-material
 
 ENV PATH=$PATH:/build/software/nodejs/node-v6.10.0-linux-x64/bin
 
