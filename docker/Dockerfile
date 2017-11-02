@@ -122,11 +122,11 @@ wget -P /build/software/nodejs https://nodejs.org/dist/v8.8.1/node-v8.8.1-linux-
 && rm /build/software/nodejs/node-v8.8.1-linux-x64.tar.xz
 
 RUN \
-sudo apt-get -y install python-pip \
-&& sudo pip --version \
-&& sudo apt-get -y install build-essential python-dev \
-&& sudo pip install mkdocs && mkdocs --version \
-&& sudo pip install mkdocs-material
+apt-get update && apt-get -y install python-pip \
+&& pip --version \
+&& apt-get -y install build-essential python-dev \
+&& pip install mkdocs && mkdocs --version \
+&& pip install mkdocs-material
 
 ENV PATH=$PATH:/build/software/nodejs/node-v8.8.1-linux-x64/bin
 
