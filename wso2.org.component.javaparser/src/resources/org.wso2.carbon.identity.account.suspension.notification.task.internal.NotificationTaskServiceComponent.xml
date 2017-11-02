@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0">
+    <scr:component immediate="true" name="NotificationTaskServiceComponent" activate="activate" deactivate="deactivate">
+        <implementation
+                class="org.wso2.carbon.identity.account.suspension.notification.task.internal.NotificationTaskServiceComponent"/>
+        <reference name="EventMgtService" interface="org.wso2.carbon.identity.event.services.IdentityEventService"
+                   cardinality="1..1" policy="dynamic" bind="setIdentityEventService"
+                   unbind="unsetIdentityEventService"/>
+        <reference name="IdentityGovernanceService"
+                   interface="org.wso2.carbon.identity.governance.IdentityGovernanceService" cardinality="1..1"
+                   policy="dynamic" bind="setIdentityGovernanceService" unbind="unsetIdentityGovernanceService"/>
+        <reference name="NotificationTaskServiceComponent"
+                   interface="org.wso2.carbon.identity.account.suspension.notification.task.NotificationReceiversRetrievalFactory"
+                   cardinality="0..n" policy="dynamic" bind="setNotificationReceiversRetrievalFactory"
+                   unbind="unsetNotificationReceiversRetrievalFactory"/>
+        <reference name="user.realmservice.default" interface="org.wso2.carbon.user.core.service.RealmService"
+                   cardinality="1..1" policy="dynamic" bind="setRealmService" unbind="unsetRealmService"/>
+    </scr:component>
+</components>

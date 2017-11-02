@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Components>
+    <componentPath name="pathNames">
+
+        <Path>
+            /home/dineth/wso2-test/identity-governance/components/org.wso2.carbon.identity.recovery/src/main/java/org/wso2/carbon/identity/recovery/internal
+        </Path>
+
+    </componentPath>
+</Components>
