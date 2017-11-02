@@ -117,9 +117,9 @@ chmod a+x /build/software/java/jdk-6u33-linux-x64.bin \
 && rm /build/software/java/jdk-6u33-linux-x64.bin
 
 RUN \
-wget -P /build/software/nodejs https://nodejs.org/dist/v6.10.0/node-v6.10.0-linux-x64.tar.xz \
-&& tar -xvf /build/software/nodejs/node-v6.10.0-linux-x64.tar.xz --directory /build/software/nodejs \
-&& rm /build/software/nodejs/node-v6.10.0-linux-x64.tar.xz
+wget -P /build/software/nodejs https://nodejs.org/dist/v8.8.1/node-v8.8.1-linux-x64.tar.xz \
+&& tar -xvf /build/software/nodejs/node-v8.8.1-linux-x64.tar.xz --directory /build/software/nodejs \
+&& rm /build/software/nodejs/node-v8.8.1-linux-x64.tar.xz
 
 RUN \
 sudo apt-get -y install python-pip \
@@ -128,7 +128,7 @@ sudo apt-get -y install python-pip \
 && sudo pip install mkdocs && mkdocs --version \
 && sudo pip install mkdocs-material
 
-ENV PATH=$PATH:/build/software/nodejs/node-v6.10.0-linux-x64/bin
+ENV PATH=$PATH:/build/software/nodejs/node-v8.8.1-linux-x64/bin
 
 RUN \
 echo "net.ipv4.ip_local_port_range=15000 61000" >> /etc/sysctl.conf \
