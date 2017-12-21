@@ -50,7 +50,6 @@ java -cp wso2.org.component.javaparser-1.0.0-SNAPSHOT-jar-with-dependencies.jar 
 	#rm  $FILE_NAME wso2.org.component.javaparser-1.0.0-SNAPSHOT-jar-with-dependencies.jar
 }
 
-
 validate_result(){
 target_string=$(find . -type d | grep "OLD_XML")
 touch target.xml
@@ -109,7 +108,6 @@ mv OLD_XML $PARENT_DIR
 cd ..
 }
 
-
 find_newjar(){
 tmp=/tmp
 echo $tmp
@@ -159,19 +157,14 @@ JAVA_PARSER=wso2.org.component.javaparser-1.0.0-SNAPSHOT-jar-with-dependencies.j
 
 LOCAL_REPO=$(ls -td -- */ | head -n 1)
 
-
-
 repo_result=$(find . -name repo_result.txt)
 if [ "$repo_result" != "./repo_result.txt" ]; then
     touch repo_result.txt
     repo_result=repo_result.txt
 fi
 
-
-
 cp $JAVA_PARSER $LOCAL_REPO
 cd $LOCAL_REPO
-
 
 echo "*** Building to find initial scr components.xml"
 mvn clean install -Dmaven.test.skip=true
@@ -210,16 +203,12 @@ else
     echo $repo_converted
 fi
 
-
 rm $JAVA_PARSER
 cd ..
 
 echo "\n" >> $repo_result
 echo $repo_converted >> $repo_result
 }
-
-
-
 
 # wso2/product-is wso2-extensions/identity-inbound-auth-oauth
 REPOS=$*
@@ -231,9 +220,3 @@ do
  echo "The Repository name is incorrect. It should look like: wso2/product-is"
  fi
 done
-
-
-
-
-
-

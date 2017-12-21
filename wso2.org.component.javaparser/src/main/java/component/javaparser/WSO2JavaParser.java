@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package component.javaparser;
 
 import com.github.javaparser.JavaParser;
@@ -21,6 +36,10 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+/**
+ * This class do the changes of component.java file. Here identified the oldest component.java file
+ * and change the Java file content with adding OSGI annotations.
+ */
 public class WSO2JavaParser {
 
     FileInputStream in = null;
@@ -57,9 +76,9 @@ public class WSO2JavaParser {
                 addAnnotations(scrComponent, docComments[0], path);
                 hasScrDoc = true;
             } else {
-                System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<Can not identified comment>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+                System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<Can not identified comment>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
                 System.out.print(javaDocComment);
-                System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+                System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             }
         }
         return hasScrDoc;
@@ -187,7 +206,7 @@ public class WSO2JavaParser {
         return fileNames;
     }
 
-    public List<String> getComponentPaths(String file) {
+    public List<String> getComponentPaths(String file) throws IOException, SAXException, ParserConfigurationException {
         List<String> paths = new ArrayList<>();
         Document doc = readXMLDoc(file);
         NodeList nodeList = doc.getElementsByTagName("Path");
@@ -199,7 +218,7 @@ public class WSO2JavaParser {
         return paths;
     }
 
-    public List<String> getPomPaths(String file) {
+    public List<String> getPomPaths(String file) throws IOException, SAXException, ParserConfigurationException {
         List<String> pomPaths = new ArrayList<>();
         Document doc = readXMLDoc(file);
         NodeList nodeList = doc.getElementsByTagName("POMPath");
@@ -209,23 +228,11 @@ public class WSO2JavaParser {
         return pomPaths;
     }
 
-    public Document readXMLDoc(String file) {
+    public Document readXMLDoc(String file) throws ParserConfigurationException,SAXException,IOException{
         File inputFile = new File(file);
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder dBuilder = null;
-        try {
-            dBuilder = dbFactory.newDocumentBuilder();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        }
-        Document doc = null;
-        try {
-            doc = dBuilder.parse(inputFile);
-        } catch (SAXException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+        Document doc = dBuilder.parse(inputFile);
         doc.getDocumentElement().normalize();
         return doc;
     }

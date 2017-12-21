@@ -1,14 +1,29 @@
+/*
+ * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package component.javaparser;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
@@ -32,9 +47,11 @@ import javax.xml.transform.stream.StreamResult;
  */
 public class WSO2POMReader {
 
+    private static final String DEFAULT_SCR_PLUGIN_VERSION="1.16.0";
+
     private void addSCRPluginVersion(Document doc, NodeList nodeList) {
         Element ele = null;
-        String version = "1.16.0";
+        String version = DEFAULT_SCR_PLUGIN_VERSION;
         for (int i = 0; i < nodeList.getLength(); i++) {
             ele = (Element) nodeList.item(i);
             if (hasSCRpluginVersion(nodeList)) {
@@ -48,10 +65,11 @@ public class WSO2POMReader {
         }
     }
 
-    public void addDependency(String file, boolean parentPOM) {
-        try {
+    public void addDependency(String file, boolean parentPOM) throws ParserConfigurationException,
+            IOException, SAXException, TransformerException {
             File inputFile = new File(file);
-            System.setProperty("javax.xml.parsers.DocumentBuilderFactory", "org.apache.xerces.jaxp.DocumentBuilderFactoryImpl");
+            System.setProperty("javax.xml.parsers.DocumentBuilderFactory",
+                    "org.apache.xerces.jaxp.DocumentBuilderFactoryImpl");
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(inputFile);
@@ -77,13 +95,7 @@ public class WSO2POMReader {
                 addSCRPluginVersion(doc, properties);
                 updatePomFile(doc, file);
             }
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (org.xml.sax.SAXException e) {
-            e.printStackTrace();
-        }
+
     }
 
     public void removeSCRpluginVersion(NodeList plugins, Document doc, boolean parentPOM) {
@@ -232,11 +244,10 @@ public class WSO2POMReader {
         }
     }
 
-    public void updatePomFile(Document doc, String file) {
+    public void updatePomFile(Document doc, String file) throws TransformerException, IOException {
         doc.setXmlStandalone(true);
         doc.getDocumentElement().normalize();
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        try {
             Transformer transformer = transformerFactory.newTransformer();
             transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -247,16 +258,12 @@ public class WSO2POMReader {
             DOMSource source = new DOMSource(doc);
             transformer.transform(source, result);
             modifyProjectTag(file);
-        } catch (TransformerException e) {
-            e.printStackTrace();
-        }
         System.out.println(" <<<<<updated successfully>>>>>");
     }
 
-    private void modifyProjectTag(String file) {
+    private void modifyProjectTag(String file) throws IOException {
         FileInputStream fis = null;
         BufferedReader reader = null;
-        try {
             fis = new FileInputStream(file);
             reader = new BufferedReader(new InputStreamReader(fis));
 
@@ -272,11 +279,6 @@ public class WSO2POMReader {
                     break;
                 }
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public void writeFile(String regex, String replacement, String file) throws IOException {
