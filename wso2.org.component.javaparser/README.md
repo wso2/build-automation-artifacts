@@ -1,4 +1,4 @@
-This project for refactoring scr doc comment from declarative service file and and add those things to same file as osgi annotations.
+This project for refactoring scr doclets (doc comments) to SCR Java annotations  and add those things to component file as osgi annotations.
 
 Here
 
