@@ -46,8 +46,8 @@ converted_repo(){
 	echo "</Components>" >> $FILE_NAME
 	COMPONENT_PATH=$PWD"/"$FILE_NAME
 
-java -cp wso2.org.component.javaparser-1.0.0-SNAPSHOT-jar-with-dependencies.jar component.javaparser.App $COMPONENT_PATH
-	#rm  $FILE_NAME wso2.org.component.javaparser-1.0.0-SNAPSHOT-jar-with-dependencies.jar
+java -cp org.wso2.build.scr-annotation-converter-1.0.0-SNAPSHOT-jar-with-dependencies.jar component.javaparser.App $COMPONENT_PATH
+	#rm  $FILE_NAME org.wso2.build.scr-annotation-converter-1.0.0-SNAPSHOT-jar-with-dependencies.jar
 }
 
 validate_result(){
@@ -83,7 +83,7 @@ echo -n "<?xml version=" >> $TARGET_FILE
 	echo "</targetPath>" >> $TARGET_FILE
 	echo "</Targets>" >> $TARGET_FILE
 	TARGET_PATH=$PWD"/"$TARGET_FILE
-java -cp wso2.org.component.javaparser-1.0.0-SNAPSHOT-jar-with-dependencies.jar component.javaparser.App $TARGET_PATH
+java -cp org.wso2.build.scr-annotation-converter-1.0.0-SNAPSHOT-jar-with-dependencies.jar component.javaparser.App $TARGET_PATH
 }
 
 find_oldjar(){
@@ -153,7 +153,7 @@ REPO=$1
 git clone --depth 1 https://github.com/$REPO.git
 
 
-JAVA_PARSER=wso2.org.component.javaparser-1.0.0-SNAPSHOT-jar-with-dependencies.jar
+JAVA_PARSER=org.wso2.build.scr-annotation-converter-1.0.0-SNAPSHOT-jar-with-dependencies.jar
 
 LOCAL_REPO=$(ls -td -- */ | head -n 1)
 
