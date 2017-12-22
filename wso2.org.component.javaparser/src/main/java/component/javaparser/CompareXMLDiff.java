@@ -31,7 +31,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 /**
- *This class will compare the previous component.xml file and latest component.xml file
+ * This class will compare the previous component.xml file and latest component.xml file
  */
 public class CompareXMLDiff {
 
@@ -43,31 +43,31 @@ public class CompareXMLDiff {
         DocumentBuilder db = null;
         Document doc = null;
         Document doc2 = null;
-            db = dbf.newDocumentBuilder();
-            doc = db.parse(new File(file1));
-            doc2 = db.parse(new File(file2));
+        db = dbf.newDocumentBuilder();
+        doc = db.parse(new File(file1));
+        doc2 = db.parse(new File(file2));
 
-            Diff diff = new Diff(doc, doc2);
-            setNumberofReferenceTag(doc);
-            DetailedDiff detDiff = new DetailedDiff(diff);
-            MatchTrackerImpl matchTracker = new MatchTrackerImpl();
-            detDiff.overrideMatchTracker(matchTracker);
-            detDiff.overrideElementQualifier(new ElementNameAndAttributeQualifier());
-            detDiff.getAllDifferences();
+        Diff diff = new Diff(doc, doc2);
+        setNumberofReferenceTag(doc);
+        DetailedDiff detDiff = new DetailedDiff(diff);
+        MatchTrackerImpl matchTracker = new MatchTrackerImpl();
+        detDiff.overrideMatchTracker(matchTracker);
+        detDiff.overrideElementQualifier(new ElementNameAndAttributeQualifier());
+        detDiff.getAllDifferences();
 
-            boolean isMatchImplementationTags = matchTracker.isMatchedImplementationTags();
-            boolean isMatchComponentTag = matchTracker.isMatchedComponentTags();
+        boolean isMatchImplementationTags = matchTracker.isMatchedImplementationTags();
+        boolean isMatchComponentTag = matchTracker.isMatchedComponentTags();
 
-            if (getNumberofReferenceTag() == matchTracker.numberOfmatchingReferenceTags() && isMatchImplementationTags
-                    && isMatchComponentTag) {
-                System.out.println(file1 + "\n" + file2 + "\nFiles are same");
-                fileDifferences.add("matched");
-            } else {
-                String result = file1 + "\n" + file2 + "\nFiles are different\n";
-                System.out.println(result);
-                fileDifferences.add(result);
-                //writeFile(result,targetFile);
-            }
+        if (getNumberofReferenceTag() == matchTracker.numberOfmatchingReferenceTags() && isMatchImplementationTags
+                && isMatchComponentTag) {
+            System.out.println(file1 + "\n" + file2 + "\nFiles are same");
+            fileDifferences.add("matched");
+        } else {
+            String result = file1 + "\n" + file2 + "\nFiles are different\n";
+            System.out.println(result);
+            fileDifferences.add(result);
+            //writeFile(result,targetFile);
+        }
     }
 
 

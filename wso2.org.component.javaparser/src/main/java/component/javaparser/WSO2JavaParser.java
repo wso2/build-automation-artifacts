@@ -228,7 +228,7 @@ public class WSO2JavaParser {
         return pomPaths;
     }
 
-    public Document readXMLDoc(String file) throws ParserConfigurationException,SAXException,IOException{
+    public Document readXMLDoc(String file) throws ParserConfigurationException, SAXException, IOException {
         File inputFile = new File(file);
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();

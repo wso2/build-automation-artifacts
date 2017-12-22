@@ -131,13 +131,13 @@ public class App {
     private void createNewFile(String nwFile) throws IOException {
         File file = new File(nwFile);
         boolean fvar = false;
-            fvar = file.createNewFile();
+        fvar = file.createNewFile();
 
-            if (fvar) {
-                System.out.println("Create the target xml file");
-            } else {
-                System.out.println("Result file already present at the specified location");
-            }
+        if (fvar) {
+            System.out.println("Create the target xml file");
+        } else {
+            System.out.println("Result file already present at the specified location");
+        }
 
     }
 

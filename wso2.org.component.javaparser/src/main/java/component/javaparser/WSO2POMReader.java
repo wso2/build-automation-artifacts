@@ -47,7 +47,7 @@ import javax.xml.transform.stream.StreamResult;
  */
 public class WSO2POMReader {
 
-    private static final String DEFAULT_SCR_PLUGIN_VERSION="1.16.0";
+    private static final String DEFAULT_SCR_PLUGIN_VERSION = "1.16.0";
 
     private void addSCRPluginVersion(Document doc, NodeList nodeList) {
         Element ele = null;
@@ -67,34 +67,34 @@ public class WSO2POMReader {
 
     public void addDependency(String file, boolean parentPOM) throws ParserConfigurationException,
             IOException, SAXException, TransformerException {
-            File inputFile = new File(file);
-            System.setProperty("javax.xml.parsers.DocumentBuilderFactory",
-                    "org.apache.xerces.jaxp.DocumentBuilderFactoryImpl");
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.parse(inputFile);
-            doc.getDocumentElement().normalize();
+        File inputFile = new File(file);
+        System.setProperty("javax.xml.parsers.DocumentBuilderFactory",
+                "org.apache.xerces.jaxp.DocumentBuilderFactoryImpl");
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+        Document doc = dBuilder.parse(inputFile);
+        doc.getDocumentElement().normalize();
 
-            NodeList dependencies = doc.getElementsByTagName("dependencies");
-            NodeList plugin = doc.getElementsByTagName("plugin");
-            if (hasSCRPluginNode(plugin) && !parentPOM) {
-                System.out.print("Component pom : " + file + "\t\t");
-                addSCRDependencyToComponent(doc, dependencies);
-                removeSCRpluginVersion(plugin, doc, parentPOM);
-                updatePomFile(doc, file);
-            } else if (parentPOM) {
-                System.out.print("Parent pom : " + file + "\t\t");
-                NodeList parentDependencies = doc.getElementsByTagName("dependencies");
-                NodeList properties = doc.getElementsByTagName("properties");
-                NodeList pluginManagement = doc.getElementsByTagName("pluginManagement");
-                NodeList plugins = doc.getElementsByTagName("plugins");
-                addSCRdependecyToParent(doc, parentDependencies);
-                addSCRDependencyVesion(doc, properties);
-                addSCRPlugin(doc, pluginManagement);
-                removeSCRPlugin(plugins);
-                addSCRPluginVersion(doc, properties);
-                updatePomFile(doc, file);
-            }
+        NodeList dependencies = doc.getElementsByTagName("dependencies");
+        NodeList plugin = doc.getElementsByTagName("plugin");
+        if (hasSCRPluginNode(plugin) && !parentPOM) {
+            System.out.print("Component pom : " + file + "\t\t");
+            addSCRDependencyToComponent(doc, dependencies);
+            removeSCRpluginVersion(plugin, doc, parentPOM);
+            updatePomFile(doc, file);
+        } else if (parentPOM) {
+            System.out.print("Parent pom : " + file + "\t\t");
+            NodeList parentDependencies = doc.getElementsByTagName("dependencies");
+            NodeList properties = doc.getElementsByTagName("properties");
+            NodeList pluginManagement = doc.getElementsByTagName("pluginManagement");
+            NodeList plugins = doc.getElementsByTagName("plugins");
+            addSCRdependecyToParent(doc, parentDependencies);
+            addSCRDependencyVesion(doc, properties);
+            addSCRPlugin(doc, pluginManagement);
+            removeSCRPlugin(plugins);
+            addSCRPluginVersion(doc, properties);
+            updatePomFile(doc, file);
+        }
 
     }
 
@@ -248,37 +248,37 @@ public class WSO2POMReader {
         doc.setXmlStandalone(true);
         doc.getDocumentElement().normalize();
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
-            Transformer transformer = transformerFactory.newTransformer();
-            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-            transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "no");
-            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-            transformer.setOutputProperty("{http://xml.apache.org/xalan}indent-amount", "4");
-            StreamResult result = new StreamResult(new File(file));
-            DOMSource source = new DOMSource(doc);
-            transformer.transform(source, result);
-            modifyProjectTag(file);
+        Transformer transformer = transformerFactory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "no");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+        transformer.setOutputProperty("{http://xml.apache.org/xalan}indent-amount", "4");
+        StreamResult result = new StreamResult(new File(file));
+        DOMSource source = new DOMSource(doc);
+        transformer.transform(source, result);
+        modifyProjectTag(file);
         System.out.println(" <<<<<updated successfully>>>>>");
     }
 
     private void modifyProjectTag(String file) throws IOException {
         FileInputStream fis = null;
         BufferedReader reader = null;
-            fis = new FileInputStream(file);
-            reader = new BufferedReader(new InputStreamReader(fis));
+        fis = new FileInputStream(file);
+        reader = new BufferedReader(new InputStreamReader(fis));
 
-            System.out.println("Reading File line by line using BufferedReader");
+        System.out.println("Reading File line by line using BufferedReader");
 
-            String line = reader.readLine();
-            while (line != null) {
-                line = reader.readLine();
-                if (line.contains("<project")) {
-                    System.out.println(line);
-                    String[] projectTag = line.split("-->");
-                    writeFile(line, "  -->\n" + projectTag[1], file);
-                    break;
-                }
+        String line = reader.readLine();
+        while (line != null) {
+            line = reader.readLine();
+            if (line.contains("<project")) {
+                System.out.println(line);
+                String[] projectTag = line.split("-->");
+                writeFile(line, "  -->\n" + projectTag[1], file);
+                break;
             }
+        }
     }
 
     public void writeFile(String regex, String replacement, String file) throws IOException {

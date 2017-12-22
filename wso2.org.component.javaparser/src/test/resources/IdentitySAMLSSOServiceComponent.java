@@ -74,13 +74,25 @@ public class IdentitySAMLSSOServiceComponent {
         return ssoRedirectPage;
     }
 
+    public static ServerConfigurationService getServerConfigurationService() {
+        return org.wso2.carbon.identity.sso.saml.internal.IdentitySAMLSSOServiceComponent.serverConfigurationService;
+    }
+
+    protected void setServerConfigurationService(ServerConfigurationService serverConfigurationService) {
+        if (log.isDebugEnabled()) {
+            log.debug("Set the ServerConfiguration Service");
+        }
+        org.wso2.carbon.identity.sso.saml.internal.IdentitySAMLSSOServiceComponent.serverConfigurationService = serverConfigurationService;
+
+    }
+
     protected void activate(ComponentContext ctxt) {
         SAMLSSOUtil.setBundleContext(ctxt.getBundleContext());
         HttpService httpService = SAMLSSOUtil.getHttpService();
 
         // Register SAML SSO servlet
         Servlet samlSSOServlet = new ContextPathServletAdaptor(new SAMLSSOProviderServlet(),
-                                                               SAMLSSOConstants.SAMLSSO_URL);
+                SAMLSSOConstants.SAMLSSO_URL);
         try {
             httpService.registerServlet(SAMLSSOConstants.SAMLSSO_URL, samlSSOServlet, null, null);
         } catch (Exception e) {
@@ -186,6 +198,7 @@ public class IdentitySAMLSSOServiceComponent {
         }
         SAMLSSOUtil.setRegistryService(null);
     }
+
     /**
      * This method is used to set realm service
      *
@@ -233,17 +246,6 @@ public class IdentitySAMLSSOServiceComponent {
         SAMLSSOUtil.setHttpService(null);
     }
 
-    public static ServerConfigurationService getServerConfigurationService() {
-        return org.wso2.carbon.identity.sso.saml.internal.IdentitySAMLSSOServiceComponent.serverConfigurationService;
-    }
-
-    protected void setServerConfigurationService(ServerConfigurationService serverConfigurationService) {
-        if (log.isDebugEnabled()) {
-            log.debug("Set the ServerConfiguration Service");
-        }
-        org.wso2.carbon.identity.sso.saml.internal.IdentitySAMLSSOServiceComponent.serverConfigurationService = serverConfigurationService;
-
-    }
     protected void unsetServerConfigurationService(ServerConfigurationService serverConfigurationService) {
         if (log.isDebugEnabled()) {
             log.debug("Unset the ServerConfiguration Service");

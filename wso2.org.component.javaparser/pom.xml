@@ -69,11 +69,6 @@
             <version>0.6.1</version>
         </dependency>
 
-        <!--<dependency>-->
-        <!--<groupId>org.jdom</groupId>-->
-        <!--<artifactId>jdom2</artifactId>-->
-        <!--<version>${jdom2.version}</version>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
@@ -91,12 +86,6 @@
             <artifactId>jaxp-api</artifactId>
             <version>${jaxp.api.version}</version>
         </dependency>
-
-        <!--<dependency>-->
-        <!--<groupId>org.w3c</groupId>-->
-        <!--<artifactId>dom</artifactId>-->
-        <!--<version>${dom.version}</version>-->
-        <!--</dependency>-->
 
         <dependency>
             <groupId>junit</groupId>
