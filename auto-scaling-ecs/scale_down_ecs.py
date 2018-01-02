@@ -24,10 +24,30 @@ import boto3
 import datetime 
 import math
 import time
+import sys
+import getopt
 
 #Method to get the unix time
 def unix_time(time_stamp):
     return time.mktime(time_stamp.timetuple())
+
+#access key, secret key and regionshould be passed as parameters
+def getCredential(argv):
+   access_key = ''
+   secret_key = ''
+   try:
+      opts, args = getopt.getopt(argv,"ak:sk:",["accesskey=","secretkey=","region="])
+   except getopt.GetoptError:
+      print 'test.py -i <accesskey> -o <outputfile>'
+      sys.exit(2)
+   for opt, arg in opts:
+      if opt in ("-ak","--accesskey"):
+         access_key = arg
+      elif opt in ("-sk", "--secretkey"):
+         secret_key = arg
+      elif opt in ("-r", "--region"):
+         region = arg
+   return {'access_key':access_key, 'secret_key': secret_key, 'region':region}
 
 #Method to scale down the instances 
 def scale_down(containerInstance, container_instances_count):
@@ -58,7 +78,8 @@ def scale_down(containerInstance, container_instances_count):
     
 
 #choose the aws user which to access the resources
-session = boto3.Session(profile_name='account2')
+credentials = getCredential(sys.argv[1:])
+session = boto3.Session(aws_access_key_id=credentials['access_key'], aws_secret_access_key=credentials['secret_key'], region_name=credentials['region'])
 
 #ecs client and auto scaling group resource generation
 ecsClient = session.client(service_name='ecs')
@@ -76,6 +97,11 @@ container_instances_count = len(containerDetails['containerInstances'])
 #loop through every instances to check if it should be terminated
 for containerInstance in containerDetails['containerInstances']:
     scale_down(containerInstance, container_instances_count)
+
+
+
+
+
 
 
 
