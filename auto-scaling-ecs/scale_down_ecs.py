@@ -76,7 +76,6 @@ def scale_down(containerInstance, container_instances_count):
     else :
         print ("Running Containers {} \nPending tasks {} \nCluster size {} \n ".format(containerInstance['runningTasksCount'],containerInstance['pendingTasksCount'],container_instances_count))
     
-
 #choose the aws user which to access the resources
 credentials = getCredential(sys.argv[1:])
 session = boto3.Session(aws_access_key_id=credentials['access_key'], aws_secret_access_key=credentials['secret_key'], region_name=credentials['region'])
@@ -97,13 +96,4 @@ container_instances_count = len(containerDetails['containerInstances'])
 #loop through every instances to check if it should be terminated
 for containerInstance in containerDetails['containerInstances']:
     scale_down(containerInstance, container_instances_count)
-
-
-
-
-
-
-
-
-
 
