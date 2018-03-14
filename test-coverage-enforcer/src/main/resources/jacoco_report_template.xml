@@ -1,0 +1,6 @@
+<execution>
+	<id>default-report</id>
+	<goals>
+		<goal>report</goal>
+	</goals>
+</execution>
