@@ -91,10 +91,10 @@ public class JacocoCoverage {
                 if (!executionsList.item(i).getNodeName().equals(Constants.MAVEN_TAG_EXECUTION)) continue;
 
                 Element execution = (Element) executionsList.item(i);
-                switch (execution.getElementsByTagName(Constants.MAVEN_TAG_GOAL).item(0).getTextContent()) {
+                switch (execution.getElementsByTagName(Constants.MAVEN_TAG_GOAL).item(0).getTextContent()) { // there may be multiple goals. handle that.
                     case Constants.JACOCO_GOAL_AGENT_INVOKE:
                         nodeAnalysisReport.put(Constants.JACOCO_GOAL_AGENT_INVOKE, true);
-
+                        deleteJacocoReportPathNodes(execution);
                         break;
                     case Constants.JACOCO_GOAL_REPORT:
                         nodeAnalysisReport.put(Constants.JACOCO_GOAL_REPORT, true);
@@ -160,7 +160,7 @@ public class JacocoCoverage {
             plugins.appendChild(inheritedJacocoPluginTemplate);
             log.info("Inherited in " + "Build" + " | " + pom.getDocumentURI());
         } else {
-            // If jacoco plugin and executions are exists, update coverage threshold and coverage per element
+            // If jacoco plugin and executions exists, update coverage threshold and coverage per element
             // If inheritance is already present, ignore enforcing inheritance of coverage check
             Node executions = inheritedJacocoPlugin.getElementsByTagName(Constants.MAVEN_TAG_EXECUTIONS).item(0);
             NodeList executionsList;
@@ -175,6 +175,9 @@ public class JacocoCoverage {
                         case Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE:
                             execution.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0).setTextContent(coveragePerElement);
                             execution.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE).item(0).setTextContent(coverageThreshold);
+                            break;
+                        case Constants.JACOCO_GOAL_AGENT_INVOKE:
+                            deleteJacocoReportPathNodes(execution);
                             break;
                     }
                 }
@@ -241,5 +244,16 @@ public class JacocoCoverage {
             parent.appendChild(plugins);
         }
         return plugins;
+    }
+
+    /**
+     * delete destFile node
+     */
+    private static void deleteJacocoReportPathNodes(Element execution) {
+
+        NodeList destFileNodeList = execution.getElementsByTagName(Constants.JACOCO_DESTFILE);
+        for (int i = 0; i<destFileNodeList.getLength(); i++) {
+            destFileNodeList.item(i).getParentNode().removeChild(destFileNodeList.item(i));
+        }
     }
 }

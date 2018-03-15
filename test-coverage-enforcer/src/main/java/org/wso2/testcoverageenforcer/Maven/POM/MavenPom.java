@@ -16,7 +16,7 @@
  *   under the License.
  */
 
-package org.wso2.testcoverageenforcer.Maven;
+package org.wso2.testcoverageenforcer.Maven.POM;
 
 import org.apache.maven.model.Model;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
