@@ -34,17 +34,17 @@ public class FeatureAdder {
     /**
      * Deep integration of Jacoco coverage check rule with an existing multi-module maven project
      */
-    public static void intergrateJacocoCoverageCheck (
+    public static void intergrateJacocoCoverageCheck(
             String projectPath,
             String coveragePerElement,
-            String coverageThreshold) throws IOException, XmlPullParserException, ParserConfigurationException, SAXException, TransformerException{
+            String coverageThreshold) throws IOException, XmlPullParserException, ParserConfigurationException, SAXException, TransformerException {
 
         ParentMavenPom parent = new ParentMavenPom(projectPath);
         if (parent.hasChildren()) {
             parent.enforceCoverageCheckUnderPluginManagement(coveragePerElement, coverageThreshold);
             parent.inheritCoverageCheckInChildren(parent.getChildren(), coveragePerElement, coverageThreshold);
         } else if (parent.hasTests()) {
-            parent.enforceCoverageCheckUnderBuildPlugins( coveragePerElement, coverageThreshold);
+            parent.enforceCoverageCheckUnderBuildPlugins(coveragePerElement, coverageThreshold);
         }
     }
 }

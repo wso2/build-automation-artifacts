@@ -16,15 +16,11 @@
  *   under the License.
  */
 
-package org.wso2.testcoverageenforcer;
+package org.wso2.testcoverageenforcer.ServerHandler;
 
-import org.wso2.testcoverageenforcer.GitHubHandler.Jacoco.CoverageCheckEnforcer;
-import org.wso2.testcoverageenforcer.ServerHandler.SQLServer;
+import org.wso2.testcoverageenforcer.Constants;
 
-/**
- * Provide application interface to create pull requests for multiple github projects to add jacoco coverage check
- */
-public class Application {
+public class TestServer {
 
     public static void main(String[] args) throws Exception {
 
@@ -35,18 +31,6 @@ public class Application {
                 break;
             } else if (!repo.equals("")) {
                 System.out.println(repo);
-                try {
-                    CoverageCheckEnforcer.createPullRequestWithCoverageCheck(repo,
-                            "tharindu-bandara",
-                            Constants.temp_pass,
-                            "bandara14@live.com",
-                            "/home/tharindu/my-projects/clone-space",
-                            false);
-                } catch (Exception e) {
-                    System.out.println("Skipped due to errors" + e);
-                    continue;
-                }
-
             }
         }
     }

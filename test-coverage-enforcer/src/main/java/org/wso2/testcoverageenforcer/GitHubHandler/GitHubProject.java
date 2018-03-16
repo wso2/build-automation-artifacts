@@ -96,13 +96,12 @@ public class GitHubProject {
     /**
      * To clone this repository. If forked, this will clone from the forked user and set cloned directory path
      */
-    public void gitClone() throws GitAPIException,IOException {
+    public void gitClone() throws GitAPIException, IOException {
 
         this.cloneFolder = new File(this.workspacePath + File.separator + this.forkedRepository.getFullName());
         if (!cloneFolder.exists()) {
             cloneFolder.mkdir();
-        }
-        else {
+        } else {
             FileUtils.cleanDirectory(cloneFolder);
         }
 
@@ -115,7 +114,7 @@ public class GitHubProject {
     /**
      * Clear cloned folder
      */
-    public void gitClearClonedFolder() throws IOException{
+    public void gitClearClonedFolder() throws IOException {
 
         if (this.cloneFolder.exists()) {
             FileUtils.cleanDirectory(cloneFolder);
@@ -125,7 +124,7 @@ public class GitHubProject {
     /**
      * Commit cloned repository
      */
-    public void gitCommit(String committingMessage) throws GitAPIException{
+    public void gitCommit(String committingMessage) throws GitAPIException {
 
         this.clonedRepository.add()
                 .addFilepattern(".")
@@ -139,17 +138,18 @@ public class GitHubProject {
     /**
      * Push cloned repo to the forked repository master
      */
-    public void gitPush() throws GitAPIException{
+    public void gitPush() throws GitAPIException, IOException {
 
         this.clonedRepository.push()
                 .setCredentialsProvider(new UsernamePasswordCredentialsProvider(this.login, this.password))
                 .call();
+        FileUtils.deleteDirectory(cloneFolder);
     }
 
     /**
      * Request a PR for the forked repository
      */
-    public void gitPullRequest() throws IOException{
+    public void gitPullRequest() throws IOException {
 
         this.projectRepository.createPullRequest(
                 Constants.GIT_PR_TITLE,

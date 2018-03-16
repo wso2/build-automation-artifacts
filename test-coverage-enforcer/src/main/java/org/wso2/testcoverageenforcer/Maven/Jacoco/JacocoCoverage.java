@@ -73,7 +73,7 @@ public class JacocoCoverage {
             ((Element) jacocoPluginTemplate).getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0).setTextContent(coveragePerElement);
             ((Element) jacocoPluginTemplate).getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE).item(0).setTextContent(coverageThreshold);
             plugins.appendChild(jacocoPluginTemplate);
-            log.debug("jacoco plugin added in under " + pluginsParent + " | " + pom.getDocumentURI());
+            log.info("jacoco plugin added in under " + pluginsParent + " | " + pom.getDocumentURI());
 
         } else { // If jacoco plugin exists, analyze each execution for the presence of executions with goals of 'prepare-agent', 'report', 'check'
             Node executions = jacocoPlugin.getElementsByTagName(Constants.MAVEN_TAG_EXECUTIONS).item(0);
@@ -112,12 +112,12 @@ public class JacocoCoverage {
             if (!((boolean) nodeAnalysisReport.get(Constants.JACOCO_GOAL_AGENT_INVOKE))) {
                 Node jacocoPrepareAgentExecutionNodeTemplate = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_PREPARE_AGENT_TEMPLATE), true);
                 executions.appendChild(jacocoPrepareAgentExecutionNodeTemplate);
-                log.debug("Prepare-agent added in " + pluginsParent + " | " + pom.getDocumentURI());
+                log.info("Prepare-agent added in " + pluginsParent + " | " + pom.getDocumentURI());
             }
             if (!((boolean) nodeAnalysisReport.get(Constants.JACOCO_GOAL_REPORT))) {
                 Node jacocoReportExecutionNodeTemplate = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_REPORT_TEMPLATE), true);
                 executions.appendChild(jacocoReportExecutionNodeTemplate);
-                log.debug("Report added in " + pluginsParent + " | " + pom.getDocumentURI());
+                log.info("Report added in " + pluginsParent + " | " + pom.getDocumentURI());
             }
             if (!((boolean) nodeAnalysisReport.get(Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE))) {
                 Node jacocoCheckExecutionNodeTemplate = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_CHECK_TEMPLATE), true);
@@ -125,7 +125,7 @@ public class JacocoCoverage {
                 jacocoCheckExecutionElementTemplate.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0).setTextContent(coveragePerElement);
                 jacocoCheckExecutionElementTemplate.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE).item(0).setTextContent(coverageThreshold);
                 executions.appendChild(jacocoCheckExecutionNodeTemplate);
-                log.debug("Check added in " + pluginsParent + " | " + pom.getDocumentURI());
+                log.info("Check added in " + pluginsParent + " | " + pom.getDocumentURI());
             }
         }
         return pom;
@@ -175,6 +175,7 @@ public class JacocoCoverage {
                         case Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE:
                             execution.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0).setTextContent(coveragePerElement);
                             execution.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE).item(0).setTextContent(coverageThreshold);
+                            log.info("Coverage Thresholds changed");
                             break;
                         case Constants.JACOCO_GOAL_AGENT_INVOKE:
                             deleteJacocoReportPathNodes(execution);
@@ -252,7 +253,7 @@ public class JacocoCoverage {
     private static void deleteJacocoReportPathNodes(Element execution) {
 
         NodeList destFileNodeList = execution.getElementsByTagName(Constants.JACOCO_DESTFILE);
-        for (int i = 0; i<destFileNodeList.getLength(); i++) {
+        for (int i = 0; i < destFileNodeList.getLength(); i++) {
             destFileNodeList.item(i).getParentNode().removeChild(destFileNodeList.item(i));
         }
     }

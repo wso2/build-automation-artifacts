@@ -126,6 +126,7 @@ abstract class MavenPom {
      * Get pom file path
      */
     public String getPomPath() {
+
         return this.pomFilePath;
     }
 }

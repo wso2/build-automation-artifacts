@@ -45,8 +45,7 @@ public class CoverageCheckEnforcer {
                     "bandara14@live.com",
                     "/home/tharindu/my-projects/clone-space",
                     false);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -76,20 +75,25 @@ public class CoverageCheckEnforcer {
                 gitHubPassword,
                 gitHubEmail);
         try {
-        repo.gitFork();
-        repo.setWorkspace(localWorkspacePath);
-        repo.gitClone();
-
-        FeatureAdder.intergrateJacocoCoverageCheck(
-                repo.getClonedPath(),
-                Constants.COVERAGE_PER_ELEMENT,
-                Constants.COVERAGE_THRESHOLD);
-
-        repo.gitCommit(Constants.COMMIT_MESSAGE_COVERAGE_CHECK);
-        repo.gitPush();
-        if (enablePR) {repo.gitPullRequest();}
-        }
-        finally {
+            System.out.println("Forking..");
+            repo.gitFork();
+            repo.setWorkspace(localWorkspacePath);
+            System.out.println("Cloning..");
+            repo.gitClone();
+            System.out.println("Coverage Check addition..");
+            FeatureAdder.intergrateJacocoCoverageCheck(
+                    repo.getClonedPath(),
+                    Constants.COVERAGE_PER_ELEMENT,
+                    Constants.COVERAGE_THRESHOLD);
+            System.out.println("Commiting..");
+            repo.gitCommit(Constants.COMMIT_MESSAGE_COVERAGE_CHECK);
+            System.out.println("Pushing..");
+            repo.gitPush();
+            if (enablePR) {
+                repo.gitPullRequest();
+            }
+        } finally {
+            System.out.println("Fork Deleting..");
             repo.gitDeleteForked();
         }
     }
