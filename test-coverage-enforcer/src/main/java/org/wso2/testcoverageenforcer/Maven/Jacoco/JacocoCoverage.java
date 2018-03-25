@@ -83,6 +83,7 @@ public class JacocoCoverage {
                 jacocoPlugin.appendChild(executions);
             }
             NodeList executionsList = executions.getChildNodes();
+            String jacocoReportFilePath = Constants.DEFAULT_JACOCO_REPORT_PATH;
             Map nodeAnalysisReport = new HashMap();
             nodeAnalysisReport.put(Constants.JACOCO_GOAL_AGENT_INVOKE, false);
             nodeAnalysisReport.put(Constants.JACOCO_GOAL_REPORT, false);
@@ -95,7 +96,7 @@ public class JacocoCoverage {
                 switch (execution.getElementsByTagName(Constants.MAVEN_TAG_GOAL).item(0).getTextContent()) { // there may be multiple goals. handle that.
                     case Constants.JACOCO_GOAL_AGENT_INVOKE:
                         nodeAnalysisReport.put(Constants.JACOCO_GOAL_AGENT_INVOKE, true);
-                        deleteJacocoReportPathNodes(execution);
+                        jacocoReportFilePath = getJacocoReportPath(execution);
                         break;
                     case Constants.JACOCO_GOAL_REPORT:
                         nodeAnalysisReport.put(Constants.JACOCO_GOAL_REPORT, true);
@@ -125,6 +126,7 @@ public class JacocoCoverage {
                 Element jacocoCheckExecutionElementTemplate = (Element) jacocoCheckExecutionNodeTemplate;
                 jacocoCheckExecutionElementTemplate.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0).setTextContent(coveragePerElement);
                 jacocoCheckExecutionElementTemplate.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE).item(0).setTextContent(coverageThreshold);
+                jacocoCheckExecutionElementTemplate.getElementsByTagName(Constants.JACOCO_TAG_REPORT_READ).item(0).setTextContent(jacocoReportFilePath);
                 executions.appendChild(jacocoCheckExecutionNodeTemplate);
                 log.info("Check added in " + pluginsParent + " | " + pom.getDocumentURI());
             }
@@ -249,13 +251,27 @@ public class JacocoCoverage {
     }
 
     /**
-     * delete destFile node
+     * delete any existing custom jacoco report path
      */
     private static void deleteJacocoReportPathNodes(Element execution) {
 
         NodeList destFileNodeList = execution.getElementsByTagName(Constants.JACOCO_DESTFILE);
         for (int i = 0; i < destFileNodeList.getLength(); i++) {
             destFileNodeList.item(i).getParentNode().removeChild(destFileNodeList.item(i));
+        }
+    }
+
+    /**
+     * find for any custom jacoco report path and return it
+     */
+    private static String getJacocoReportPath(Element execution) {
+
+        NodeList destFileNodeList = execution.getElementsByTagName(Constants.JACOCO_DESTFILE);
+        if (destFileNodeList.getLength() > 0) {
+            return destFileNodeList.item(0).getTextContent();
+        }
+        else {
+            return Constants.DEFAULT_JACOCO_REPORT_PATH;
         }
     }
 }

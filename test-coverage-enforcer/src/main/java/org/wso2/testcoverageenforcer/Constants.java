@@ -41,6 +41,7 @@ public class Constants {
     public static final String MAVEN_TAG_ARTIFACT_ID = "artifactId";
     public static final String MAVEN_TAG_EXECUTIONS = "executions";
     public static final String MAVEN_TAG_PLUGINS = "plugins";
+    public static final String JACOCO_TAG_REPORT_READ = "dataFile";
     public static final String JACOCO_DESTFILE = "destFile";
     public static final String GIT_PR_TITLE = "Integration of Jacoco coverage check";
     public static final String GIT_PR_MASTER = "master";
@@ -78,4 +79,5 @@ public class Constants {
     public static final String GIT_USERNAME = "test-coverage-enforce-bot";
     public static final String GIT_PASSWORD = "coverageenforce1";
     public static final String GIT_EMAIL = "coverage.enforce.bot@gmail.com";
+    public static final String DEFAULT_JACOCO_REPORT_PATH = "target/jacoco.exec";
 }
