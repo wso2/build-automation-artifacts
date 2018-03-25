@@ -24,6 +24,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.wso2.testcoverageenforcer.Application;
 import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.FileHandler.TemplateReader;
 import org.xml.sax.SAXException;
@@ -38,7 +39,7 @@ import javax.xml.parsers.ParserConfigurationException;
  */
 public class JacocoCoverage {
 
-    public static final Log log = LogFactory.getLog(JacocoCoverage.class);
+    public static final Log log = LogFactory.getLog(Application.class);
 
     /**
      * Given Document model and a plugins node in that Document,

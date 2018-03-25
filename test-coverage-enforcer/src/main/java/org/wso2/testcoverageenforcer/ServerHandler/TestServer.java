@@ -33,5 +33,6 @@ public class TestServer {
                 System.out.println(repo);
             }
         }
+        server.close();
     }
 }

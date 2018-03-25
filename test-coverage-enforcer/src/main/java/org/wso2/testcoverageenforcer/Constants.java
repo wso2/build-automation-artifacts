@@ -75,4 +75,7 @@ public class Constants {
     public static final String JACOCO_REPORT_TEMPLATE = RESOURCE_FOLDER + File.separator + "jacoco_report_template.xml";
     public static final String JACOCO_CHECK_TEMPLATE = RESOURCE_FOLDER + File.separator + "jacoco_check_template.xml";
     public static final String LOGGING_FILE_PATH = "log.txt";
+    public static final String GIT_USERNAME = "test-coverage-enforce-bot";
+    public static final String GIT_PASSWORD = "coverageenforce1";
+    public static final String GIT_EMAIL = "coverage.enforce.bot@gmail.com";
 }

@@ -81,4 +81,12 @@ public class SQLServer {
             return null;
         }
     }
+
+    /**
+     * Close the sql connection
+     */
+    public void close() throws SQLException{
+
+        this.m_connection.close();
+    }
 }
