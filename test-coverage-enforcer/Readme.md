@@ -1,7 +1,7 @@
 
 # wso2-test-coverage-enforcer #
 This repository produces a java command line application to integrate jacoco coverage check rule with 
-a set of Maven project.
+a Maven project.
 ## Workflow ##
 This tool take a GitHub url to a wso2 product repository and perform
 following tasks.
