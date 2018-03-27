@@ -28,6 +28,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.wso2.testcoverageenforcer.GitHubHandler.Jacoco.CoverageCheckEnforcer;
 import org.xml.sax.SAXException;
 
@@ -42,7 +43,7 @@ public class Application {
 
     public static final Log log = LogFactory.getLog(Application.class);
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args){
 
         Options options = new Options();
         options.addOption(
@@ -132,6 +133,8 @@ public class Application {
             log.error("Error occurred while parsing source xml file and the pom file", e);
         } catch (TransformerException e) {
             log.error("Error occurred while writing back to the pom file", e);
+        } catch (GitAPIException e){
+            log.error("Error occurred during git operation", e);
         }
     }
 }

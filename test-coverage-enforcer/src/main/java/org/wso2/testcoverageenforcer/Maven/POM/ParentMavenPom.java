@@ -37,6 +37,12 @@ import javax.xml.transform.TransformerException;
  */
 public class ParentMavenPom extends MavenPom {
 
+    /**
+     * Class constructor
+     * @param pomFilePath File path to the pom file
+     * @throws IOException            Catch errors while reading child pom files
+     * @throws XmlPullParserException Catch errors while parsing child pom files
+     */
     public ParentMavenPom(String pomFilePath) throws IOException, XmlPullParserException {
 
         super(pomFilePath);
@@ -46,6 +52,13 @@ public class ParentMavenPom extends MavenPom {
      * Read the template for 'jacoco coverage check under plugin management' and add missing nodes
      * in the pom file. If the jacoco coverage check is not present at all in the pom file, this will add
      * the whole template.
+     *
+     * @param coveragePerElement Per which element jacoco coverage check should be performed
+     * @param coverageThreshold Line coverage threshold to break the build
+     * @throws ParserConfigurationException Error while parsing the pom file
+     * @throws IOException Error reading the pom file
+     * @throws SAXException Error while parsing the pom's file input stream
+     * @throws TransformerException Error while writing pom file back
      */
     public void enforceCoverageCheckUnderPluginManagement(String coveragePerElement,
                                                           String coverageThreshold)
@@ -63,6 +76,15 @@ public class ParentMavenPom extends MavenPom {
 
     /**
      * Deep traverse through children and inherit coverage check from the parent
+     *
+     * @param children A list of child maven objects
+     * @param coveragePerElement Per which element jacoco coverage check should be performed
+     * @param coverageThreshold Line coverage threshold to break the build
+     * @throws ParserConfigurationException Error while parsing the pom file
+     * @throws IOException Error reading the pom file
+     * @throws SAXException Error while parsing the pom's file input stream
+     * @throws TransformerException Error while writing pom file back
+     * @throws XmlPullParserException Error while parsing pom xml files
      */
     public void inheritCoverageCheckInChildren(List<ChildMavenPom> children, String coveragePerElement, String coverageThreshold)
             throws SAXException, IOException, XmlPullParserException, ParserConfigurationException, TransformerException {

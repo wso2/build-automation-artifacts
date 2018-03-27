@@ -34,9 +34,10 @@ import javax.xml.transform.stream.StreamResult;
 public class DocumentWriter {
 
     /**
-     * @param xml
-     * @param targetXmlPath
-     * @throws TransformerException
+     * Write a given org.w3c.dom.Document object as a pom xml file
+     * @param xml org.w3c.dom.Document object
+     * @param targetXmlPath File path to write pom file
+     * @throws TransformerException Error occurred while writing document object to the file stream
      */
     public static void writeDocument(Document xml, String targetXmlPath) throws TransformerException {
 

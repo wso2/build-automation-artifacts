@@ -26,10 +26,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/**
+ * Represent a SQL server containing a specific table with wso2 repository information
+ * (Based on pqd_product_area_component_mapping sql dump)
+ */
 public class SQLServer {
 
     /**
-     * SQL table
+     * SQL table data
      */
     private ResultSet sqlTable;
 
@@ -40,6 +44,11 @@ public class SQLServer {
 
     /**
      * Set table data containing WSO2 repos from the server
+     *
+     * @param url SQL url to the WSO2_PRODUCT_COMPONENTS_wso2dev database
+     * @param username SQL server username
+     * @param password Sql server password
+     * @throws SQLException Error in SQL connection
      */
     public SQLServer(String url, String username, String password) throws SQLException {
 
@@ -56,6 +65,9 @@ public class SQLServer {
 
     /**
      * read next repository url
+     *
+     * @return Repository url
+     * @throws SQLException Error in SQL connection
      */
     public String getNextRepositoryURL() throws SQLException {
 
@@ -68,6 +80,10 @@ public class SQLServer {
 
     /**
      * read next repository name. Exclude specific product category
+     *
+     * @param excludes Specific product area to be ignored
+     * @return Name of the next repository
+     * @throws SQLException Error in SQL connection
      */
     public String getNextRepositoryName(char excludes) throws SQLException {
 
@@ -84,6 +100,8 @@ public class SQLServer {
 
     /**
      * Close the sql connection
+     *
+     * @throws SQLException Error in SQL connection
      */
     public void close() throws SQLException {
 

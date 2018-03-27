@@ -35,6 +35,12 @@ import javax.xml.transform.TransformerException;
  */
 public class ChildMavenPom extends MavenPom {
 
+    /**
+     * Class constructor
+     * @param pomFilePath File path to the pom file
+     * @throws IOException Error reading the pom file
+     * @throws XmlPullParserException Error while parsing pom xml
+     */
     public ChildMavenPom(String pomFilePath) throws IOException, XmlPullParserException {
 
         super(pomFilePath);
@@ -44,6 +50,14 @@ public class ChildMavenPom extends MavenPom {
      * Read the template for 'inherit jacoco coverage check from parent' and add missing nodes
      * in the pom file. If the inherit jacoco coverage check is not present at all in the pom file, this will add
      * the whole template.
+     *
+     * @param coveragePerElement
+     * @param coveragePerElement Per which element jacoco coverage check should be performed
+     * @param coverageThreshold Line coverage threshold to break the build
+     * @throws ParserConfigurationException Error while parsing the pom file
+     * @throws IOException Error reading the pom file
+     * @throws SAXException Error while parsing the pom's file input stream
+     * @throws TransformerException Error while writing pom file back
      */
     public void inheritCoverageCheckFromParent(String coveragePerElement, String coverageThreshold)
             throws ParserConfigurationException, IOException, SAXException, TransformerException {

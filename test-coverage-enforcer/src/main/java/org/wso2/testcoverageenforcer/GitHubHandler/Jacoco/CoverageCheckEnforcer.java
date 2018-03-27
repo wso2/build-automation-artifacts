@@ -32,12 +32,30 @@ import java.io.IOException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
+/**
+ * Contains methods to integrate jacoco coverage check with an existing GitHub project
+ */
 public class CoverageCheckEnforcer {
 
+    /**
+     * Log object to log each executing steps in a process
+     */
     public static final Log log = LogFactory.getLog(Application.class);
 
     /**
      * Add jacoco coverage check to an existing repo and make a pull request
+     * @param repositoryName Name of the GitHub repository to integrate coverage check in the form of 'userName/repositoryName'
+     * @param gitHubUserName User name of the GitHub account which would be used to create the pull request
+     * @param gitHubPassword Password of the GitHub account which would be used to create the pull request
+     * @param gitHubEmail Email of the GitHub account which would be used to create the pull request
+     * @param localWorkspacePath Path to the folder to be used for temporary cloning of the repository
+     * @param enablePR Create a pull request after jacoco check rule integration in the forked repository
+     * @throws IOException Error in reading xml files or while initializing GitHub repository
+     * @throws GitAPIException Error while performing GitHub operations
+     * @throws XmlPullParserException Error while parsing xml files in the jacoco integration procedure
+     * @throws TransformerException Error while writing pom file
+     * @throws SAXException Error while parsing pom file's input stream
+     * @throws ParserConfigurationException Error while parsing the pom file
      */
     public static void createPullRequestWithCoverageCheck(
             String repositoryName,
@@ -59,28 +77,23 @@ public class CoverageCheckEnforcer {
                 gitHubUserName,
                 gitHubPassword,
                 gitHubEmail);
-        try {
-            log.info("Forking..");
-            repo.gitFork();
-            repo.setWorkspace(localWorkspacePath);
-            log.info("Cloning..");
-            repo.gitClone();
-            log.info("Coverage Check addition..");
-            FeatureAdder.intergrateJacocoCoverageCheck(
-                    repo.getClonedPath(),
-                    Constants.COVERAGE_PER_ELEMENT,
-                    Constants.COVERAGE_THRESHOLD);
-            log.info("Commiting..");
-            repo.gitCommit(Constants.COMMIT_MESSAGE_COVERAGE_CHECK);
-            log.info("Pushing..");
-            repo.gitPush();
-            if (enablePR) {
-                log.info("Making a pull request..");
-                repo.gitPullRequest();
-            }
-        } finally {
-            log.info("Deleting forked repository on the GitHub..");
-            repo.gitDeleteForked();
+        log.info("Forking..");
+        repo.gitFork();
+        repo.setWorkspace(localWorkspacePath);
+        log.info("Cloning..");
+        repo.gitClone();
+        log.info("Coverage Check addition..");
+        FeatureAdder.intergrateJacocoCoverageCheck(
+                repo.getClonedPath(),
+                Constants.COVERAGE_PER_ELEMENT,
+                Constants.COVERAGE_THRESHOLD);
+        log.info("Commiting..");
+        repo.gitCommit(Constants.COMMIT_MESSAGE_COVERAGE_CHECK);
+        log.info("Pushing..");
+        repo.gitPush();
+        if (enablePR) {
+            log.info("Making a pull request..");
+            repo.gitPullRequest();
         }
     }
 }

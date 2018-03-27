@@ -33,6 +33,15 @@ public class FeatureAdder {
 
     /**
      * Deep integration of Jacoco coverage check rule with an existing multi-module maven project
+     *
+     * @param projectPath File path of the project containing parent pom file
+     * @param coveragePerElement Per which element jacoco coverage check should be performed
+     * @param coverageThreshold Line coverage threshold to break the build
+     * @throws ParserConfigurationException Error while parsing the pom file
+     * @throws IOException Error reading the pom file
+     * @throws SAXException Error while parsing the pom's file input stream
+     * @throws TransformerException Error while writing pom file back
+     * @throws XmlPullParserException Error while parsing pom xml files
      */
     public static void intergrateJacocoCoverageCheck(
             String projectPath,

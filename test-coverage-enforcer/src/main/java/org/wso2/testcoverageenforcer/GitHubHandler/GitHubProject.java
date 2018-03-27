@@ -30,7 +30,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Represent a Git project capable of from forking to make a pull request
+ * Represent a Git project
  */
 public class GitHubProject {
 
@@ -63,9 +63,13 @@ public class GitHubProject {
     private String workspacePath = "./temp";
 
     /**
-     * Initialize
+     * Class constructor
      *
      * @param repositoryName repository name as github calls it('username/reponame')
+     * @param login GitHub account user name
+     * @param password GitHub account password
+     * @param email GitHub account email for credentials
+     * @throws IOException Error while connecting with GitHub
      */
     public GitHubProject(String repositoryName, String login, String password, String email) throws IOException {
 
@@ -79,6 +83,8 @@ public class GitHubProject {
 
     /**
      * Fork a this project to a specified git user
+     *
+     * @throws IOException Error while interacting with GitHub
      */
     public void gitFork() throws IOException {
 
@@ -87,6 +93,8 @@ public class GitHubProject {
 
     /**
      * Delete forked repo
+     *
+     * @throws IOException Error while interacting with GitHub
      */
     public void gitDeleteForked() throws IOException {
 
@@ -113,6 +121,8 @@ public class GitHubProject {
 
     /**
      * Clear cloned folder
+     *
+     * @throws IOException Error while interacting with GitHub
      */
     public void gitClearClonedFolder() throws IOException {
 
@@ -123,6 +133,8 @@ public class GitHubProject {
 
     /**
      * Commit cloned repository
+     *
+     * @throws GitAPIException Error during git operation
      */
     public void gitCommit(String committingMessage) throws GitAPIException {
 
@@ -137,6 +149,9 @@ public class GitHubProject {
 
     /**
      * Push cloned repo to the forked repository master
+     *
+     * @throws IOException Error while interacting with GitHub
+     * @throws GitAPIException Error during git operation
      */
     public void gitPush() throws GitAPIException, IOException {
 
@@ -148,6 +163,8 @@ public class GitHubProject {
 
     /**
      * Request a PR for the forked repository
+     *
+     * @throws IOException Error while interacting with GitHub
      */
     public void gitPullRequest() throws IOException {
 

@@ -24,7 +24,6 @@ public class Constants {
 
     public static final String POM_NAME = "pom.xml";
     public static final String UTF_8_CHARSET_NAME = "UTF-8";
-    public static final String JACOCO_NODE_COVERAGE_CHECK_RULE = "jacoco-line-check-execution-node.xml";
     public static final String JACOCO_MAVEN_PLUGIN = "jacoco-maven-plugin";
     public static final String SUREFIRE_MAVEN_PLUGIN = "maven-surefire-plugin";
     public static final String JACOCO_GOAL_AGENT_INVOKE = "prepare-agent";

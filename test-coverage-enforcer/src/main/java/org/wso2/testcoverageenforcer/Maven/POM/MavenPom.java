@@ -108,6 +108,13 @@ abstract class MavenPom {
      * Read the template for 'jacoco coverage check under build plugin' and add missing nodes
      * in the pom file. If the jacoco coverage check is not present at all in the pom file, this will add
      * the whole template.
+     *
+     * @param coveragePerElement Per which element jacoco coverage check should be performed
+     * @param coverageThreshold Line coverage threshold to break the build
+     * @throws ParserConfigurationException Error while parsing the pom file
+     * @throws IOException Error reading the pom file
+     * @throws SAXException Error while parsing the pom's file input stream
+     * @throws TransformerException Error while writing pom file back
      */
     public void enforceCoverageCheckUnderBuildPlugins(String coveragePerElement, String coverageThreshold)
             throws TransformerException, ParserConfigurationException, IOException, SAXException {
@@ -120,13 +127,5 @@ abstract class MavenPom {
                 coveragePerElement,
                 coverageThreshold);
         DocumentWriter.writeDocument(jacocoInsertedPom, pomFilePath);
-    }
-
-    /**
-     * Get pom file path
-     */
-    public String getPomPath() {
-
-        return this.pomFilePath;
     }
 }

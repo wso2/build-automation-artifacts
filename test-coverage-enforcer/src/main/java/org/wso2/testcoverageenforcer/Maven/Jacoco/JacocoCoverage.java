@@ -47,6 +47,12 @@ public class JacocoCoverage {
      *
      * @param pom           Jacoco will be added to this document
      * @param pluginsParent Jacoco plugin will be added as a child node appended to this node
+     * @param coveragePerElement Per which element jacoco coverage check should be performed
+     * @param coverageThreshold Line coverage threshold to break the build
+     * @return Jacoco inserted pom file as an org.w3c.Document object
+     * @throws ParserConfigurationException Error while parsing the pom file
+     * @throws IOException Error reading the pom file
+     * @throws SAXException Error while parsing the pom's file input stream
      */
     public static Document insertJacocoCoverageCheck(Document pom,
                                                      String pluginsParent,
@@ -155,6 +161,14 @@ public class JacocoCoverage {
 
     /**
      * Given Document model and a plugins node in that Document, this will add jacoco plugin inheritance to the model
+     *
+     * @param pom Pom file as an org.w3c.Document object to inherit jacoco
+     * @param coveragePerElement Per which element jacoco coverage check should be performed
+     * @param coverageThreshold Line coverage threshold to break the build
+     * @return Jacoco inherited pom file as an org.w3c.Document object
+     * @throws ParserConfigurationException Error while parsing the pom file
+     * @throws IOException Error reading the pom file
+     * @throws SAXException Error while parsing the pom's file input stream
      */
     public static Document inheritCoverageCheckFromParent(Document pom,
                                                           String coveragePerElement,
@@ -253,6 +267,9 @@ public class JacocoCoverage {
      * Create <plugins> node under a given parent node name if not already exists
      * (either <build><plugins> or <build><pluginManagement><plugins>)
      * Parent node would be created under the root node of the pom if not exists.
+     * @param xml Pom file as an org.w3c.Document object
+     * @param parentNodeName Under which parent this plugins node should be created
+     * @return 'plugins' node in a pom file
      */
     private static Node createPluginsNode(Document xml, String parentNodeName) {
         // Create build node
@@ -274,7 +291,7 @@ public class JacocoCoverage {
         }
 
         // create pluginManagement under build node if required
-        if (parentNodeName == Constants.MAVEN_TAG_PLUGIN_MANAGEMENT) {
+        if (parentNodeName.equals(Constants.MAVEN_TAG_PLUGIN_MANAGEMENT)) {
             NodeList parentChildren = parent.getChildNodes();
             boolean pluginManagementExists = false;
             for (int i = 0; i < parentChildren.getLength(); i++) {
@@ -310,18 +327,10 @@ public class JacocoCoverage {
     }
 
     /**
-     * delete any existing custom jacoco report path
-     */
-    private static void deleteJacocoReportPathNodes(Element execution) {
-
-        NodeList destFileNodeList = execution.getElementsByTagName(Constants.JACOCO_DESTFILE);
-        for (int i = 0; i < destFileNodeList.getLength(); i++) {
-            destFileNodeList.item(i).getParentNode().removeChild(destFileNodeList.item(i));
-        }
-    }
-
-    /**
      * find for any custom jacoco report path and return it
+     *
+     * @param execution Under which execution element this jacoco path should be searched for
+     * @return Jacoco report file path
      */
     private static String getJacocoReportPath(Element execution) {
 
@@ -335,6 +344,9 @@ public class JacocoCoverage {
 
     /**
      * Search and return the jacoco argument line for surefire plugin if exists. Return the default if not.
+     *
+     * @param execution Under which execution element this surefire argument line should be searched for
+     * @return surefire argument line
      */
     private static String getJacocoSurefireArgLine(Element execution) {
 
@@ -349,9 +361,14 @@ public class JacocoCoverage {
     /**
      * Configure maven surefire plugin to include jacoco agent argument line
      *
+     * @param pom Pom file model to set surefire argument line
+     * @param surefirePluginAvailable Surefire plugin definition is present in the pom
      * @param surefirePlugin     Maven Surefire plugin element if exists. Otherwise this should equal to maven plugins
      *                           element
      * @param jacocoArgumentLine Name of the argument line set by jacoco plugin for Maven Surefire plugin
+     * @throws ParserConfigurationException Error while parsing the pom file
+     * @throws IOException Error reading the pom file
+     * @throws SAXException Error while parsing the pom's file input stream
      */
     private static void setSurefireArgumentLineForJacoco(Document pom,
                                                          boolean surefirePluginAvailable,
@@ -390,6 +407,16 @@ public class JacocoCoverage {
     /**
      * Inherit surefire plugin in to the child pom from the parent. If jacoco coverage is defined locally, inheritance
      * will adjust surefire for the local jacoco coverage definition
+     *
+     * @param pom Pom file model to inherit surefire argument line
+     * @param surefirePluginAvailable surefire plugin definition is present in the pom file
+     * @param surefirePlugin Maven Surefire plugin element if exists. Otherwise this should equal to maven plugins
+     *                       element
+     * @param jacocoSurefireArgLinePresent Jacoco prepare-agent execution definition is available
+     * @param jacocoArgumentLine Argument to be added
+     * @throws ParserConfigurationException Error while parsing the pom file
+     * @throws IOException Error reading the pom file
+     * @throws SAXException Error while parsing the pom's file input stream
      */
     private static void inheritSurefireArgumentLineForJacoco(Document pom,
                                                              boolean surefirePluginAvailable,
@@ -440,6 +467,8 @@ public class JacocoCoverage {
      * Check whether this pom file has already configured maven surefire plugin argument line for jacoco
      *
      * @param configuration Configuration node to search jacoco argument line
+     * @param jacocoArgumentLine Argument which should be present in the surefire definition if the pom is already configured
+     * @return Whether the pom file is pre-configured or not
      */
     private static boolean searchForPreConfiguredJacocoArgumentLine(Element configuration, String jacocoArgumentLine) {
 
@@ -454,6 +483,9 @@ public class JacocoCoverage {
 
     /**
      * Given a property name, return formatted syntax which gives the property value
+     *
+     * @param property Name of the maven property
+     * @return Dollar and parenthesis signs added maven property
      */
     private static String getArgument(String property) {
 
