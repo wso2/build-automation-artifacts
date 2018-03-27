@@ -1,0 +1,9 @@
+<execution>
+	<id>default-check</id>
+	<goals>
+		<goal>check</goal>
+	</goals>
+	<configuration>
+		<dataFile>target/jacoco.exec</dataFile>
+	</configuration>
+</execution>

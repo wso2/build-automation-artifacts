@@ -26,7 +26,6 @@ import org.wso2.testcoverageenforcer.Application;
 import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.GitHubHandler.GitHubProject;
 import org.wso2.testcoverageenforcer.Maven.FeatureAdder;
-import org.wso2.testcoverageenforcer.Maven.Jacoco.JacocoCoverage;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
@@ -36,21 +35,6 @@ import javax.xml.transform.TransformerException;
 public class CoverageCheckEnforcer {
 
     public static final Log log = LogFactory.getLog(Application.class);
-
-    public static void main(String[] args) throws IOException, GitAPIException {
-
-        try {
-            createPullRequestWithCoverageCheck("hasithajayasundara/esb-connector-ibmmq",
-                    "tharindu-bandara",
-                    Constants.temp_pass,
-                    "bandara14@live.com",
-                    "/home/tharindu/my-projects/clone-space",
-                    false);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
 
     /**
      * Add jacoco coverage check to an existing repo and make a pull request
@@ -91,10 +75,11 @@ public class CoverageCheckEnforcer {
             log.info("Pushing..");
             repo.gitPush();
             if (enablePR) {
+                log.info("Making a pull request..");
                 repo.gitPullRequest();
             }
         } finally {
-            log.info("Fork Deleting..");
+            log.info("Deleting forked repository on the GitHub..");
             repo.gitDeleteForked();
         }
     }

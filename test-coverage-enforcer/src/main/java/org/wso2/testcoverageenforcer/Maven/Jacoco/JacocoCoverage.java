@@ -55,24 +55,36 @@ public class JacocoCoverage {
             throws ParserConfigurationException, IOException, SAXException {
 
         Node plugins = createPluginsNode(pom, pluginsParent);
+        String surefireArgLine = Constants.DEFAULT_JACOCO_SUREFIRE_ARGLINE;
+        String jacocoReportFilePath = Constants.DEFAULT_JACOCO_REPORT_PATH;
         // Check for jacoco plugin existence
         Element jacocoPlugin = null;
+        Element mavenSurefirePlugin = (Element) plugins;
+        boolean surefirePluginAvailable = false;
         NodeList pluginList = plugins.getChildNodes();
         for (int i = 0; i < pluginList.getLength(); i++) {
             // Skip line breakers, white spaces etc
             if (!pluginList.item(i).getNodeName().equals(Constants.MAVEN_TAG_PLUGIN)) continue;
 
             Element plugin = (Element) pluginList.item(i);
-            if (plugin.getElementsByTagName(Constants.MAVEN_TAG_ARTIFACT_ID).item(0).getTextContent().equals(Constants.JACOCO_MAVEN_PLUGIN)) {
+            if (plugin.getElementsByTagName(Constants.MAVEN_TAG_ARTIFACT_ID).item(0)
+                    .getTextContent()
+                    .equals(Constants.JACOCO_MAVEN_PLUGIN)) {
                 jacocoPlugin = plugin;
-                break;
+            } else if (plugin.getElementsByTagName(Constants.MAVEN_TAG_ARTIFACT_ID).item(0)
+                    .getTextContent()
+                    .equals(Constants.SUREFIRE_MAVEN_PLUGIN)) {
+                mavenSurefirePlugin = plugin;
+                surefirePluginAvailable = true;
             }
         }
         if (jacocoPlugin == null) {
             // Get the root node of the xml file
             Node jacocoPluginTemplate = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_PLUGIN_TEMPLATE), true);
-            ((Element) jacocoPluginTemplate).getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0).setTextContent(coveragePerElement);
-            ((Element) jacocoPluginTemplate).getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE).item(0).setTextContent(coverageThreshold);
+            ((Element) jacocoPluginTemplate).getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0)
+                    .setTextContent(coveragePerElement);
+            ((Element) jacocoPluginTemplate).getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE).item(0)
+                    .setTextContent(coverageThreshold);
             plugins.appendChild(jacocoPluginTemplate);
             log.info("jacoco plugin added in under " + pluginsParent + " | " + pom.getDocumentURI());
 
@@ -83,7 +95,6 @@ public class JacocoCoverage {
                 jacocoPlugin.appendChild(executions);
             }
             NodeList executionsList = executions.getChildNodes();
-            String jacocoReportFilePath = Constants.DEFAULT_JACOCO_REPORT_PATH;
             Map nodeAnalysisReport = new HashMap();
             nodeAnalysisReport.put(Constants.JACOCO_GOAL_AGENT_INVOKE, false);
             nodeAnalysisReport.put(Constants.JACOCO_GOAL_REPORT, false);
@@ -93,18 +104,21 @@ public class JacocoCoverage {
                 if (!executionsList.item(i).getNodeName().equals(Constants.MAVEN_TAG_EXECUTION)) continue;
 
                 Element execution = (Element) executionsList.item(i);
-                switch (execution.getElementsByTagName(Constants.MAVEN_TAG_GOAL).item(0).getTextContent()) { // there may be multiple goals. handle that.
+                switch (execution.getElementsByTagName(Constants.MAVEN_TAG_GOAL).item(0).getTextContent()) {
                     case Constants.JACOCO_GOAL_AGENT_INVOKE:
                         nodeAnalysisReport.put(Constants.JACOCO_GOAL_AGENT_INVOKE, true);
                         jacocoReportFilePath = getJacocoReportPath(execution);
+                        surefireArgLine = getJacocoSurefireArgLine(execution);
                         break;
                     case Constants.JACOCO_GOAL_REPORT:
                         nodeAnalysisReport.put(Constants.JACOCO_GOAL_REPORT, true);
 
                         break;
                     case Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE:
-                        execution.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0).setTextContent(coveragePerElement);
-                        execution.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE).item(0).setTextContent(coverageThreshold);
+                        execution.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0)
+                                .setTextContent(coveragePerElement);
+                        execution.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE).item(0)
+                                .setTextContent(coverageThreshold);
                         nodeAnalysisReport.put(Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE, true);
 
                         break;
@@ -124,13 +138,18 @@ public class JacocoCoverage {
             if (!((boolean) nodeAnalysisReport.get(Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE))) {
                 Node jacocoCheckExecutionNodeTemplate = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_CHECK_TEMPLATE), true);
                 Element jacocoCheckExecutionElementTemplate = (Element) jacocoCheckExecutionNodeTemplate;
-                jacocoCheckExecutionElementTemplate.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0).setTextContent(coveragePerElement);
-                jacocoCheckExecutionElementTemplate.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE).item(0).setTextContent(coverageThreshold);
-                jacocoCheckExecutionElementTemplate.getElementsByTagName(Constants.JACOCO_TAG_REPORT_READ).item(0).setTextContent(jacocoReportFilePath);
+                jacocoCheckExecutionElementTemplate.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0)
+                        .setTextContent(coveragePerElement);
+                jacocoCheckExecutionElementTemplate.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE).item(0)
+                        .setTextContent(coverageThreshold);
+                jacocoCheckExecutionElementTemplate.getElementsByTagName(Constants.JACOCO_TAG_REPORT_READ).item(0)
+                        .setTextContent(jacocoReportFilePath);
                 executions.appendChild(jacocoCheckExecutionNodeTemplate);
                 log.info("Check added in " + pluginsParent + " | " + pom.getDocumentURI());
             }
         }
+
+        setSurefireArgumentLineForJacoco(pom, surefirePluginAvailable, mavenSurefirePlugin, surefireArgLine);
         return pom;
     }
 
@@ -145,6 +164,8 @@ public class JacocoCoverage {
         Node plugins = createPluginsNode(pom, Constants.MAVEN_TAG_BUILD);
         // Check for jacoco plugin existence
         Element inheritedJacocoPlugin = null;
+        Node inheritedSurefirePlugin = plugins;
+        boolean surefirePluginAvailable = false;
         NodeList pluginList = plugins.getChildNodes();
         for (int i = 0; i < pluginList.getLength(); i++) {
             // Skip line breakers, white spaces etc
@@ -154,9 +175,17 @@ public class JacocoCoverage {
             // Every plugin has an 'artifactId'
             if (plugin.getElementsByTagName(Constants.MAVEN_TAG_ARTIFACT_ID).item(0).getTextContent().equals(Constants.JACOCO_MAVEN_PLUGIN)) {
                 inheritedJacocoPlugin = plugin;
-                break;
+            } else if (plugin.getElementsByTagName(Constants.MAVEN_TAG_ARTIFACT_ID).item(0).getTextContent().equals(Constants.SUREFIRE_MAVEN_PLUGIN)) {
+                surefirePluginAvailable = true;
+                inheritedSurefirePlugin = plugin;
             }
         }
+
+        boolean jacocoReportFilePathPresent = false;
+        boolean jacocoSurefireArgLinePresent = false;
+        String jacocoReportFilePath = null;
+        String jacocoSurefireArgLine = null;
+        Element jacocoCheckElement = null;
         if (inheritedJacocoPlugin == null) {
             // Get the root node of the xml file
             Node inheritedJacocoPluginTemplate = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_INHERITED_PLUGIN_TEMPLATE), true);
@@ -176,17 +205,47 @@ public class JacocoCoverage {
                     Element execution = (Element) executionsList.item(i);
                     switch (execution.getElementsByTagName(Constants.MAVEN_TAG_GOAL).item(0).getTextContent()) {
                         case Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE:
+                            jacocoCheckElement = execution;
                             execution.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0).setTextContent(coveragePerElement);
                             execution.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE).item(0).setTextContent(coverageThreshold);
                             log.info("Coverage Thresholds changed");
                             break;
                         case Constants.JACOCO_GOAL_AGENT_INVOKE:
-                            deleteJacocoReportPathNodes(execution);
+                            NodeList dataFiles = execution.getElementsByTagName(Constants.JACOCO_DESTFILE);
+                            jacocoReportFilePathPresent = true;
+                            if (dataFiles.getLength() > 0) {
+                                jacocoReportFilePath = dataFiles.item(0).getTextContent();
+                            } else {
+                                jacocoReportFilePath = Constants.DEFAULT_JACOCO_REPORT_PATH;
+                            }
+                            NodeList surefireArguments = execution.getElementsByTagName(Constants.JACOCO_TAG_SUREFIRE_ARGLINE_NAME);
+                            jacocoSurefireArgLinePresent = true;
+                            if (surefireArguments.getLength() > 0) {
+                                jacocoSurefireArgLine = surefireArguments.item(0).getTextContent();
+                            } else {
+                                jacocoSurefireArgLine = Constants.DEFAULT_JACOCO_SUREFIRE_ARGLINE;
+                            }
                             break;
                     }
                 }
+                // Jacoco Check rule is not present but locally changed report generation path is detected. Then
+                // change jacoco report path in the inherited check rule from the parent
+                if ((jacocoCheckElement == null) && (jacocoReportFilePathPresent)) {
+                    Node jacocoCheckInheritance = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_CHECK_INHERIT_TEMPLATE), true);
+                    Element jacocoCheckInheritanceTemplate = (Element) jacocoCheckInheritance;
+                    jacocoCheckInheritanceTemplate.getElementsByTagName(Constants.JACOCO_TAG_REPORT_READ).item(0).setTextContent(jacocoReportFilePath);
+                    executions.appendChild(jacocoCheckInheritance);
+                }
             }
         }
+
+        inheritSurefireArgumentLineForJacoco(
+                pom,
+                surefirePluginAvailable,
+                inheritedSurefirePlugin,
+                jacocoSurefireArgLinePresent,
+                jacocoSurefireArgLine);
+
         return pom;
     }
 
@@ -269,9 +328,135 @@ public class JacocoCoverage {
         NodeList destFileNodeList = execution.getElementsByTagName(Constants.JACOCO_DESTFILE);
         if (destFileNodeList.getLength() > 0) {
             return destFileNodeList.item(0).getTextContent();
-        }
-        else {
+        } else {
             return Constants.DEFAULT_JACOCO_REPORT_PATH;
         }
+    }
+
+    /**
+     * Search and return the jacoco argument line for surefire plugin if exists. Return the default if not.
+     */
+    private static String getJacocoSurefireArgLine(Element execution) {
+
+        NodeList destFileNodeList = execution.getElementsByTagName(Constants.JACOCO_TAG_SUREFIRE_ARGLINE_NAME);
+        if (destFileNodeList.getLength() > 0) {
+            return destFileNodeList.item(0).getTextContent();
+        } else {
+            return Constants.DEFAULT_JACOCO_SUREFIRE_ARGLINE;
+        }
+    }
+
+    /**
+     * Configure maven surefire plugin to include jacoco agent argument line
+     *
+     * @param surefirePlugin     Maven Surefire plugin element if exists. Otherwise this should equal to maven plugins
+     *                           element
+     * @param jacocoArgumentLine Name of the argument line set by jacoco plugin for Maven Surefire plugin
+     */
+    private static void setSurefireArgumentLineForJacoco(Document pom,
+                                                         boolean surefirePluginAvailable,
+                                                         Element surefirePlugin,
+                                                         String jacocoArgumentLine)
+            throws ParserConfigurationException, IOException, SAXException {
+
+        // If plugin is not present, surefirePlugin is equal to 'plugins' node in the pom file. Hence append extracted surefire template to it
+        if (!surefirePluginAvailable) {
+            Node surefirePluginTemplate = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_SUREFIRE_PLUGIN_TEMPLATE), true);
+            surefirePlugin.appendChild(surefirePluginTemplate);
+            log.info("Appending Maven Surefire plugin");
+        } else {
+            // Multiple configuration nodes could be present. Scan each one of them and add jacoco argument line if not configured
+            NodeList configurationNodes = surefirePlugin.getElementsByTagName(Constants.MAVEN_TAG_CONFIGURATION);
+
+            for (int i = 0; i < configurationNodes.getLength(); i++) {
+                // If jacoco argument line is already set, skip the procedure
+                if (searchForPreConfiguredJacocoArgumentLine((Element) configurationNodes.item(i), jacocoArgumentLine)) {
+                    return;
+                }
+            }
+            // Add new argument line
+            Node configurationNode;
+            if (configurationNodes.getLength() == 0) {
+                configurationNode = pom.createElement(Constants.MAVEN_TAG_CONFIGURATION);
+            } else {
+                configurationNode = configurationNodes.item(0);
+            }
+            Node jacocoArgumentLineForSurefire = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_SUREFIRE_ARGLINE_TEMPLATE), true);
+            configurationNode.appendChild(jacocoArgumentLineForSurefire);
+            log.info("Modified argument line in the existing Maven Surefire plugin");
+        }
+    }
+
+    /**
+     * Inherit surefire plugin in to the child pom from the parent. If jacoco coverage is defined locally, inheritance
+     * will adjust surefire for the local jacoco coverage definition
+     */
+    private static void inheritSurefireArgumentLineForJacoco(Document pom,
+                                                             boolean surefirePluginAvailable,
+                                                             Node surefirePlugin,
+                                                             boolean jacocoSurefireArgLinePresent,
+                                                             String jacocoArgumentLine)
+            throws ParserConfigurationException, IOException, SAXException {
+
+        if (!surefirePluginAvailable) { //maven surefire plugin is not defined in the child
+            if (!jacocoSurefireArgLinePresent) { //Jacoco prepare-agent execution in not present
+                Node simplyInheritSurefire = pom.importNode(TemplateReader.extractTemplate(Constants.SUREFIRE_SIMPLE_INHERIT_TEMPLATE), true);
+                surefirePlugin.appendChild(simplyInheritSurefire);
+            } else { // Replace 'argLine' in surefire inheritance with local value
+                Node InheritAndAugmentSurefire = pom.importNode(TemplateReader.extractTemplate(Constants.SUREFIRE_INHERIT_WITH_ARGLINE_TEMPLATE), true);
+                Element InheritAndAugmentSurefireElement = (Element) InheritAndAugmentSurefire;
+                InheritAndAugmentSurefireElement
+                        .getElementsByTagName(Constants.SUREFIRE_TAG_ARGLINE)
+                        .item(0)
+                        .setTextContent(getArgument(jacocoArgumentLine));
+                surefirePlugin.appendChild(InheritAndAugmentSurefireElement);
+            }
+            log.info("Inherited Maven Surefire plugin from the parent ");
+        } else { //Maven surefire plugin definition is available
+            if (jacocoSurefireArgLinePresent) { //jacoco prepare-agent execution is available
+                Element surefirePluginElement = (Element) surefirePlugin;
+                NodeList argLines = surefirePluginElement.getElementsByTagName(Constants.SUREFIRE_TAG_ARGLINE);
+                for (int i = 0; i < argLines.getLength(); i++) {
+                    if (argLines.item(i).getTextContent().contains(getArgument(jacocoArgumentLine))) {
+                        return;
+                    }
+                }
+                NodeList configurations = surefirePluginElement.getElementsByTagName(Constants.MAVEN_TAG_CONFIGURATION);
+                Node configuration;
+                if (configurations.getLength() == 0) {
+                    configuration = pom.createElement(Constants.MAVEN_TAG_CONFIGURATION);
+                } else {
+                    configuration = configurations.item(0);
+                }
+                Node argLine = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_SUREFIRE_ARGLINE_TEMPLATE), true);
+                argLine.setTextContent(argLine.getTextContent().replace(getArgument(Constants.DEFAULT_JACOCO_SUREFIRE_PROPERTY_NAME), getArgument(jacocoArgumentLine)));
+                configuration.appendChild(argLine);
+                log.info("Modified Maven Surefire argument line in the child");
+            }
+        }
+    }
+
+    /**
+     * Check whether this pom file has already configured maven surefire plugin argument line for jacoco
+     *
+     * @param configuration Configuration node to search jacoco argument line
+     */
+    private static boolean searchForPreConfiguredJacocoArgumentLine(Element configuration, String jacocoArgumentLine) {
+
+        NodeList arguments = configuration.getElementsByTagName(Constants.SUREFIRE_TAG_ARGLINE);
+        for (int i = 0; i < arguments.getLength(); i++) {
+            if (arguments.item(i).getTextContent().contains(getArgument(jacocoArgumentLine))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Given a property name, return formatted syntax which gives the property value
+     */
+    private static String getArgument(String property) {
+
+        return "${" + property + "}";
     }
 }

@@ -8,6 +8,9 @@
 			<goals>
 				<goal>prepare-agent</goal>
 			</goals>
+			<configuration>	
+				<propertyName>surefireArgLine</propertyName>
+			</configuration>
 		</execution>
 		<execution>
 			<id>default-report</id>

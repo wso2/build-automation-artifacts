@@ -87,6 +87,9 @@
                         <goals>
                             <goal>repackage</goal>
                         </goals>
+                        <configuration>
+                            <mainClass>org.wso2.testcoverageenforcer.Application</mainClass>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

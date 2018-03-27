@@ -26,6 +26,7 @@ public class Constants {
     public static final String UTF_8_CHARSET_NAME = "UTF-8";
     public static final String JACOCO_NODE_COVERAGE_CHECK_RULE = "jacoco-line-check-execution-node.xml";
     public static final String JACOCO_MAVEN_PLUGIN = "jacoco-maven-plugin";
+    public static final String SUREFIRE_MAVEN_PLUGIN = "maven-surefire-plugin";
     public static final String JACOCO_GOAL_AGENT_INVOKE = "prepare-agent";
     public static final String JACOCO_GOAL_COVERAGE_RULE_INVOKE = "check";
     public static final String JACOCO_GOAL_REPORT = "report";
@@ -41,7 +42,10 @@ public class Constants {
     public static final String MAVEN_TAG_ARTIFACT_ID = "artifactId";
     public static final String MAVEN_TAG_EXECUTIONS = "executions";
     public static final String MAVEN_TAG_PLUGINS = "plugins";
+    public static final String MAVEN_TAG_CONFIGURATION = "configuration";
+    public static final String SUREFIRE_TAG_ARGLINE = "argLine";
     public static final String JACOCO_TAG_REPORT_READ = "dataFile";
+    public static final String JACOCO_TAG_SUREFIRE_ARGLINE_NAME = "propertyName";
     public static final String JACOCO_DESTFILE = "destFile";
     public static final String GIT_PR_TITLE = "Integration of Jacoco coverage check";
     public static final String GIT_PR_MASTER = "master";
@@ -68,16 +72,22 @@ public class Constants {
     public static final String SQL_TABLE = "PRODUCT_REPOS";
     public static final String SQL_REPO_COLLUMN = "REPO_URL";
     public static final String SQL_REPO_PRODUCT = "PRODUCT_ID";
-    public static final String temp_pass = "Incoparation1!";
+    public static final String LOGGING_FILE_PATH = "log.txt";
+    public static final String GIT_USERNAME = "test-coverage-enforce-bot";
+    public static final String GIT_PASSWORD = "coverageenforce1";
+    public static final String GIT_EMAIL = "coverage.enforce.bot@gmail.com";
+    public static final String DEFAULT_JACOCO_REPORT_PATH = "target/jacoco.exec";
+    public static final String DEFAULT_JACOCO_SUREFIRE_ARGLINE = "argLine";
+    public static final String DEFAULT_JACOCO_SUREFIRE_PROPERTY_NAME = "surefireArgLine";
     private static final String RESOURCE_FOLDER = "src" + File.separator + "main" + File.separator + "resources";
     public static final String JACOCO_INHERITED_PLUGIN_TEMPLATE = RESOURCE_FOLDER + File.separator + "jacoco_inherited_plugin_template.xml";
     public static final String JACOCO_PLUGIN_TEMPLATE = RESOURCE_FOLDER + File.separator + "jacoco_plugin_template.xml";
     public static final String JACOCO_PREPARE_AGENT_TEMPLATE = RESOURCE_FOLDER + File.separator + "jacoco_prepare_agent_template.xml";
     public static final String JACOCO_REPORT_TEMPLATE = RESOURCE_FOLDER + File.separator + "jacoco_report_template.xml";
     public static final String JACOCO_CHECK_TEMPLATE = RESOURCE_FOLDER + File.separator + "jacoco_check_template.xml";
-    public static final String LOGGING_FILE_PATH = "log.txt";
-    public static final String GIT_USERNAME = "test-coverage-enforce-bot";
-    public static final String GIT_PASSWORD = "coverageenforce1";
-    public static final String GIT_EMAIL = "coverage.enforce.bot@gmail.com";
-    public static final String DEFAULT_JACOCO_REPORT_PATH = "target/jacoco.exec";
+    public static final String JACOCO_SUREFIRE_PLUGIN_TEMPLATE = RESOURCE_FOLDER + File.separator + "surefire_plugin_template.xml";
+    public static final String JACOCO_SUREFIRE_ARGLINE_TEMPLATE = RESOURCE_FOLDER + File.separator + "jacoco_surefire_argument_line_template.xml";
+    public static final String JACOCO_CHECK_INHERIT_TEMPLATE = RESOURCE_FOLDER + File.separator + "jacoco_check_inheritance_template.xml";
+    public static final String SUREFIRE_SIMPLE_INHERIT_TEMPLATE = RESOURCE_FOLDER + File.separator + "surefire_simple_inherit.xml";
+    public static final String SUREFIRE_INHERIT_WITH_ARGLINE_TEMPLATE = RESOURCE_FOLDER + File.separator + "surefire_inherit_with_arg_line.xml";
 }

@@ -85,7 +85,7 @@ public class SQLServer {
     /**
      * Close the sql connection
      */
-    public void close() throws SQLException{
+    public void close() throws SQLException {
 
         this.m_connection.close();
     }

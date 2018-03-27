@@ -27,16 +27,11 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.maven.model.Model;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.wso2.testcoverageenforcer.FileHandler.POMReader;
 import org.wso2.testcoverageenforcer.GitHubHandler.Jacoco.CoverageCheckEnforcer;
-import org.wso2.testcoverageenforcer.ServerHandler.SQLServer;
 import org.xml.sax.SAXException;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -50,12 +45,36 @@ public class Application {
     public static void main(String[] args) throws Exception {
 
         Options options = new Options();
-        options.addOption("h", "help",false, "Get help with usage");
-        options.addOption("r","repository",true,"GitHub repository name to add coverage check(Format: 'username/repositoryname')");
-        options.addOption("w", "workspacePath",true, "Folder to temporally clone the repository during the procedure");
-        options.addOption("t","threshold",true,"Line coverage threshold to break the build(float value between 0 and 1)");
-        options.addOption("e","element",true,"Per which element this coverage check should be performed(BUNDLE, PACKAGE, CLASS, SOURCEFILE or METHOD)");
-
+        options.addOption(
+                "h",
+                "help",
+                false,
+                "Get help with usage");
+        options.addOption(
+                "r",
+                "repository",
+                true,
+                "GitHub repository name to add coverage check(Format: 'username/repositoryname')");
+        options.addOption(
+                "w",
+                "workspacePath",
+                true,
+                "Folder to temporally clone the repository during the procedure");
+        options.addOption(
+                "t",
+                "threshold",
+                true,
+                "Line coverage threshold to break the build(float value between 0 and 1)");
+        options.addOption(
+                "e",
+                "element",
+                true,
+                "Per which element this coverage check should be performed(BUNDLE, PACKAGE, CLASS, SOURCEFILE or METHOD)");
+        options.addOption(
+                "p",
+                "pullRequest",
+                true,
+                "Make a pull request once changes are done(boolean value: true or false)");
         CommandLineParser parser = new BasicParser();
         CommandLine line;
         String[] arguments = new String[5];
@@ -64,8 +83,8 @@ public class Application {
         try {
             line = parser.parse(options, args);
 
-            if(line.hasOption("h")){
-                help.printHelp("java -jar test-coverage-enforcer-1.0-SNAPSHOT.jar", options,true);
+            if (line.hasOption("h")) {
+                help.printHelp("java -jar test-coverage-enforcer-1.0-SNAPSHOT.jar", options, true);
                 return;
             }
             if (line.hasOption("r")) {
@@ -88,25 +107,31 @@ public class Application {
             } else {
                 throw new MissingOptionException("Missing workspace path");
             }
+            if (line.hasOption("p")) {
+                arguments[4] = line.getOptionValue("p");
+            }
+            else {
+                throw new MissingOptionException("Missing pull request information");
+            }
             log.info("Enforcing coverage on " + arguments[0]);
-            CoverageCheckEnforcer.createPullRequestWithCoverageCheck(arguments[0],
+            CoverageCheckEnforcer.createPullRequestWithCoverageCheck(
+                    arguments[0],
                     Constants.GIT_USERNAME,
                     Constants.GIT_PASSWORD,
                     Constants.GIT_EMAIL,
                     arguments[3],
-                    true);
-        }
-        catch (ParseException e){
+                    Boolean.parseBoolean(arguments[4]));
+        } catch (ParseException e) {
             log.error("Arguments parsing error: " + e.getMessage(), e);
         } catch (IOException e) {
             log.error("Cannot read the parent POM", e);
-        } catch (XmlPullParserException e){
+        } catch (XmlPullParserException e) {
             log.error("Error occurred while parsing the pom file", e);
-        } catch (ParserConfigurationException e){
+        } catch (ParserConfigurationException e) {
             log.error("Error occurred due to a serious configuration error in 'javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder()'", e);
-        } catch (SAXException e){
+        } catch (SAXException e) {
             log.error("Error occurred while parsing source xml file and the pom file", e);
-        } catch (TransformerException e){
+        } catch (TransformerException e) {
             log.error("Error occurred while writing back to the pom file", e);
         }
     }
