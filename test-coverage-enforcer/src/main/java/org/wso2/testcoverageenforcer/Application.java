@@ -109,8 +109,7 @@ public class Application {
             }
             if (line.hasOption("p")) {
                 arguments[4] = line.getOptionValue("p");
-            }
-            else {
+            } else {
                 throw new MissingOptionException("Missing pull request information");
             }
             log.info("Enforcing coverage on " + arguments[0]);

@@ -20,11 +20,10 @@ package org.wso2.testcoverageenforcer.GitHubHandler.Jacoco;
 
 import org.eclipse.jgit.api.errors.GitAPIException;
 
-import org.wso2.testcoverageenforcer.GitHubHandler.Jacoco.CoverageCheckEnforcer;
-
 import java.io.IOException;
 
 public class testPullRequest {
+
     public static void main(String[] args) throws IOException, GitAPIException {
 
         try {
