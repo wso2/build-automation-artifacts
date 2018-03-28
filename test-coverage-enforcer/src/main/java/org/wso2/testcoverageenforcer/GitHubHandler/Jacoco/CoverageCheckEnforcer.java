@@ -63,30 +63,43 @@ public class CoverageCheckEnforcer {
             String gitHubPassword,
             String gitHubEmail,
             String localWorkspacePath,
-            boolean enablePR)
+            boolean enablePR,
+            boolean automaticCoverageThreshold)
             throws
             IOException,
             GitAPIException,
             XmlPullParserException,
             TransformerException,
             SAXException,
-            ParserConfigurationException {
+            ParserConfigurationException,
+            InterruptedException{
 
         GitHubProject repo = new GitHubProject(
                 repositoryName,
                 gitHubUserName,
                 gitHubPassword,
                 gitHubEmail);
+        //If the repository is inactive for a time span of interest, ignore the procedure
+        if (!(repo.getActiveStatus(Constants.GIT_TIME_PERIOD_OF_INTEREST))) {
+            log.error("Inactive repository for the past six months. Aborting procedure for this repository");
+            return;
+        }
         log.info("Forking..");
         repo.gitFork();
         repo.setWorkspace(localWorkspacePath);
         log.info("Cloning..");
         repo.gitClone();
         log.info("Coverage Check addition..");
-        FeatureAdder.intergrateJacocoCoverageCheck(
-                repo.getClonedPath(),
-                Constants.COVERAGE_PER_ELEMENT,
-                Constants.COVERAGE_THRESHOLD);
+        if (!automaticCoverageThreshold) {
+            FeatureAdder.intergrateJacocoCoverageCheck(
+                    repo.getClonedPath(),
+                    Constants.COVERAGE_PER_ELEMENT,
+                    Constants.COVERAGE_THRESHOLD);
+        }
+        else {
+            FeatureAdder.intergrateJacocoCoverageCheck(
+                    repo.getClonedPath());
+        }
         log.info("Commiting..");
         repo.gitCommit(Constants.COMMIT_MESSAGE_COVERAGE_CHECK);
         log.info("Pushing..");

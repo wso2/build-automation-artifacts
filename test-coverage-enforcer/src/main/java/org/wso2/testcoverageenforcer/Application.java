@@ -65,7 +65,8 @@ public class Application {
                 "t",
                 "threshold",
                 true,
-                "Line coverage threshold to break the build(float value between 0 and 1)");
+                "Line coverage threshold to break the build(float value between 0 and 1). If this parameter" +
+                        "is not available then existing line coverage percentage will be used as the coverage threshold");
         options.addOption(
                 "e",
                 "element",
@@ -80,6 +81,8 @@ public class Application {
         CommandLine line;
         String[] arguments = new String[5];
         HelpFormatter help = new HelpFormatter();
+        //If user did not input coverage threshold, current available coverage ration will be set
+        boolean automaticCoverageThreshold = false;
 
         try {
             line = parser.parse(options, args);
@@ -96,7 +99,7 @@ public class Application {
             if (line.hasOption("t")) {
                 arguments[1] = line.getOptionValue("t");
             } else {
-                throw new MissingOptionException("Missing threshold value");
+                automaticCoverageThreshold = true;
             }
             if (line.hasOption("e")) {
                 arguments[2] = line.getOptionValue("e");
@@ -120,7 +123,8 @@ public class Application {
                     Constants.GIT_PASSWORD,
                     Constants.GIT_EMAIL,
                     arguments[3],
-                    Boolean.parseBoolean(arguments[4]));
+                    Boolean.parseBoolean(arguments[4]),
+                    automaticCoverageThreshold);
         } catch (ParseException e) {
             log.error("Arguments parsing error: " + e.getMessage(), e);
         } catch (IOException e) {
@@ -135,6 +139,8 @@ public class Application {
             log.error("Error occurred while writing back to the pom file", e);
         } catch (GitAPIException e){
             log.error("Error occurred during git operation", e);
+        } catch (InterruptedException e) {
+            log.error("Project build interrupted", e);
         }
     }
 }

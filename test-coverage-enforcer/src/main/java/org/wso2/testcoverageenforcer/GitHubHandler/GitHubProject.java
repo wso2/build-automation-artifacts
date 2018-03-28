@@ -22,12 +22,17 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
+import org.kohsuke.github.PagedIterable;
 import org.wso2.testcoverageenforcer.Constants;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.concurrent.CompletionService;
 
 /**
  * Represent a Git project
@@ -204,5 +209,40 @@ public class GitHubProject {
             default:
                 return null;
         }
+    }
+
+    /**
+     * Check whether this repository is active within a given period of time
+     *
+     * @param timePeriodOfInterest Up to which number of months activity is considered
+     * @throws IOException Error occurred during date fetching
+     */
+    public boolean getActiveStatus(int timePeriodOfInterest) throws IOException{
+
+        //Check a Fixed number of commits ordered from latest to oldest and count the number of recent commits
+        PagedIterable<GHCommit> commitsList = this.projectRepository.listCommits();
+        short recentCommitCount = 0;
+        short commitsCount = 0;
+        Calendar currentTime = Calendar.getInstance();
+        for (GHCommit commit : commitsList) {
+            if (commit.getAuthor().getLogin().equals(Constants.GIT_JENKINS_BOT)) {
+                continue;
+            }
+            if (commitsCount == Constants.GITHUB_COMMITS_OF_INTEREST_COUNT) {
+                break;
+            }
+            Calendar commitTime = Calendar.getInstance();
+            commitTime.setTime(commit.getCommitDate());
+            int yearDifference = currentTime.get(Calendar.YEAR) - commitTime.get(Calendar.YEAR);
+            int monthsDifference = yearDifference * 12 + currentTime.get(Calendar.MONTH) - commitTime.get(Calendar.MONTH);
+            if (monthsDifference < timePeriodOfInterest) {
+                recentCommitCount++;
+            }
+            commitsCount++;
+        }
+        if (recentCommitCount < Constants.GITHUB_RECENT_COMMITS_THRESHOLD) {
+            return false;
+        }
+        return true;
     }
 }

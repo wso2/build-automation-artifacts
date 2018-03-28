@@ -20,11 +20,15 @@ package org.wso2.testcoverageenforcer.Maven.POM;
 
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.w3c.dom.Document;
+import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentReader;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentWriter;
+import org.wso2.testcoverageenforcer.Maven.Jacoco.CoverageReportReader;
 import org.wso2.testcoverageenforcer.Maven.Jacoco.JacocoCoverage;
 import org.xml.sax.SAXException;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -69,5 +73,20 @@ public class ChildMavenPom extends MavenPom {
                 coveragePerElement,
                 coverageThreshold);
         DocumentWriter.writeDocument(jacocoInheritedPom, pomFilePath);
+    }
+
+    /**
+     * Calculate line coverage ratio for the bundle
+     *
+     * @return Combined line coverage value for all packages
+     * @throws IOException Jacoco execution file not found
+     */
+    public double getBundleCoverage() throws IOException{
+
+        String buildFolderPath = this.pomFilePath.replace(File.separator + Constants.POM_NAME, Constants.EMPTY_STRING)
+                + Constants.BUILD_TARGET_FOLDER;
+        File buildFolder = new File(buildFolderPath);
+        CoverageReportReader coverageReader = new CoverageReportReader(buildFolder);
+        return coverageReader.getCoverageThresholdForBundle();
     }
 }

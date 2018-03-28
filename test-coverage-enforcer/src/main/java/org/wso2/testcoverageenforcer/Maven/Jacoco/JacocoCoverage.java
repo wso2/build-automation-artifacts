@@ -220,8 +220,14 @@ public class JacocoCoverage {
                     switch (execution.getElementsByTagName(Constants.MAVEN_TAG_GOAL).item(0).getTextContent()) {
                         case Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE:
                             jacocoCheckElement = execution;
-                            execution.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0).setTextContent(coveragePerElement);
-                            execution.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE).item(0).setTextContent(coverageThreshold);
+                            NodeList elementList = execution.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT);
+                            NodeList minimumList = execution.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE);
+                            if (elementList.getLength() != 0) {
+                                elementList.item(0).setTextContent(coveragePerElement);
+                            }
+                            if (minimumList.getLength() != 0) {
+                                minimumList.item(0).setTextContent(coverageThreshold);
+                            }
                             log.info("Coverage Thresholds changed");
                             break;
                         case Constants.JACOCO_GOAL_AGENT_INVOKE:

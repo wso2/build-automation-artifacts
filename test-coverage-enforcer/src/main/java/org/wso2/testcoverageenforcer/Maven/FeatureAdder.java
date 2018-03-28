@@ -19,10 +19,12 @@
 package org.wso2.testcoverageenforcer.Maven;
 
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.Maven.POM.ParentMavenPom;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import javax.swing.text.Document;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -49,6 +51,51 @@ public class FeatureAdder {
             String coverageThreshold) throws IOException, XmlPullParserException, ParserConfigurationException, SAXException, TransformerException {
 
         ParentMavenPom parent = new ParentMavenPom(projectPath);
+        applyJacocoCoverageCheck(parent, coveragePerElement, coverageThreshold);
+    }
+
+    /**
+     * Deep integration of Jacoco coverage check rule with an existing multi-module maven project using existing code coverage
+     * ratio as the threshold
+     *
+     * @param projectPath File path of the project containing parent pom file
+     * @throws ParserConfigurationException Error while parsing the pom file
+     * @throws IOException Error reading the pom file
+     * @throws SAXException Error while parsing the pom's file input stream
+     * @throws TransformerException Error while writing pom file back
+     * @throws XmlPullParserException Error while parsing pom xml files
+     * @throws InterruptedException Waiting until the build to happen is failed
+     */
+    public static void intergrateJacocoCoverageCheck(
+            String projectPath)
+            throws
+            IOException,
+            XmlPullParserException,
+            ParserConfigurationException,
+            SAXException,
+            TransformerException,
+            InterruptedException {
+
+        ParentMavenPom parent = new ParentMavenPom(projectPath);
+        //Apply jacoco coverage check with zero coverage threshold per bundle in the beginning
+        String coveragePerElement = Constants.COVERAGE_PER_ELEMENT;
+        String coverageThreshold = Constants.ZERO;
+        applyJacocoCoverageCheck(parent, coveragePerElement, coverageThreshold);
+        //Build the project and get current code coverage value
+        double minimumBundleCoverageRatio = parent.buildAndCalculateMinimumBundleCoverage();
+        //Apply coverage check again with the newly calculated coverage ratio value
+        applyJacocoCoverageCheck(
+                parent,
+                coveragePerElement,
+                Double.toString(
+                        ((short)(minimumBundleCoverageRatio * Constants.DECIMAL_CONSTANT_2)) / Constants.DECIMAL_CONSTANT_2));
+    }
+
+    private static void applyJacocoCoverageCheck(ParentMavenPom parent,
+                                          String coveragePerElement,
+                                          String coverageThreshold)
+            throws IOException, XmlPullParserException, ParserConfigurationException, SAXException, TransformerException {
+
         if (parent.hasChildren()) {
             parent.enforceCoverageCheckUnderPluginManagement(coveragePerElement, coverageThreshold);
             parent.inheritCoverageCheckInChildren(parent.getChildren(), coveragePerElement, coverageThreshold);

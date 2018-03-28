@@ -42,12 +42,21 @@ public class Constants {
     public static final String MAVEN_TAG_EXECUTIONS = "executions";
     public static final String MAVEN_TAG_PLUGINS = "plugins";
     public static final String MAVEN_TAG_CONFIGURATION = "configuration";
+    public static final String MAVEN_MVN = "mvn";
+    public static final String MAVEN_CLEAN = "clean";
+    public static final String MAVEN_INSTALL = "install";
+    public static final int MAVEN_HEALTHY_BUILD = 0;
+    public static final int MAVEN_BAD_BUILD = (-1);
     public static final String SUREFIRE_TAG_ARGLINE = "argLine";
     public static final String JACOCO_TAG_REPORT_READ = "dataFile";
     public static final String JACOCO_TAG_SUREFIRE_ARGLINE_NAME = "propertyName";
     public static final String JACOCO_DESTFILE = "destFile";
     public static final String GIT_PR_TITLE = "Integration of Jacoco coverage check";
     public static final String GIT_PR_MASTER = "master";
+    public static final short GIT_TIME_PERIOD_OF_INTEREST = 6;
+    public static final short GITHUB_COMMITS_OF_INTEREST_COUNT = 8;
+    public static final short GITHUB_RECENT_COMMITS_THRESHOLD = 3;
+    public static final String GIT_JENKINS_BOT = "wso2-jenkins-bot";
     public static final String COMMIT_MESSAGE_COVERAGE_CHECK = "Jacoco Coverage Check Added";
     public static final String TEST_FOLDER = "src" + File.separator + "test";
     public static final String COVERAGE_THRESHOLD = "0.7";
@@ -88,4 +97,10 @@ public class Constants {
     public static final String JACOCO_CHECK_INHERIT_TEMPLATE = RESOURCE_FOLDER + File.separator + "jacoco_check_inheritance_template.xml";
     public static final String SUREFIRE_SIMPLE_INHERIT_TEMPLATE = RESOURCE_FOLDER + File.separator + "surefire_simple_inherit.xml";
     public static final String SUREFIRE_INHERIT_WITH_ARGLINE_TEMPLATE = RESOURCE_FOLDER + File.separator + "surefire_inherit_with_arg_line.xml";
+    public static final String BUILD_TARGET_FOLDER = File.separator + "target";
+    public static final String EMPTY_STRING = "";
+    public static final String BUILD_CLASSES_FOLDER = "classes";
+    public static final String BUILD_EXECUTION_FILE = "exec";
+    public static final String ZERO = "0";
+    public static final double DECIMAL_CONSTANT_2 = 100.0;
 }

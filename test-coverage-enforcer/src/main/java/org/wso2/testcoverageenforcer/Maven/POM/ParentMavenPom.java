@@ -18,15 +18,21 @@
 
 package org.wso2.testcoverageenforcer.Maven.POM;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.w3c.dom.Document;
+import org.wso2.testcoverageenforcer.Application;
 import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentReader;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentWriter;
 import org.wso2.testcoverageenforcer.Maven.Jacoco.JacocoCoverage;
+import org.wso2.testcoverageenforcer.Maven.Jacoco.CoverageReportReader;
 import org.xml.sax.SAXException;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -37,6 +43,7 @@ import javax.xml.transform.TransformerException;
  */
 public class ParentMavenPom extends MavenPom {
 
+    public static final Log log = LogFactory.getLog(Application.class);
     /**
      * Class constructor
      * @param pomFilePath File path to the pom file
@@ -90,7 +97,6 @@ public class ParentMavenPom extends MavenPom {
             throws SAXException, IOException, XmlPullParserException, ParserConfigurationException, TransformerException {
 
         for (ChildMavenPom child : children) {
-            //System.out.println(child.getPomPath());
             if (child.hasChildren()) {
                 inheritCoverageCheckInChildren(child.getChildren(), coveragePerElement, coverageThreshold);
             } else if (child.hasTests()) {
@@ -100,5 +106,68 @@ public class ParentMavenPom extends MavenPom {
             }
 
         }
+    }
+
+    /**
+     * Build the maven project
+     *
+     * @throws IOException IO errors occurring during the build
+     * @throws InterruptedException Current thread interrupted by another thread while waiting
+     */
+    public int buildProject() throws IOException, InterruptedException{
+
+        ProcessBuilder builder = new ProcessBuilder();
+        List<String> commands = new ArrayList<String>();
+        commands.add(Constants.MAVEN_MVN);
+        commands.add(Constants.MAVEN_CLEAN);
+        commands.add(Constants.MAVEN_INSTALL);
+        builder.command(commands);
+        builder.directory(new File(this.pomFilePath.replace(File.separator + Constants.POM_NAME, Constants.EMPTY_STRING)));
+        builder.inheritIO();
+        Process process = builder.start();
+        int exitCode = process.waitFor();
+        if (exitCode == Constants.MAVEN_HEALTHY_BUILD) {
+            return Constants.MAVEN_HEALTHY_BUILD;
+        }
+        else {
+            return Constants.MAVEN_BAD_BUILD;
+        }
+    }
+
+    /**
+     * Get minimum line coverage value in the project
+     *
+     * @return Minimum coverage ratio value among bundles
+     * @throws IOException Error in opening files
+     * @throws XmlPullParserException Error while parsing pom files
+     */
+     public double getMinimumBundleCoverage(List<ChildMavenPom> children)
+             throws IOException, XmlPullParserException {
+
+         double minimumCoverage = 1;
+         for (ChildMavenPom child : children) {
+             if (child.hasChildren()) {
+                 getMinimumBundleCoverage(child.getChildren());
+             } else if (child.hasTests()) {
+                 double bundleCoverage = child.getBundleCoverage();
+                 if (bundleCoverage < minimumCoverage) {
+                     minimumCoverage = bundleCoverage;
+                 }
+             }
+         }
+         return minimumCoverage;
+     }
+    /**
+     * Build the project with coverage check generation and calculate minimum bundle coverage
+     *
+     * @return Calculated minimum coverage value
+     * @throws IOException Error in opening files
+     * @throws XmlPullParserException Error while parsing pom files
+     * @throws InterruptedException Current thread interrupted by another thread while waiting
+     */
+    public double buildAndCalculateMinimumBundleCoverage()
+    throws IOException, XmlPullParserException, InterruptedException{
+        this.buildProject();
+        return this.getMinimumBundleCoverage(this.getChildren());
     }
 }
