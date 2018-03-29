@@ -36,11 +36,12 @@ public class TemplateReader {
 
     /**
      * Given a xml file path, read xml as org.w3c.Document model and return it's root element as a Node
+     *
      * @param xmlPath xml file path
      * @return Root element of the xml file
-     * @throws ParserConfigurationException Error while parsing the pom file
-     * @throws IOException Error reading the pom file
-     * @throws SAXException Error while parsing the pom's file input stream
+     * @throws ParserConfigurationException Error while parsing the template file
+     * @throws IOException                  Error reading the template file
+     * @throws SAXException                 Error while parsing the template's file input stream
      */
     public static Node extractTemplate(String xmlPath)
             throws ParserConfigurationException, IOException, SAXException {

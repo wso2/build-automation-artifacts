@@ -35,11 +35,12 @@ public class DocumentReader {
 
     /**
      * Read a pom XML file and parsing it to an org.w3c.dom.Document object
+     *
      * @param xmlPath File path to the pom
-     * @return  org.w3c.dom.Document object for the pom file
+     * @return org.w3c.dom.Document object for the pom file
      * @throws ParserConfigurationException Error while parsing the pom file
-     * @throws IOException Error reading the pom file
-     * @throws SAXException Error while parsing the pom's file input stream
+     * @throws IOException                  Error reading the pom file
+     * @throws SAXException                 Error while parsing the pom's file input stream
      */
     public static Document readDocument(String xmlPath) throws ParserConfigurationException, IOException, SAXException {
 

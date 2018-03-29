@@ -29,10 +29,10 @@ import org.kohsuke.github.PagedIterable;
 import org.wso2.testcoverageenforcer.Constants;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.concurrent.CompletionService;
+import java.util.Properties;
 
 /**
  * Represent a Git project
@@ -71,16 +71,16 @@ public class GitHubProject {
      * Class constructor
      *
      * @param repositoryName repository name as github calls it('username/reponame')
-     * @param login GitHub account user name
-     * @param password GitHub account password
-     * @param email GitHub account email for credentials
      * @throws IOException Error while connecting with GitHub
      */
-    public GitHubProject(String repositoryName, String login, String password, String email) throws IOException {
+    public GitHubProject(String repositoryName, String propertiesFilePath) throws IOException {
 
-        this.login = login;
-        this.password = password;
-        this.email = email;
+        Properties properties = new Properties();
+        properties.load(new FileInputStream(propertiesFilePath));
+
+        this.login = properties.getProperty(Constants.GIT_USERNAME);
+        this.password = properties.getProperty(Constants.GIT_PASSWORD);
+        this.email = properties.getProperty(Constants.GIT_EMAIL);
 
         GitHub github = GitHub.connectUsingPassword(this.login, this.password);
         this.projectRepository = github.getRepository(repositoryName);
@@ -113,7 +113,8 @@ public class GitHubProject {
 
         this.cloneFolder = new File(this.workspacePath + File.separator + this.forkedRepository.getFullName());
         if (!cloneFolder.exists()) {
-            cloneFolder.mkdir();
+            boolean mkdirStatus = cloneFolder.mkdir();
+            if (!mkdirStatus) throw new IOException();
         } else {
             FileUtils.cleanDirectory(cloneFolder);
         }
@@ -122,18 +123,6 @@ public class GitHubProject {
                 .setURI(Constants.GITHUB_URL + this.forkedRepository.getFullName() + ".git")
                 .setDirectory(cloneFolder)
                 .call();
-    }
-
-    /**
-     * Clear cloned folder
-     *
-     * @throws IOException Error while interacting with GitHub
-     */
-    public void gitClearClonedFolder() throws IOException {
-
-        if (this.cloneFolder.exists()) {
-            FileUtils.cleanDirectory(cloneFolder);
-        }
     }
 
     /**
@@ -155,7 +144,7 @@ public class GitHubProject {
     /**
      * Push cloned repo to the forked repository master
      *
-     * @throws IOException Error while interacting with GitHub
+     * @throws IOException     Error while interacting with GitHub
      * @throws GitAPIException Error during git operation
      */
     public void gitPush() throws GitAPIException, IOException {
@@ -197,27 +186,12 @@ public class GitHubProject {
     }
 
     /**
-     * get full name of the repository
-     */
-    public String getRepositoryFullName(String repoType) {
-
-        switch (repoType) {
-            case "original":
-                return this.projectRepository.getFullName();
-            case "forked":
-                return this.forkedRepository.getFullName();
-            default:
-                return null;
-        }
-    }
-
-    /**
      * Check whether this repository is active within a given period of time
      *
      * @param timePeriodOfInterest Up to which number of months activity is considered
      * @throws IOException Error occurred during date fetching
      */
-    public boolean getActiveStatus(int timePeriodOfInterest) throws IOException{
+    public boolean getActiveStatus(int timePeriodOfInterest) throws IOException {
 
         //Check a Fixed number of commits ordered from latest to oldest and count the number of recent commits
         PagedIterable<GHCommit> commitsList = this.projectRepository.listCommits();
@@ -225,8 +199,8 @@ public class GitHubProject {
         short commitsCount = 0;
         Calendar currentTime = Calendar.getInstance();
         for (GHCommit commit : commitsList) {
-            if (commit.getAuthor().getLogin().equals(Constants.GIT_JENKINS_BOT)) {
-                continue;
+            if ((commit.getAuthor() != null)) {
+                if (commit.getAuthor().getLogin().equals(Constants.GIT_JENKINS_BOT)) continue;
             }
             if (commitsCount == Constants.GITHUB_COMMITS_OF_INTEREST_COUNT) {
                 break;
@@ -240,9 +214,6 @@ public class GitHubProject {
             }
             commitsCount++;
         }
-        if (recentCommitCount < Constants.GITHUB_RECENT_COMMITS_THRESHOLD) {
-            return false;
-        }
-        return true;
+        return recentCommitCount >= Constants.GITHUB_RECENT_COMMITS_THRESHOLD;
     }
 }

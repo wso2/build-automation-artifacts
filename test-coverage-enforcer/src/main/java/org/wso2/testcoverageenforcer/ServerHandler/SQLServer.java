@@ -20,11 +20,14 @@ package org.wso2.testcoverageenforcer.ServerHandler;
 
 import org.wso2.testcoverageenforcer.Constants;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Properties;
 
 /**
  * Represent a SQL server containing a specific table with wso2 repository information
@@ -33,66 +36,51 @@ import java.sql.SQLException;
 public class SQLServer {
 
     /**
-     * SQL table data
+     * SQL table containing urls to the GitHub repositories
      */
-    private ResultSet sqlTable;
-
+    private ResultSet repositoryTableData;
     /**
-     * connection with the sql server
+     * SQL table column ID for repository urls
+     */
+    private String sqlRepositoryColumn;
+    /**
+     * connection with the SQL server
      */
     private Connection m_connection;
 
     /**
-     * Set table data containing WSO2 repos from the server
+     * Read required table containing repository urls from the server and cache it
      *
-     * @param url SQL url to the WSO2_PRODUCT_COMPONENTS_wso2dev database
-     * @param username SQL server username
-     * @param password Sql server password
+     * @param propertiesFilePath File path to the properties file
      * @throws SQLException Error in SQL connection
+     * @throws IOException  Error opening properties file
      */
-    public SQLServer(String url, String username, String password) throws SQLException {
+    public SQLServer(String propertiesFilePath) throws SQLException, IOException {
+
+        Properties properties = new Properties();
+        properties.load(new FileInputStream(propertiesFilePath));
+        this.sqlRepositoryColumn = properties.getProperty(Constants.SQL_REPO_COLLUMN);
 
         this.m_connection = DriverManager.getConnection(
-                url, username, password);
-
-        PreparedStatement stat = this.m_connection.prepareStatement(
-                "SELECT * FROM " + Constants.SQL_TABLE,
-                ResultSet.TYPE_FORWARD_ONLY,
-                ResultSet.CONCUR_READ_ONLY);
+                properties.getProperty(Constants.SQL_URL),
+                properties.getProperty(Constants.SQL_USERNAME),
+                properties.getProperty(Constants.SQL_PASSWORD));
+        PreparedStatement stat = this.m_connection.prepareStatement("SELECT * FROM " + properties.getProperty(Constants.SQL_TABLE),
+                ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         stat.setFetchSize(Integer.MIN_VALUE);
-        this.sqlTable = stat.executeQuery();
+        this.repositoryTableData = stat.executeQuery();
     }
 
     /**
-     * read next repository url
+     * Get next repository url from the cached repository table if available
      *
-     * @return Repository url
+     * @return Repository url if available. Otherwise a null value is returned.
      * @throws SQLException Error in SQL connection
      */
     public String getNextRepositoryURL() throws SQLException {
 
-        if (this.sqlTable.next()) {
-            return this.sqlTable.getString(Constants.SQL_REPO_COLLUMN);
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * read next repository name. Exclude specific product category
-     *
-     * @param excludes Specific product area to be ignored
-     * @return Name of the next repository
-     * @throws SQLException Error in SQL connection
-     */
-    public String getNextRepositoryName(char excludes) throws SQLException {
-
-        if (this.sqlTable.next()) {
-            if (!this.sqlTable.getString(Constants.SQL_REPO_PRODUCT).equals(excludes)) {
-                return this.sqlTable.getString(Constants.SQL_REPO_COLLUMN).replace(Constants.GITHUB_URL, "");
-            } else {
-                return "";
-            }
+        if (this.repositoryTableData.next()) {
+            return this.repositoryTableData.getString(sqlRepositoryColumn).replace(Constants.GITHUB_URL, Constants.EMPTY_STRING);
         } else {
             return null;
         }

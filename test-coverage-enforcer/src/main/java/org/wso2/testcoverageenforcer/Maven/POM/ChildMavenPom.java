@@ -28,7 +28,6 @@ import org.wso2.testcoverageenforcer.Maven.Jacoco.JacocoCoverage;
 import org.xml.sax.SAXException;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -41,8 +40,9 @@ public class ChildMavenPom extends MavenPom {
 
     /**
      * Class constructor
+     *
      * @param pomFilePath File path to the pom file
-     * @throws IOException Error reading the pom file
+     * @throws IOException            Error reading the pom file
      * @throws XmlPullParserException Error while parsing pom xml
      */
     public ChildMavenPom(String pomFilePath) throws IOException, XmlPullParserException {
@@ -55,13 +55,12 @@ public class ChildMavenPom extends MavenPom {
      * in the pom file. If the inherit jacoco coverage check is not present at all in the pom file, this will add
      * the whole template.
      *
-     * @param coveragePerElement
      * @param coveragePerElement Per which element jacoco coverage check should be performed
-     * @param coverageThreshold Line coverage threshold to break the build
+     * @param coverageThreshold  Line coverage threshold to break the build
      * @throws ParserConfigurationException Error while parsing the pom file
-     * @throws IOException Error reading the pom file
-     * @throws SAXException Error while parsing the pom's file input stream
-     * @throws TransformerException Error while writing pom file back
+     * @throws IOException                  Error reading the pom file
+     * @throws SAXException                 Error while parsing the pom's file input stream
+     * @throws TransformerException         Error while writing pom file back
      */
     public void inheritCoverageCheckFromParent(String coveragePerElement, String coverageThreshold)
             throws ParserConfigurationException, IOException, SAXException, TransformerException {
@@ -81,7 +80,7 @@ public class ChildMavenPom extends MavenPom {
      * @return Combined line coverage value for all packages
      * @throws IOException Jacoco execution file not found
      */
-    public double getBundleCoverage() throws IOException{
+    public double getBundleCoverage() throws IOException {
 
         String buildFolderPath = this.pomFilePath.replace(File.separator + Constants.POM_NAME, Constants.EMPTY_STRING)
                 + Constants.BUILD_TARGET_FOLDER;

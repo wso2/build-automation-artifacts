@@ -35,7 +35,8 @@ public class DocumentWriter {
 
     /**
      * Write a given org.w3c.dom.Document object as a pom xml file
-     * @param xml org.w3c.dom.Document object
+     *
+     * @param xml           org.w3c.dom.Document object
      * @param targetXmlPath File path to write pom file
      * @throws TransformerException Error occurred while writing document object to the file stream
      */

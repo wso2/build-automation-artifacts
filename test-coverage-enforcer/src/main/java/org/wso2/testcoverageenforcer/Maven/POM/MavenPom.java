@@ -50,7 +50,7 @@ abstract class MavenPom {
      * org.apache.maven.model.model representation of the pom file
      * to examine pom nodes
      */
-    Model pomFile;
+    private Model pomFile;
 
     /**
      * To initialize pom file path, pom file model and jacoco template file path
@@ -110,11 +110,11 @@ abstract class MavenPom {
      * the whole template.
      *
      * @param coveragePerElement Per which element jacoco coverage check should be performed
-     * @param coverageThreshold Line coverage threshold to break the build
+     * @param coverageThreshold  Line coverage threshold to break the build
      * @throws ParserConfigurationException Error while parsing the pom file
-     * @throws IOException Error reading the pom file
-     * @throws SAXException Error while parsing the pom's file input stream
-     * @throws TransformerException Error while writing pom file back
+     * @throws IOException                  Error reading the pom file
+     * @throws SAXException                 Error while parsing the pom's file input stream
+     * @throws TransformerException         Error while writing pom file back
      */
     public void enforceCoverageCheckUnderBuildPlugins(String coveragePerElement, String coverageThreshold)
             throws TransformerException, ParserConfigurationException, IOException, SAXException {
@@ -127,5 +127,15 @@ abstract class MavenPom {
                 coveragePerElement,
                 coverageThreshold);
         DocumentWriter.writeDocument(jacocoInsertedPom, pomFilePath);
+    }
+
+    /**
+     * Get pom file path relevant to an instance
+     *
+     * @return File path of the relevant pom file
+     */
+    public String getPomFilePath() {
+
+        return this.pomFilePath;
     }
 }

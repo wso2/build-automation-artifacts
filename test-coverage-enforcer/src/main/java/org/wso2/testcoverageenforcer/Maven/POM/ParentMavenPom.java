@@ -27,7 +27,6 @@ import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentReader;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentWriter;
 import org.wso2.testcoverageenforcer.Maven.Jacoco.JacocoCoverage;
-import org.wso2.testcoverageenforcer.Maven.Jacoco.CoverageReportReader;
 import org.xml.sax.SAXException;
 
 import java.io.File;
@@ -44,8 +43,10 @@ import javax.xml.transform.TransformerException;
 public class ParentMavenPom extends MavenPom {
 
     public static final Log log = LogFactory.getLog(Application.class);
+
     /**
      * Class constructor
+     *
      * @param pomFilePath File path to the pom file
      * @throws IOException            Catch errors while reading child pom files
      * @throws XmlPullParserException Catch errors while parsing child pom files
@@ -61,11 +62,11 @@ public class ParentMavenPom extends MavenPom {
      * the whole template.
      *
      * @param coveragePerElement Per which element jacoco coverage check should be performed
-     * @param coverageThreshold Line coverage threshold to break the build
+     * @param coverageThreshold  Line coverage threshold to break the build
      * @throws ParserConfigurationException Error while parsing the pom file
-     * @throws IOException Error reading the pom file
-     * @throws SAXException Error while parsing the pom's file input stream
-     * @throws TransformerException Error while writing pom file back
+     * @throws IOException                  Error reading the pom file
+     * @throws SAXException                 Error while parsing the pom's file input stream
+     * @throws TransformerException         Error while writing pom file back
      */
     public void enforceCoverageCheckUnderPluginManagement(String coveragePerElement,
                                                           String coverageThreshold)
@@ -84,14 +85,14 @@ public class ParentMavenPom extends MavenPom {
     /**
      * Deep traverse through children and inherit coverage check from the parent
      *
-     * @param children A list of child maven objects
+     * @param children           A list of child maven objects
      * @param coveragePerElement Per which element jacoco coverage check should be performed
-     * @param coverageThreshold Line coverage threshold to break the build
+     * @param coverageThreshold  Line coverage threshold to break the build
      * @throws ParserConfigurationException Error while parsing the pom file
-     * @throws IOException Error reading the pom file
-     * @throws SAXException Error while parsing the pom's file input stream
-     * @throws TransformerException Error while writing pom file back
-     * @throws XmlPullParserException Error while parsing pom xml files
+     * @throws IOException                  Error reading the pom file
+     * @throws SAXException                 Error while parsing the pom's file input stream
+     * @throws TransformerException         Error while writing pom file back
+     * @throws XmlPullParserException       Error while parsing pom xml files
      */
     public void inheritCoverageCheckInChildren(List<ChildMavenPom> children, String coveragePerElement, String coverageThreshold)
             throws SAXException, IOException, XmlPullParserException, ParserConfigurationException, TransformerException {
@@ -102,7 +103,7 @@ public class ParentMavenPom extends MavenPom {
             } else if (child.hasTests()) {
                 child.inheritCoverageCheckFromParent(coveragePerElement, coverageThreshold);
             } else if (!child.hasTests()) {
-                // add logging
+                log.debug("Ignoring child module due to missing tests in " + child.getPomFilePath());
             }
 
         }
@@ -111,13 +112,14 @@ public class ParentMavenPom extends MavenPom {
     /**
      * Build the maven project
      *
-     * @throws IOException IO errors occurring during the build
+     * @return Status of the build. 0 if healthy. -1 otherwise
+     * @throws IOException          IO errors occurring during the build
      * @throws InterruptedException Current thread interrupted by another thread while waiting
      */
-    public int buildProject() throws IOException, InterruptedException{
+    private int buildProject() throws IOException, InterruptedException {
 
         ProcessBuilder builder = new ProcessBuilder();
-        List<String> commands = new ArrayList<String>();
+        List<String> commands = new ArrayList<>();
         commands.add(Constants.MAVEN_MVN);
         commands.add(Constants.MAVEN_CLEAN);
         commands.add(Constants.MAVEN_INSTALL);
@@ -128,8 +130,7 @@ public class ParentMavenPom extends MavenPom {
         int exitCode = process.waitFor();
         if (exitCode == Constants.MAVEN_HEALTHY_BUILD) {
             return Constants.MAVEN_HEALTHY_BUILD;
-        }
-        else {
+        } else {
             return Constants.MAVEN_BAD_BUILD;
         }
     }
@@ -138,35 +139,37 @@ public class ParentMavenPom extends MavenPom {
      * Get minimum line coverage value in the project
      *
      * @return Minimum coverage ratio value among bundles
-     * @throws IOException Error in opening files
+     * @throws IOException            Error in opening files
      * @throws XmlPullParserException Error while parsing pom files
      */
-     public double getMinimumBundleCoverage(List<ChildMavenPom> children)
-             throws IOException, XmlPullParserException {
+    private double getMinimumBundleCoverage(List<ChildMavenPom> children)
+            throws IOException, XmlPullParserException {
 
-         double minimumCoverage = 1;
-         for (ChildMavenPom child : children) {
-             if (child.hasChildren()) {
-                 getMinimumBundleCoverage(child.getChildren());
-             } else if (child.hasTests()) {
-                 double bundleCoverage = child.getBundleCoverage();
-                 if (bundleCoverage < minimumCoverage) {
-                     minimumCoverage = bundleCoverage;
-                 }
-             }
-         }
-         return minimumCoverage;
-     }
+        double minimumCoverage = 1;
+        for (ChildMavenPom child : children) {
+            if (child.hasChildren()) {
+                getMinimumBundleCoverage(child.getChildren());
+            } else if (child.hasTests()) {
+                double bundleCoverage = child.getBundleCoverage();
+                if (bundleCoverage < minimumCoverage) {
+                    minimumCoverage = bundleCoverage;
+                }
+            }
+        }
+        return minimumCoverage;
+    }
+
     /**
      * Build the project with coverage check generation and calculate minimum bundle coverage
      *
      * @return Calculated minimum coverage value
-     * @throws IOException Error in opening files
+     * @throws IOException            Error in opening files
      * @throws XmlPullParserException Error while parsing pom files
-     * @throws InterruptedException Current thread interrupted by another thread while waiting
+     * @throws InterruptedException   Current thread interrupted by another thread while waiting
      */
     public double buildAndCalculateMinimumBundleCoverage()
-    throws IOException, XmlPullParserException, InterruptedException{
+            throws IOException, XmlPullParserException, InterruptedException {
+
         this.buildProject();
         return this.getMinimumBundleCoverage(this.getChildren());
     }

@@ -18,20 +18,18 @@
 
 package org.wso2.testcoverageenforcer.Maven.Jacoco;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.util.Iterator;
-
 import org.apache.commons.io.FileUtils;
-
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.analysis.IBundleCoverage;
 import org.jacoco.core.analysis.IPackageCoverage;
 import org.jacoco.core.tools.ExecFileLoader;
 import org.wso2.testcoverageenforcer.Constants;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Iterator;
 
 /**
  * This class represents a jacoco coverage report with a relevant jacoco execution data file and capable of
@@ -49,25 +47,27 @@ public class CoverageReportReader {
     private IBundleCoverage bundleCoverage;
 
     /**
-     * Create a new generator based for the given project.
+     * Create a new reader for the jacoco report file
      *
-     * @param projectBuildDirectory
+     * @param projectBuildDirectory Project build folder containing classes files and jacoco exec report file
      * @throws FileNotFoundException Cannot Find any jacoco execution file
      */
-    public CoverageReportReader(final File projectBuildDirectory) throws IOException{
+    public CoverageReportReader(final File projectBuildDirectory) throws IOException {
 
         this.title = new File(projectBuildDirectory.getPath().replace(Constants.BUILD_TARGET_FOLDER, Constants.EMPTY_STRING)).getName();
         Iterator<File> executionFiles = FileUtils.iterateFiles(projectBuildDirectory, new String[]{Constants.BUILD_EXECUTION_FILE}, true);
-        if (!(executionFiles.hasNext())) {throw new FileNotFoundException();}
+        if (!(executionFiles.hasNext())) {
+            throw new FileNotFoundException();
+        }
         this.executionDataFile = executionFiles.next();
-        this.classesDirectory = new File(projectBuildDirectory,  Constants.BUILD_CLASSES_FOLDER);
+        this.classesDirectory = new File(projectBuildDirectory, Constants.BUILD_CLASSES_FOLDER);
         create();
     }
 
     /**
      * Create the report.
      *
-     * @throws IOException
+     * @throws IOException Error reading Jacoco execution data file
      */
     private void create() throws IOException {
 
@@ -85,11 +85,13 @@ public class CoverageReportReader {
     }
 
     private void loadExecutionData() throws IOException {
+
         execFileLoader = new ExecFileLoader();
         execFileLoader.load(executionDataFile);
     }
 
     private IBundleCoverage analyzeStructure() throws IOException {
+
         final CoverageBuilder coverageBuilder = new CoverageBuilder();
         final Analyzer analyzer = new Analyzer(
                 execFileLoader.getExecutionDataStore(), coverageBuilder);
@@ -118,7 +120,7 @@ public class CoverageReportReader {
 
         Iterator<IPackageCoverage> packageIterator = this.bundleCoverage.getPackages().iterator();
         double minimumCoverageRatio = 1;
-        while(packageIterator.hasNext()) {
+        while (packageIterator.hasNext()) {
             IPackageCoverage packageCoverage = packageIterator.next();
             if (packageCoverage.getLineCounter().getCoveredRatio() < minimumCoverageRatio) {
                 minimumCoverageRatio = packageCoverage.getLineCounter().getCoveredRatio();
@@ -130,7 +132,7 @@ public class CoverageReportReader {
     /**
      * Return project name
      *
-     * @return
+     * @return Name of this project
      */
     public String getProjectName() {
 

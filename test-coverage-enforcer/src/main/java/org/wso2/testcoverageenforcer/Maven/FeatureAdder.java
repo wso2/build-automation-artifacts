@@ -18,13 +18,14 @@
 
 package org.wso2.testcoverageenforcer.Maven;
 
+import org.apache.log4j.Logger;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.wso2.testcoverageenforcer.Application;
 import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.Maven.POM.ParentMavenPom;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import javax.swing.text.Document;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -33,17 +34,19 @@ import javax.xml.transform.TransformerException;
  */
 public class FeatureAdder {
 
+    private static final Logger log = Logger.getLogger(Application.class);
+
     /**
      * Deep integration of Jacoco coverage check rule with an existing multi-module maven project
      *
-     * @param projectPath File path of the project containing parent pom file
+     * @param projectPath        File path of the project containing parent pom file
      * @param coveragePerElement Per which element jacoco coverage check should be performed
-     * @param coverageThreshold Line coverage threshold to break the build
+     * @param coverageThreshold  Line coverage threshold to break the build
      * @throws ParserConfigurationException Error while parsing the pom file
-     * @throws IOException Error reading the pom file
-     * @throws SAXException Error while parsing the pom's file input stream
-     * @throws TransformerException Error while writing pom file back
-     * @throws XmlPullParserException Error while parsing pom xml files
+     * @throws IOException                  Error reading the pom file
+     * @throws SAXException                 Error while parsing the pom's file input stream
+     * @throws TransformerException         Error while writing pom file back
+     * @throws XmlPullParserException       Error while parsing pom xml files
      */
     public static void intergrateJacocoCoverageCheck(
             String projectPath,
@@ -60,20 +63,15 @@ public class FeatureAdder {
      *
      * @param projectPath File path of the project containing parent pom file
      * @throws ParserConfigurationException Error while parsing the pom file
-     * @throws IOException Error reading the pom file
-     * @throws SAXException Error while parsing the pom's file input stream
-     * @throws TransformerException Error while writing pom file back
-     * @throws XmlPullParserException Error while parsing pom xml files
-     * @throws InterruptedException Waiting until the build to happen is failed
+     * @throws IOException                  Error reading the pom file
+     * @throws SAXException                 Error while parsing the pom's file input stream
+     * @throws TransformerException         Error while writing pom file back
+     * @throws XmlPullParserException       Error while parsing pom xml files
+     * @throws InterruptedException         Waiting until the build to happen is failed
      */
     public static void intergrateJacocoCoverageCheck(
             String projectPath)
-            throws
-            IOException,
-            XmlPullParserException,
-            ParserConfigurationException,
-            SAXException,
-            TransformerException,
+            throws IOException, XmlPullParserException, ParserConfigurationException, SAXException, TransformerException,
             InterruptedException {
 
         ParentMavenPom parent = new ParentMavenPom(projectPath);
@@ -88,19 +86,29 @@ public class FeatureAdder {
                 parent,
                 coveragePerElement,
                 Double.toString(
-                        ((short)(minimumBundleCoverageRatio * Constants.DECIMAL_CONSTANT_2)) / Constants.DECIMAL_CONSTANT_2));
+                        ((short) (minimumBundleCoverageRatio * Constants.DECIMAL_CONSTANT_2)) / Constants.DECIMAL_CONSTANT_2));
     }
 
     private static void applyJacocoCoverageCheck(ParentMavenPom parent,
-                                          String coveragePerElement,
-                                          String coverageThreshold)
+                                                 String coveragePerElement,
+                                                 String coverageThreshold)
             throws IOException, XmlPullParserException, ParserConfigurationException, SAXException, TransformerException {
 
         if (parent.hasChildren()) {
+            log.debug("Child modules are available. Analysing <PluginManagement> node");
             parent.enforceCoverageCheckUnderPluginManagement(coveragePerElement, coverageThreshold);
             parent.inheritCoverageCheckInChildren(parent.getChildren(), coveragePerElement, coverageThreshold);
         } else if (parent.hasTests()) {
+            log.debug("Tests are available in parent. Analysing <buildPlugin> node");
             parent.enforceCoverageCheckUnderBuildPlugins(coveragePerElement, coverageThreshold);
+        } else if (!parent.hasTests()) {
+            log.debug("Tests are not available in parent. Skipping coverage addition ");
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        intergrateJacocoCoverageCheck("/home/tharindu/my-projects/TestResources/siddhi-map-json", "BUNDLE",
+                "0.89");
     }
 }

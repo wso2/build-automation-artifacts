@@ -4,3 +4,6 @@ target
 
 #To ignore files with following extensions
 *.iml
+
+#Ignore log files
+*.log

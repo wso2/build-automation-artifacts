@@ -25,14 +25,15 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.wso2.testcoverageenforcer.GitHubHandler.Jacoco.CoverageCheckEnforcer;
+import org.wso2.testcoverageenforcer.ServerHandler.SQLServer;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -41,94 +42,112 @@ import javax.xml.transform.TransformerException;
  */
 public class Application {
 
-    public static final Log log = LogFactory.getLog(Application.class);
+    private static final Logger log = Logger.getLogger(Application.class);
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
 
         Options options = new Options();
-        options.addOption(
-                "h",
-                "help",
-                false,
-                "Get help with usage");
-        options.addOption(
-                "r",
-                "repository",
-                true,
-                "GitHub repository name to add coverage check(Format: 'username/repositoryname')");
-        options.addOption(
-                "w",
-                "workspacePath",
-                true,
-                "Folder to temporally clone the repository during the procedure");
-        options.addOption(
-                "t",
-                "threshold",
-                true,
-                "Line coverage threshold to break the build(float value between 0 and 1). If this parameter" +
-                        "is not available then existing line coverage percentage will be used as the coverage threshold");
-        options.addOption(
-                "e",
-                "element",
-                true,
-                "Per which element this coverage check should be performed(BUNDLE, PACKAGE, CLASS, SOURCEFILE or METHOD)");
-        options.addOption(
-                "p",
-                "pullRequest",
-                true,
-                "Make a pull request once changes are done(boolean value: true or false)");
         CommandLineParser parser = new BasicParser();
-        CommandLine line;
-        String[] arguments = new String[5];
+        CommandLine cmd;
         HelpFormatter help = new HelpFormatter();
-        //If user did not input coverage threshold, current available coverage ration will be set
+        /*
+        Automatic coverage threshold calculation status for when user did not input coverage threshold.
+        Then current available coverage ratio will be set.
+         */
         boolean automaticCoverageThreshold = false;
-
+        options.addOption("h", "help", false,
+                "Get help with usage");
+        options.addOption("r", "repository", true,
+                "GitHub repository name to add coverage check(Format: 'username/repositoryname'). If urls are" +
+                        " received from an external server, this option is ignored");
+        options.addOption("w", "workspacePath", true,
+                "Folder to temporally clone the repository during the procedure");
+        options.addOption("t", "threshold", true,
+                "Line coverage threshold to break the build(float value between 0 and 1). If this parameter" +
+                        " is not available then the tool will build the project to calculate line coverage and " +
+                        "existing line coverage percentage will be used as the coverage threshold");
+        options.addOption("e", "element", true,
+                "Per which element this coverage check should be performed(BUNDLE, PACKAGE, CLASS, SOURCEFILE or METHOD)");
+        options.addOption("p", "pullRequest", true,
+                "Make a pull request once changes are done(boolean value: true or false)");
+        options.addOption("s", "enableServer", true,
+                "Get repository urls from the SQL server. Provide your credentials in the properties file");
+        options.addOption("prop", "properties", true,
+                "Properties file containing configurations for SQL server and GitHub account");
         try {
-            line = parser.parse(options, args);
-
-            if (line.hasOption("h")) {
+            cmd = parser.parse(options, args);
+            if (cmd.hasOption("h")) {
                 help.printHelp("java -jar test-coverage-enforcer-1.0-SNAPSHOT.jar", options, true);
-                return;
+                System.exit(0);
             }
-            if (line.hasOption("r")) {
-                arguments[0] = line.getOptionValue("r");
-            } else {
+            /*
+            If repository urls are received using an external server, ignore 'repository' option
+             */
+            if (!(cmd.hasOption("r")) && !Boolean.parseBoolean(cmd.getOptionValue("enableServer"))) {
                 throw new MissingOptionException("Missing repository name");
             }
-            if (line.hasOption("t")) {
-                arguments[1] = line.getOptionValue("t");
-            } else {
+            /*
+            If the threshold value is not present, automatic calculation of threshold value will take place. In this case
+            coverage per element would be set to BUNDLE and user input is ignored.
+             */
+            if (!(cmd.hasOption("t"))) {
                 automaticCoverageThreshold = true;
-            }
-            if (line.hasOption("e")) {
-                arguments[2] = line.getOptionValue("e");
-            } else {
+            } else if (!(cmd.hasOption("e"))) {
                 throw new MissingOptionException("Missing element name");
             }
-            if (line.hasOption("w")) {
-                arguments[3] = line.getOptionValue("w");
-            } else {
+            if (!(cmd.hasOption("w"))) {
                 throw new MissingOptionException("Missing workspace path");
             }
-            if (line.hasOption("p")) {
-                arguments[4] = line.getOptionValue("p");
-            } else {
+            if (!(cmd.hasOption("p"))) {
                 throw new MissingOptionException("Missing pull request information");
             }
-            log.info("Enforcing coverage on " + arguments[0]);
-            CoverageCheckEnforcer.createPullRequestWithCoverageCheck(
-                    arguments[0],
-                    Constants.GIT_USERNAME,
-                    Constants.GIT_PASSWORD,
-                    Constants.GIT_EMAIL,
-                    arguments[3],
-                    Boolean.parseBoolean(arguments[4]),
-                    automaticCoverageThreshold);
+            if (!(cmd.hasOption("s"))) {
+                throw new MissingOptionException("Missing server enabling information");
+            }
+            if (!(cmd.hasOption("prop"))) {
+                throw new MissingOptionException("Missing properties file");
+            }
+            /*
+            If an external server is available, read urls and integrate coverage check in each of them.
+            Otherwise use the url provided as an argument and integrate coverage check in it.
+             */
+            if (Boolean.parseBoolean(cmd.getOptionValue("enableServer"))) {
+                SQLServer externalServer = new SQLServer(cmd.getOptionValue("properties"));
+                try {
+                    String gitHubRepository;
+                    while (true) {
+                        gitHubRepository = externalServer.getNextRepositoryURL();
+                        if (gitHubRepository == null) break;
+                        log.info("Enforcing coverage on " + gitHubRepository);
+                        CoverageCheckEnforcer.createPullRequestWithCoverageCheck(
+                                gitHubRepository,
+                                cmd.getOptionValue("properties"),
+                                cmd.getOptionValue("workspacePath"),
+                                automaticCoverageThreshold ? null : cmd.getOptionValue("element"),
+                                automaticCoverageThreshold ? null : cmd.getOptionValue("threshold"),
+                                Boolean.parseBoolean(cmd.getOptionValue("pullRequest")),
+                                automaticCoverageThreshold);
+                    }
+                } finally {
+                    externalServer.close();
+                }
+
+            } else {
+                log.info("Enforcing coverage on " + cmd.getOptionValue("repository"));
+                CoverageCheckEnforcer.createPullRequestWithCoverageCheck(
+                        cmd.getOptionValue("repository"),
+                        cmd.getOptionValue("properties"),
+                        cmd.getOptionValue("workspacePath"),
+                        automaticCoverageThreshold ? null : cmd.getOptionValue("element"),
+                        automaticCoverageThreshold ? null : cmd.getOptionValue("threshold"),
+                        Boolean.parseBoolean(cmd.getOptionValue("pullRequest")),
+                        automaticCoverageThreshold);
+            }
+
         } catch (ParseException e) {
             log.error("Arguments parsing error: " + e.getMessage(), e);
         } catch (IOException e) {
-            log.error("Cannot read the parent POM", e);
+            log.error("File reading error", e);
         } catch (XmlPullParserException e) {
             log.error("Error occurred while parsing the pom file", e);
         } catch (ParserConfigurationException e) {
@@ -137,10 +156,12 @@ public class Application {
             log.error("Error occurred while parsing source xml file and the pom file", e);
         } catch (TransformerException e) {
             log.error("Error occurred while writing back to the pom file", e);
-        } catch (GitAPIException e){
+        } catch (GitAPIException e) {
             log.error("Error occurred during git operation", e);
         } catch (InterruptedException e) {
             log.error("Project build interrupted", e);
+        } catch (SQLException e) {
+            log.error("Communication error with the external server", e);
         }
     }
 }

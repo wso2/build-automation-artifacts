@@ -18,11 +18,9 @@
 
 package org.wso2.testcoverageenforcer.GitHubHandler.Jacoco;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.wso2.testcoverageenforcer.Application;
 import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.GitHubHandler.GitHubProject;
 import org.wso2.testcoverageenforcer.Maven.FeatureAdder;
@@ -40,72 +38,58 @@ public class CoverageCheckEnforcer {
     /**
      * Log object to log each executing steps in a process
      */
-    public static final Log log = LogFactory.getLog(Application.class);
+    private static final Logger log = Logger.getLogger(CoverageCheckEnforcer.class);
 
     /**
      * Add jacoco coverage check to an existing repo and make a pull request
-     * @param repositoryName Name of the GitHub repository to integrate coverage check in the form of 'userName/repositoryName'
-     * @param gitHubUserName User name of the GitHub account which would be used to create the pull request
-     * @param gitHubPassword Password of the GitHub account which would be used to create the pull request
-     * @param gitHubEmail Email of the GitHub account which would be used to create the pull request
+     *
+     * @param repositoryName     Name of the GitHub repository to integrate coverage check in the form of 'userName/repositoryName'
      * @param localWorkspacePath Path to the folder to be used for temporary cloning of the repository
-     * @param enablePR Create a pull request after jacoco check rule integration in the forked repository
-     * @throws IOException Error in reading xml files or while initializing GitHub repository
-     * @throws GitAPIException Error while performing GitHub operations
-     * @throws XmlPullParserException Error while parsing xml files in the jacoco integration procedure
-     * @throws TransformerException Error while writing pom file
-     * @throws SAXException Error while parsing pom file's input stream
+     * @param coveragePerElement Per which element coverage checking to be performed(per BUNDLE, CLASS etc)
+     * @param coverageThreshold  Coverage threshold value to break the build
+     * @param enablePR           Create a pull request after jacoco check rule integration in the forked repository
+     * @throws IOException                  Error in reading xml files or while initializing GitHub repository
+     * @throws GitAPIException              Error while performing GitHub operations
+     * @throws XmlPullParserException       Error while parsing xml files in the jacoco integration procedure
+     * @throws TransformerException         Error while writing pom file
+     * @throws SAXException                 Error while parsing pom file's input stream
      * @throws ParserConfigurationException Error while parsing the pom file
      */
-    public static void createPullRequestWithCoverageCheck(
-            String repositoryName,
-            String gitHubUserName,
-            String gitHubPassword,
-            String gitHubEmail,
-            String localWorkspacePath,
-            boolean enablePR,
-            boolean automaticCoverageThreshold)
-            throws
-            IOException,
-            GitAPIException,
-            XmlPullParserException,
-            TransformerException,
-            SAXException,
-            ParserConfigurationException,
-            InterruptedException{
+    public static void createPullRequestWithCoverageCheck(String repositoryName, String propertiesFilePath,
+                                                          String localWorkspacePath, String coveragePerElement,
+                                                          String coverageThreshold, boolean enablePR,
+                                                          boolean automaticCoverageThreshold)
+            throws IOException, GitAPIException, XmlPullParserException, TransformerException, SAXException,
+            ParserConfigurationException, InterruptedException {
 
-        GitHubProject repo = new GitHubProject(
-                repositoryName,
-                gitHubUserName,
-                gitHubPassword,
-                gitHubEmail);
+        GitHubProject repo = new GitHubProject(repositoryName, propertiesFilePath);
+
         //If the repository is inactive for a time span of interest, ignore the procedure
         if (!(repo.getActiveStatus(Constants.GIT_TIME_PERIOD_OF_INTEREST))) {
-            log.error("Inactive repository for the past six months. Aborting procedure for this repository");
+            log.warn("Inactive repository for the past six months. Aborting procedure for this repository");
             return;
         }
-        log.info("Forking..");
+        log.info("--Forking..");
         repo.gitFork();
         repo.setWorkspace(localWorkspacePath);
-        log.info("Cloning..");
+        log.info("--Cloning..");
         repo.gitClone();
-        log.info("Coverage Check addition..");
+        log.info("--Processing pom files..");
         if (!automaticCoverageThreshold) {
             FeatureAdder.intergrateJacocoCoverageCheck(
                     repo.getClonedPath(),
-                    Constants.COVERAGE_PER_ELEMENT,
-                    Constants.COVERAGE_THRESHOLD);
-        }
-        else {
+                    coveragePerElement,
+                    coverageThreshold);
+        } else {
             FeatureAdder.intergrateJacocoCoverageCheck(
                     repo.getClonedPath());
         }
-        log.info("Commiting..");
+        log.info("--Committing..");
         repo.gitCommit(Constants.COMMIT_MESSAGE_COVERAGE_CHECK);
-        log.info("Pushing..");
+        log.info("--Pushing..");
         repo.gitPush();
         if (enablePR) {
-            log.info("Making a pull request..");
+            log.info("--Making a pull request..");
             repo.gitPullRequest();
         }
     }

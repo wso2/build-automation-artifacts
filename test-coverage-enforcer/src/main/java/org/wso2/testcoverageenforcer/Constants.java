@@ -89,24 +89,38 @@ public class Constants {
     public static final String BUILD_EXECUTION_FILE = "exec";
     public static final String ZERO = "0";
     public static final double DECIMAL_CONSTANT_2 = 100.0;
-    public static final String JACOCO_INHERITED_PLUGIN_TEMPLATE = ClassLoader.getSystemClassLoader()
-            .getResource("jacoco_inherited_plugin_template.xml").getPath();
-    public static final String JACOCO_PLUGIN_TEMPLATE = ClassLoader.getSystemClassLoader()
-            .getResource("jacoco_plugin_template.xml").getPath();
-    public static final String JACOCO_PREPARE_AGENT_TEMPLATE = ClassLoader.getSystemClassLoader()
-            .getResource("jacoco_prepare_agent_template.xml").getPath();
-    public static final String JACOCO_REPORT_TEMPLATE = ClassLoader.getSystemClassLoader()
-            .getResource("jacoco_report_template.xml").getPath();
-    public static final String JACOCO_CHECK_TEMPLATE = ClassLoader.getSystemClassLoader()
-            .getResource("jacoco_check_template.xml").getPath();
-    public static final String JACOCO_SUREFIRE_PLUGIN_TEMPLATE = ClassLoader.getSystemClassLoader()
-            .getResource("surefire_plugin_template.xml").getPath();
-    public static final String JACOCO_SUREFIRE_ARGLINE_TEMPLATE = ClassLoader.getSystemClassLoader()
-            .getResource("jacoco_surefire_argument_line_template.xml").getPath();
-    public static final String JACOCO_CHECK_INHERIT_TEMPLATE = ClassLoader.getSystemClassLoader()
-            .getResource("jacoco_check_inheritance_template.xml").getPath();
-    public static final String SUREFIRE_SIMPLE_INHERIT_TEMPLATE = ClassLoader.getSystemClassLoader()
-            .getResource("surefire_simple_inherit.xml").getPath();
-    public static final String SUREFIRE_INHERIT_WITH_ARGLINE_TEMPLATE = ClassLoader.getSystemClassLoader()
-            .getResource("surefire_inherit_with_arg_line.xml").getPath();
+    public static final String JACOCO_INHERITED_PLUGIN_TEMPLATE;
+    public static final String JACOCO_PLUGIN_TEMPLATE;
+    public static final String JACOCO_PREPARE_AGENT_TEMPLATE;
+    public static final String JACOCO_REPORT_TEMPLATE;
+    public static final String JACOCO_CHECK_TEMPLATE;
+    public static final String JACOCO_SUREFIRE_PLUGIN_TEMPLATE;
+    public static final String JACOCO_SUREFIRE_ARGLINE_TEMPLATE;
+    public static final String JACOCO_CHECK_INHERIT_TEMPLATE;
+    public static final String SUREFIRE_SIMPLE_INHERIT_TEMPLATE;
+    public static final String SUREFIRE_INHERIT_WITH_ARGLINE_TEMPLATE;
+
+    static {
+        JACOCO_INHERITED_PLUGIN_TEMPLATE = Constants.class.getClassLoader()
+                .getResource("jacoco_inherited_plugin_template.xml").getPath();
+        JACOCO_PLUGIN_TEMPLATE = Constants.class.getClassLoader()
+                .getResource("jacoco_plugin_template.xml").getPath();
+        JACOCO_PREPARE_AGENT_TEMPLATE = Constants.class.getClassLoader()
+                .getResource("jacoco_prepare_agent_template.xml").getPath();
+        JACOCO_REPORT_TEMPLATE = Constants.class.getClassLoader()
+                .getResource("jacoco_report_template.xml").getPath();
+        JACOCO_SUREFIRE_PLUGIN_TEMPLATE = Constants.class.getClassLoader()
+                .getResource("surefire_plugin_template.xml").getPath();
+        JACOCO_SUREFIRE_ARGLINE_TEMPLATE = Constants.class.getClassLoader()
+                .getResource("jacoco_surefire_argument_line_template.xml").getPath();
+        JACOCO_CHECK_INHERIT_TEMPLATE = Constants.class.getClassLoader()
+                .getResource("jacoco_check_inheritance_template.xml").getPath();
+        SUREFIRE_SIMPLE_INHERIT_TEMPLATE = Constants.class.getClassLoader()
+                .getResource("surefire_simple_inherit.xml").getPath();
+        SUREFIRE_INHERIT_WITH_ARGLINE_TEMPLATE = Constants.class.getClassLoader()
+                .getResource("surefire_inherit_with_arg_line.xml").getPath();
+        JACOCO_CHECK_TEMPLATE = Constants.class.getClassLoader()
+                .getResource("jacoco_check_template.xml").getPath();
+    }
+
 }
