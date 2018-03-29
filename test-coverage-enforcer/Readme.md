@@ -5,10 +5,11 @@ a Maven project.
 ## Workflow ##
 This tool take a GitHub url to a wso2 product repository and perform
 following tasks.
+* Check whether the repository is active for the past six months and ignore inactive repositories
 * Forking in to a GitHub account([GitHub account](https://github.com/test-coverage-enforce-bot))
 * Cloning in to the local computer
 * Integrate jacoco check rule
-* Make a commit and push to the forked remote
+* Commit changes and push to the forked remote
 * Create a pull request 
 ## Getting Started ##
 Build the Maven project and use the jar file.
