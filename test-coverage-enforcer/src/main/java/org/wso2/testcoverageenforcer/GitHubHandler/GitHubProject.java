@@ -27,10 +27,16 @@ import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.PagedIterable;
 import org.wso2.testcoverageenforcer.Constants;
+import org.wso2.testcoverageenforcer.FileHandler.TemplateReader;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Calendar;
 import java.util.Properties;
 
@@ -162,11 +168,17 @@ public class GitHubProject {
      */
     public void gitPullRequest() throws IOException {
 
+        Path tempFile = Files.createTempFile("pr_message_temp", ".txt");
+        try (InputStream stream = TemplateReader.class.getClassLoader().getResourceAsStream(Constants.GIT_PR_BODY)) {
+            Files.copy(stream, tempFile, StandardCopyOption.REPLACE_EXISTING);
+        }
+        byte[] encoded = Files.readAllBytes(tempFile);
+        String pullRequestMessage = new String(encoded);
         this.projectRepository.createPullRequest(
                 Constants.GIT_PR_TITLE,
                 this.forkedRepository.getOwnerName() + Constants.COLON + Constants.GIT_PR_MASTER,
                 Constants.GIT_PR_MASTER,
-                Constants.GIT_PR_BODY);
+                pullRequestMessage);
     }
 
     /**

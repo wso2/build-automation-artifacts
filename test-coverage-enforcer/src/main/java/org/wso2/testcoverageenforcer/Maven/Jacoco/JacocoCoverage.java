@@ -127,17 +127,17 @@ public class JacocoCoverage {
                 }
             }
             // Append each template Node for missing jacoco nodes
-            if (!((boolean) nodeAnalysisReport.get(Constants.JACOCO_GOAL_AGENT_INVOKE))) {
+            if (!(nodeAnalysisReport.get(Constants.JACOCO_GOAL_AGENT_INVOKE))) {
                 Node jacocoPrepareAgentExecutionNodeTemplate = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_PREPARE_AGENT_TEMPLATE), true);
                 executions.appendChild(jacocoPrepareAgentExecutionNodeTemplate);
                 log.debug("Jacoco prepare-agent execution template added in under " + pluginsParent + " for " + pom.getDocumentURI());
             }
-            if (!((boolean) nodeAnalysisReport.get(Constants.JACOCO_GOAL_REPORT))) {
+            if (!(nodeAnalysisReport.get(Constants.JACOCO_GOAL_REPORT))) {
                 Node jacocoReportExecutionNodeTemplate = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_REPORT_TEMPLATE), true);
                 executions.appendChild(jacocoReportExecutionNodeTemplate);
                 log.debug("Jacoco report execution template added in under " + pluginsParent + " for " + pom.getDocumentURI());
             }
-            if (!((boolean) nodeAnalysisReport.get(Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE))) {
+            if (!(nodeAnalysisReport.get(Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE))) {
                 Node jacocoCheckExecutionNodeTemplate = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_CHECK_TEMPLATE), true);
                 Element jacocoCheckExecutionElementTemplate = (Element) jacocoCheckExecutionNodeTemplate;
                 jacocoCheckExecutionElementTemplate.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0)
@@ -170,7 +170,7 @@ public class JacocoCoverage {
                                                           String coveragePerElement,
                                                           String coverageThreshold)
             throws ParserConfigurationException, IOException, SAXException {
-        //log.info("inherit for " + pom.getDocumentURI());
+
         Node plugins = createPluginsNode(pom, Constants.MAVEN_TAG_BUILD);
         // Check for jacoco plugin existence
         Element inheritedJacocoPlugin = null;
@@ -202,8 +202,10 @@ public class JacocoCoverage {
             plugins.appendChild(inheritedJacocoPluginTemplate);
             log.debug("Jacoco plugin configuration inherited from parent in " + pom.getDocumentURI());
         } else {
-            // If jacoco plugin and executions exists, update coverage threshold and coverage per element
-            // If inheritance is already present, ignore enforcing inheritance of coverage check
+            /*
+            If jacoco plugin and executions exists, update coverage threshold and coverage per element
+            If inheritance is already present, ignore enforcing inheritance of coverage check
+             */
             Node executions = inheritedJacocoPlugin.getElementsByTagName(Constants.MAVEN_TAG_EXECUTIONS).item(0);
             NodeList executionsList;
             if (executions != null) {
@@ -216,6 +218,10 @@ public class JacocoCoverage {
                     switch (execution.getElementsByTagName(Constants.MAVEN_TAG_GOAL).item(0).getTextContent()) {
                         case Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE:
                             jacocoCheckElement = execution;
+                            /*
+                            If coverage check rule is present, update locally defined threshold and coverage per element
+                             if available
+                             */
                             NodeList elementList = execution.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT);
                             NodeList minimumList = execution.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE);
                             if (elementList.getLength() != 0) {
@@ -466,6 +472,8 @@ public class JacocoCoverage {
                 argLine.setTextContent(argLine.getTextContent().replace(getArgument(Constants.DEFAULT_JACOCO_SUREFIRE_PROPERTY_NAME), getArgument(jacocoArgumentLine)));
                 configuration.appendChild(argLine);
                 log.debug("Modified Maven Surefire argument line for locally available Jacoco agent");
+            } else {
+                log.debug("Ignoring Surefire argument inheritance due to missing locally defined Jacoco argument line");
             }
         }
     }

@@ -18,6 +18,10 @@
 
 package org.wso2.testcoverageenforcer.FileHandler;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
@@ -25,6 +29,10 @@ import org.xml.sax.SAXException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -34,6 +42,8 @@ import javax.xml.parsers.ParserConfigurationException;
  */
 public class TemplateReader {
 
+    @Autowired
+    private static ResourceLoader resourceLoader;
     /**
      * Given a xml file path, read xml as org.w3c.Document model and return it's root element as a Node
      *
@@ -50,7 +60,11 @@ public class TemplateReader {
         dbf.setValidating(false);
         DocumentBuilder db = dbf.newDocumentBuilder();
 
-        try (FileInputStream xmlFileStream = new FileInputStream(new File(xmlPath))) {
+        Path tempFile = Files.createTempFile("template_temp", ".xml");
+        try (InputStream stream = TemplateReader.class.getClassLoader().getResourceAsStream(xmlPath)) {
+            Files.copy(stream, tempFile, StandardCopyOption.REPLACE_EXISTING);
+        }
+        try (FileInputStream xmlFileStream = new FileInputStream(tempFile.toFile())) {
             Document xmlFile = db.parse(xmlFileStream);
             return xmlFile.getDocumentElement();
         }
