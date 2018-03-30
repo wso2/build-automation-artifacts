@@ -41,7 +41,7 @@ public class JacocoCoverage {
     private static final Logger log = Logger.getLogger(Application.class);
 
     /**
-     * Given Document model and a plugins node in that Document,
+     * Given Document model and the 'plugins' node in that Document(either under <build> or <build><pluginManagement>),
      * this will either add or modify existing jacoco plugin to have the functionality of coverage check
      *
      * @param pom                Jacoco will be added to this document
@@ -59,14 +59,21 @@ public class JacocoCoverage {
                                                      String coverageThreshold)
             throws ParserConfigurationException, IOException, SAXException {
 
+        /*<plugins> node might not be present in some cases. Uses existing or create otherwise*/
         Node plugins = createPluginsNode(pom, pluginsParent);
+        /*
+        Custom defined surefire argument name and jacoco report path could be present in the child. If not defaults
+        are used. Hence defaults are initialized in the beginning and values are updated if any custom definitions
+        are found later in the document
+         */
         String surefireArgLine = Constants.DEFAULT_JACOCO_SUREFIRE_ARGLINE;
         String jacocoReportFilePath = Constants.DEFAULT_JACOCO_REPORT_PATH;
-        // Check for jacoco plugin existence
         Element jacocoPlugin = null;
+        /*Initialized with root element for Maven Surefire plugin. Because it needs to be added if it is not available*/
         Element mavenSurefirePlugin = (Element) plugins;
         boolean surefirePluginAvailable = false;
         NodeList pluginList = plugins.getChildNodes();
+        /*Check for jacoco and Maven surefire plugin existence*/
         for (int i = 0; i < pluginList.getLength(); i++) {
             // Skip line breakers, white spaces etc
             if (!pluginList.item(i).getNodeName().equals(Constants.MAVEN_TAG_PLUGIN)) continue;
@@ -119,6 +126,9 @@ public class JacocoCoverage {
                         nodeAnalysisReport.put(Constants.JACOCO_GOAL_REPORT, true);
                         break;
                     case Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE:
+                        /*
+                        Update threshold and coverage per element if the execution is already exists
+                         */
                         createNode(pom, execution, Constants.JACOCO_POM_PATH_ELEMENT).setTextContent(coveragePerElement);
                         createNode(pom, execution, Constants.JACOCO_POM_PATH_MINIMUM).setTextContent(coverageThreshold);
                         log.debug("Both coverage element and coverage threshold parameters are updated for " + pom.getDocumentURI());
@@ -134,6 +144,9 @@ public class JacocoCoverage {
             }
             if (!(nodeAnalysisReport.get(Constants.JACOCO_GOAL_REPORT))) {
                 Node jacocoReportExecutionNodeTemplate = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_REPORT_TEMPLATE), true);
+                Element jacocoReportExecutionNodeElement = (Element) jacocoReportExecutionNodeTemplate;
+                jacocoReportExecutionNodeElement.getElementsByTagName(Constants.JACOCO_TAG_REPORT_READ).item(0)
+                        .setTextContent(jacocoReportFilePath);
                 executions.appendChild(jacocoReportExecutionNodeTemplate);
                 log.debug("Jacoco report execution template added in under " + pluginsParent + " for " + pom.getDocumentURI());
             }
@@ -192,7 +205,7 @@ public class JacocoCoverage {
         }
 
         boolean jacocoReportFilePathPresent = false;
-        boolean jacocoSurefireArgLinePresent = false;
+        boolean localJacocoPrepareAgentAvailable = false;
         String jacocoReportFilePath = null;
         String jacocoSurefireArgLine = null;
         Element jacocoCheckElement = null;
@@ -243,7 +256,7 @@ public class JacocoCoverage {
                                 jacocoReportFilePath = Constants.DEFAULT_JACOCO_REPORT_PATH;
                             }
                             NodeList surefireArguments = execution.getElementsByTagName(Constants.JACOCO_TAG_SUREFIRE_ARGLINE_NAME);
-                            jacocoSurefireArgLinePresent = true;
+                            localJacocoPrepareAgentAvailable = true;
                             if (surefireArguments.getLength() > 0) {
                                 jacocoSurefireArgLine = surefireArguments.item(0).getTextContent();
                             } else {
@@ -262,13 +275,15 @@ public class JacocoCoverage {
                     Element jacocoCheckInheritanceTemplate = (Element) jacocoCheckInheritance;
                     jacocoCheckInheritanceTemplate.getElementsByTagName(Constants.JACOCO_TAG_REPORT_READ).item(0).setTextContent(jacocoReportFilePath);
                     executions.appendChild(jacocoCheckInheritance);
+                } else if (jacocoCheckElement != null && (jacocoReportFilePathPresent)) { //If jacoco check rule is present, add report file path information
+
+                    createNode(pom, jacocoCheckElement, Constants.JACOCO_POM_PATH_DATA_FILE).setTextContent(jacocoReportFilePath);
                 }
             }
         }
 
         inheritSurefireArgumentLineForJacoco(
-                pom, surefirePluginAvailable, inheritedSurefirePlugin,
-                jacocoSurefireArgLinePresent, jacocoSurefireArgLine);
+                pom, surefirePluginAvailable, inheritedSurefirePlugin, localJacocoPrepareAgentAvailable, jacocoSurefireArgLine);
 
         return pom;
     }
@@ -374,8 +389,8 @@ public class JacocoCoverage {
      *
      * @param pom                     Pom file model to set surefire argument line
      * @param surefirePluginAvailable Surefire plugin definition is present in the pom
-     * @param surefirePlugin          Maven Surefire plugin element if exists. Otherwise this should equal to maven plugins
-     *                                element
+     * @param surefirePlugin          Maven Surefire plugin element if exists. Otherwise this is equal to the maven
+     *                               <plugins> element
      * @param jacocoArgumentLine      Name of the argument line set by jacoco plugin for Maven Surefire plugin
      * @throws ParserConfigurationException Error while parsing the pom file
      * @throws IOException                  Error reading the pom file
@@ -387,23 +402,33 @@ public class JacocoCoverage {
                                                          String jacocoArgumentLine)
             throws ParserConfigurationException, IOException, SAXException {
 
-        // If plugin is not present, surefirePlugin is equal to 'plugins' node in the pom file. Hence append extracted surefire template to it
+        // If plugin definition is not present, surefirePlugin is equal to <plugins> node in the pom file. Hence append extracted surefire template to it
         if (!surefirePluginAvailable) {
             Node surefirePluginTemplate = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_SUREFIRE_PLUGIN_TEMPLATE), true);
+
+            /*Set Jacoco argument line in the appending Maven Surefire plugin template and append */
+            Element surefirePluginTemplateElement = (Element) surefirePluginTemplate;
+            surefirePluginTemplateElement.getElementsByTagName(Constants.SUREFIRE_TAG_ARGLINE).item(0)
+                    .setTextContent(getArgument(jacocoArgumentLine));
             surefirePlugin.appendChild(surefirePluginTemplate);
             log.debug("Complete Maven Surefire template was added for " + pom.getDocumentURI());
         } else {
-            // Multiple configuration nodes could be present. Scan each one of them and add jacoco argument line if not configured
+
+            /*Multiple <configuration> nodes could be present. Scan each one of them and add jacoco argument line if not configured*/
             NodeList configurationNodes = surefirePlugin.getElementsByTagName(Constants.MAVEN_TAG_CONFIGURATION);
 
             for (int i = 0; i < configurationNodes.getLength(); i++) {
-                // If jacoco argument line is already set, skip the procedure
+                /*
+                If required jacoco argument line (either default or locally defined) is present in the current Maven Surefire configuration,
+                skip the procedure
+                 */
                 if (searchForPreConfiguredJacocoArgumentLine((Element) configurationNodes.item(i), jacocoArgumentLine)) {
                     log.debug("Jacoco agent argument line is already configured for Maven Surefire");
                     return;
                 }
             }
-            // Add new argument line
+
+            /*If the <configuration> nodes are present(or a single one)  pick any one and append <argLine>requiredJacocoArgumentLine</argLine>*/
             Node configurationNode;
             if (configurationNodes.getLength() == 0) {
                 configurationNode = pom.createElement(Constants.MAVEN_TAG_CONFIGURATION);
@@ -411,6 +436,9 @@ public class JacocoCoverage {
                 configurationNode = configurationNodes.item(0);
             }
             Node jacocoArgumentLineForSurefire = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_SUREFIRE_ARGLINE_TEMPLATE), true);
+            Element jacocoArgumentLineForSurefireElement = (Element) jacocoArgumentLineForSurefire;
+            jacocoArgumentLineForSurefireElement.getElementsByTagName(Constants.SUREFIRE_TAG_ARGLINE).item(0)
+                    .setTextContent(getArgument(jacocoArgumentLine));
             configurationNode.appendChild(jacocoArgumentLineForSurefire);
             log.debug("Jacoco argument line for Maven Surefire is configured");
         }
@@ -424,7 +452,7 @@ public class JacocoCoverage {
      * @param surefirePluginAvailable      surefire plugin definition is present in the pom file
      * @param surefirePlugin               Maven Surefire plugin element if exists. Otherwise this should equal to maven plugins
      *                                     element
-     * @param jacocoSurefireArgLinePresent Jacoco prepare-agent execution definition is available
+     * @param localJacocoPrepareAgentAvailable Jacoco prepare-agent execution definition is available
      * @param jacocoArgumentLine           Argument to be added
      * @throws ParserConfigurationException Error while parsing the pom file
      * @throws IOException                  Error reading the pom file
@@ -433,16 +461,16 @@ public class JacocoCoverage {
     private static void inheritSurefireArgumentLineForJacoco(Document pom,
                                                              boolean surefirePluginAvailable,
                                                              Node surefirePlugin,
-                                                             boolean jacocoSurefireArgLinePresent,
+                                                             boolean localJacocoPrepareAgentAvailable,
                                                              String jacocoArgumentLine)
             throws ParserConfigurationException, IOException, SAXException {
 
         if (!surefirePluginAvailable) { //maven surefire plugin is not defined in the child
-            if (!jacocoSurefireArgLinePresent) { //Jacoco prepare-agent execution is not present in the child
+            if (!localJacocoPrepareAgentAvailable) { //Jacoco prepare-agent execution is not present in the child
                 Node simplyInheritSurefire = pom.importNode(TemplateReader.extractTemplate(Constants.SUREFIRE_SIMPLE_INHERIT_TEMPLATE), true);
                 surefirePlugin.appendChild(simplyInheritSurefire);
                 log.debug("Maven Surefire plugin inherited from the parent without configuration changes");
-            } else { // Replace 'argLine' in surefire inheritance with local value
+            } else { // Replace '<argLine>' in surefire inheritance the local value
                 Node InheritAndAugmentSurefire = pom.importNode(TemplateReader.extractTemplate(Constants.SUREFIRE_INHERIT_WITH_ARGLINE_TEMPLATE), true);
                 Element InheritAndAugmentSurefireElement = (Element) InheritAndAugmentSurefire;
                 InheritAndAugmentSurefireElement
@@ -453,9 +481,13 @@ public class JacocoCoverage {
                 log.debug("Maven Surefire plugin inherited from the parent configured for locally defined Jacoco agent");
             }
         } else { //Maven surefire plugin definition is available
-            if (jacocoSurefireArgLinePresent) { //jacoco prepare-agent execution is available
+            if (localJacocoPrepareAgentAvailable) { //jacoco prepare-agent execution is available
                 Element surefirePluginElement = (Element) surefirePlugin;
                 NodeList argLines = surefirePluginElement.getElementsByTagName(Constants.SUREFIRE_TAG_ARGLINE);
+                /*
+                If <argLine> tag or tags present, search if the jacoco argument line is included in any of them and skip
+                this procedure if available. If <argLine> tag is not present at all add required template under <configuration>
+                */
                 for (int i = 0; i < argLines.getLength(); i++) {
                     if (argLines.item(i).getTextContent().contains(getArgument(jacocoArgumentLine))) {
                         return;
@@ -463,12 +495,16 @@ public class JacocoCoverage {
                 }
                 NodeList configurations = surefirePluginElement.getElementsByTagName(Constants.MAVEN_TAG_CONFIGURATION);
                 Node configuration;
+
+                /*Get <configuration> element. Create if not exists*/
                 if (configurations.getLength() == 0) {
                     configuration = pom.createElement(Constants.MAVEN_TAG_CONFIGURATION);
                 } else {
                     configuration = configurations.item(0);
                 }
                 Node argLine = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_SUREFIRE_ARGLINE_TEMPLATE), true);
+
+                /*Modifying jacoco argument line in the Surefire template*/
                 argLine.setTextContent(argLine.getTextContent().replace(getArgument(Constants.DEFAULT_JACOCO_SUREFIRE_PROPERTY_NAME), getArgument(jacocoArgumentLine)));
                 configuration.appendChild(argLine);
                 log.debug("Modified Maven Surefire argument line for locally available Jacoco agent");

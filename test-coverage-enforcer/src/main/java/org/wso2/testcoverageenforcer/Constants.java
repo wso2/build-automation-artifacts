@@ -33,6 +33,7 @@ public class Constants {
     public static final String JACOCO_TAG_COVERAGE_PER_ELEMENT = "element";
     public static final String[] JACOCO_POM_PATH_MINIMUM = {"configuration", "rules", "rule", "limits", "limit", "minimum"};
     public static final String[] JACOCO_POM_PATH_ELEMENT = {"configuration", "rules", "rule", "element"};
+    public static final String[] JACOCO_POM_PATH_DATA_FILE = {"configuration", "dataFile"};
     public static final String MAVEN_TAG_PLUGIN = "plugin";
     public static final String MAVEN_TAG_EXECUTION = "execution";
     public static final String MAVEN_TAG_GOAL = "goal";

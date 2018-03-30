@@ -165,7 +165,7 @@ public class Application {
         } catch (XmlPullParserException e) {
             log.error("Error occurred while parsing the pom file", e);
         } catch (ParserConfigurationException e) {
-            log.error("Error occurred due to a serious configuration error in 'javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder()'", e);
+            log.error("Error occurred due to a serious configuration error", e);
         } catch (SAXException e) {
             log.error("Error occurred while parsing source xml file and the pom file", e);
         } catch (TransformerException e) {

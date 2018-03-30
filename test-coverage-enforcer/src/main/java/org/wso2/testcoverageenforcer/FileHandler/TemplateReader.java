@@ -18,15 +18,10 @@
 
 package org.wso2.testcoverageenforcer.FileHandler;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,8 +37,6 @@ import javax.xml.parsers.ParserConfigurationException;
  */
 public class TemplateReader {
 
-    @Autowired
-    private static ResourceLoader resourceLoader;
     /**
      * Given a xml file path, read xml as org.w3c.Document model and return it's root element as a Node
      *
