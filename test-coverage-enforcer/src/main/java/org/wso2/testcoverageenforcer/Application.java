@@ -117,16 +117,30 @@ public class Application {
                     String gitHubRepository;
                     while (true) {
                         gitHubRepository = externalServer.getNextRepositoryURL();
-                        if (gitHubRepository == null) break;
-                        log.info("Enforcing coverage on " + gitHubRepository);
-                        CoverageCheckEnforcer.createPullRequestWithCoverageCheck(
-                                gitHubRepository,
-                                cmd.getOptionValue("properties"),
-                                cmd.getOptionValue("workspacePath"),
-                                automaticCoverageThreshold ? null : cmd.getOptionValue("element"),
-                                automaticCoverageThreshold ? null : cmd.getOptionValue("threshold"),
-                                Boolean.parseBoolean(cmd.getOptionValue("pullRequest")),
-                                automaticCoverageThreshold);
+                        if (gitHubRepository == null) {
+                            log.info("Reached to the end of the table");
+                            break;
+                        }
+                        /*
+                        If the coverage check integration failed due to Git or GitHub exception, log the message
+                        and skip current repository
+                         */
+                        try {
+                            log.info("Enforcing coverage on " + gitHubRepository);
+                            CoverageCheckEnforcer.createPullRequestWithCoverageCheck(
+                                    gitHubRepository,
+                                    cmd.getOptionValue("properties"),
+                                    cmd.getOptionValue("workspacePath"),
+                                    automaticCoverageThreshold ? null : cmd.getOptionValue("element"),
+                                    automaticCoverageThreshold ? null : cmd.getOptionValue("threshold"),
+                                    Boolean.parseBoolean(cmd.getOptionValue("pullRequest")),
+                                    automaticCoverageThreshold);
+
+                        } catch (GitAPIException e) {
+                            log.warn("Error while performing git operations. Skipping job", e);
+                        } catch (IOException e) {
+                            log.warn("Error occurred possibly due to a GitHub operation or local file IO. Skipping Job", e);
+                        }
                     }
                 } finally {
                     externalServer.close();
