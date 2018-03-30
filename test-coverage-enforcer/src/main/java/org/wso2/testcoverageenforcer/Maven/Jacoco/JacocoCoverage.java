@@ -437,8 +437,7 @@ public class JacocoCoverage {
             }
             Node jacocoArgumentLineForSurefire = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_SUREFIRE_ARGLINE_TEMPLATE), true);
             Element jacocoArgumentLineForSurefireElement = (Element) jacocoArgumentLineForSurefire;
-            jacocoArgumentLineForSurefireElement.getElementsByTagName(Constants.SUREFIRE_TAG_ARGLINE).item(0)
-                    .setTextContent(getArgument(jacocoArgumentLine));
+            jacocoArgumentLineForSurefireElement.setTextContent(getArgument(jacocoArgumentLine));
             configurationNode.appendChild(jacocoArgumentLineForSurefire);
             log.debug("Jacoco argument line for Maven Surefire is configured");
         }
