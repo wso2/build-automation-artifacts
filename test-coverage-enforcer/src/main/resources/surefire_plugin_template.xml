@@ -3,6 +3,6 @@
 	<artifactId>maven-surefire-plugin</artifactId>
 	<version>2.21.0</version>
 	<configuration>
-	    <argLine>${surefireArgLine}</argLine>	
+		<argLine>${argLine}</argLine>
 	</configuration>
 </plugin>

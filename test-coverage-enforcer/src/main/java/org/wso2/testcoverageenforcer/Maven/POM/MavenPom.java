@@ -111,22 +111,28 @@ abstract class MavenPom {
      *
      * @param coveragePerElement Per which element jacoco coverage check should be performed
      * @param coverageThreshold  Line coverage threshold to break the build
+     * @return An ArrayList of objects in the order of,
+     * Jacoco inserted pom file as an org.w3c.Document object
+     * Maven surefire argument line String in the processed document,
+     * Jacoco report path String in the processed document
      * @throws ParserConfigurationException Error while parsing the pom file
      * @throws IOException                  Error reading the pom file
      * @throws SAXException                 Error while parsing the pom's file input stream
      * @throws TransformerException         Error while writing pom file back
      */
-    public void enforceCoverageCheckUnderBuildPlugins(String coveragePerElement, String coverageThreshold)
+    public ArrayList<Object> enforceCoverageCheckUnderBuildPlugins(String coveragePerElement, String coverageThreshold)
             throws TransformerException, ParserConfigurationException, IOException, SAXException {
 
         Document pomFile = DocumentReader.readDocument(pomFilePath);
         pomFile.setDocumentURI(pomFilePath);
-        Document jacocoInsertedPom = JacocoCoverage.insertJacocoCoverageCheck(
+        ArrayList<Object> processedData = JacocoCoverage.insertJacocoCoverageCheck(
                 pomFile,
                 Constants.MAVEN_TAG_BUILD,
                 coveragePerElement,
                 coverageThreshold);
+        Document jacocoInsertedPom = (Document) processedData.get(0);
         DocumentWriter.writeDocument(jacocoInsertedPom, pomFilePath);
+        return processedData;
     }
 
     /**

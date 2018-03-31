@@ -8,8 +8,8 @@
 			<goals>
 				<goal>prepare-agent</goal>
 			</goals>
-			<configuration>	
-				<propertyName>surefireArgLine</propertyName>
+			<configuration>
+                <propertyName>argLine</propertyName>
 			</configuration>
 		</execution>
 		<execution>

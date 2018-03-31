@@ -29,7 +29,9 @@ import org.wso2.testcoverageenforcer.FileHandler.TemplateReader;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -48,17 +50,24 @@ public class JacocoCoverage {
      * @param pluginsParent      Jacoco plugin will be added as a child node appended to this node
      * @param coveragePerElement Per which element jacoco coverage check should be performed
      * @param coverageThreshold  Line coverage threshold to break the build
-     * @return Jacoco inserted pom file as an org.w3c.Document object
+     * @return An ArrayList of objects in the order of,
+     * Jacoco inserted pom file as an org.w3c.Document object
+     * Maven surefire argument line String in the processed document,
+     * Jacoco report path String in the processed document
      * @throws ParserConfigurationException Error while parsing the pom file
      * @throws IOException                  Error reading the pom file
      * @throws SAXException                 Error while parsing the pom's file input stream
      */
-    public static Document insertJacocoCoverageCheck(Document pom,
-                                                     String pluginsParent,
-                                                     String coveragePerElement,
-                                                     String coverageThreshold)
+    public static ArrayList<Object> insertJacocoCoverageCheck(Document pom,
+                                                              String pluginsParent,
+                                                              String coveragePerElement,
+                                                              String coverageThreshold)
             throws ParserConfigurationException, IOException, SAXException {
 
+        /*
+        To return multiple objects
+         */
+        ArrayList<Object> output = new ArrayList<>();
         /*<plugins> node might not be present in some cases. Uses existing or create otherwise*/
         Node plugins = createPluginsNode(pom, pluginsParent);
         /*
@@ -165,7 +174,10 @@ public class JacocoCoverage {
         }
 
         setSurefireArgumentLineForJacoco(pom, surefirePluginAvailable, mavenSurefirePlugin, surefireArgLine);
-        return pom;
+        output.add(pom);
+        output.add(surefireArgLine);
+        output.add(jacocoReportFilePath);
+        return output;
     }
 
     /**
@@ -174,6 +186,8 @@ public class JacocoCoverage {
      * @param pom                Pom file as an org.w3c.Document object to inherit jacoco
      * @param coveragePerElement Per which element jacoco coverage check should be performed
      * @param coverageThreshold  Line coverage threshold to break the build
+     * @param surefireArgumentLineInParent surefire argument name in the parent pom
+     * @param jacocoReportPathInParent jacoco report file path used in the parent pom
      * @return Jacoco inherited pom file as an org.w3c.Document object
      * @throws ParserConfigurationException Error while parsing the pom file
      * @throws IOException                  Error reading the pom file
@@ -181,7 +195,9 @@ public class JacocoCoverage {
      */
     public static Document inheritCoverageCheckFromParent(Document pom,
                                                           String coveragePerElement,
-                                                          String coverageThreshold)
+                                                          String coverageThreshold,
+                                                          String surefireArgumentLineInParent,
+                                                          String jacocoReportPathInParent)
             throws ParserConfigurationException, IOException, SAXException {
 
         Node plugins = createPluginsNode(pom, Constants.MAVEN_TAG_BUILD);
@@ -204,10 +220,10 @@ public class JacocoCoverage {
             }
         }
 
-        boolean jacocoReportFilePathPresent = false;
+        boolean jacocoPrepareAgentPresent = false;
         boolean localJacocoPrepareAgentAvailable = false;
-        String jacocoReportFilePath = null;
-        String jacocoSurefireArgLine = null;
+        String jacocoReportFilePath = jacocoReportPathInParent;
+        String jacocoSurefireArgLine = surefireArgumentLineInParent;
         Element jacocoCheckElement = null;
         if (inheritedJacocoPlugin == null) {
             // Get the root node of the xml file
@@ -216,7 +232,7 @@ public class JacocoCoverage {
             log.debug("Jacoco plugin configuration inherited from parent in " + pom.getDocumentURI());
         } else {
             /*
-            If jacoco plugin and executions exists, update coverage threshold and coverage per element
+            If jacoco plugin and executions exists, update coverage threshold and coverage per element.
             If inheritance is already present, ignore enforcing inheritance of coverage check
              */
             Node executions = inheritedJacocoPlugin.getElementsByTagName(Constants.MAVEN_TAG_EXECUTIONS).item(0);
@@ -249,18 +265,18 @@ public class JacocoCoverage {
                             break;
                         case Constants.JACOCO_GOAL_AGENT_INVOKE:
                             NodeList dataFiles = execution.getElementsByTagName(Constants.JACOCO_DESTFILE);
-                            jacocoReportFilePathPresent = true;
+                            jacocoPrepareAgentPresent = true;
                             if (dataFiles.getLength() > 0) {
                                 jacocoReportFilePath = dataFiles.item(0).getTextContent();
                             } else {
-                                jacocoReportFilePath = Constants.DEFAULT_JACOCO_REPORT_PATH;
+                                jacocoReportFilePath = jacocoReportPathInParent;
                             }
                             NodeList surefireArguments = execution.getElementsByTagName(Constants.JACOCO_TAG_SUREFIRE_ARGLINE_NAME);
                             localJacocoPrepareAgentAvailable = true;
                             if (surefireArguments.getLength() > 0) {
                                 jacocoSurefireArgLine = surefireArguments.item(0).getTextContent();
                             } else {
-                                jacocoSurefireArgLine = Constants.DEFAULT_JACOCO_SUREFIRE_ARGLINE;
+                                jacocoSurefireArgLine = surefireArgumentLineInParent;
                             }
                             break;
                     }
@@ -270,14 +286,19 @@ public class JacocoCoverage {
                  child module to inherit Jacoco check rule from the parent with an incorrect path for the coverage report.
                  Therefore change inheriting report path configuration locally.
                   */
-                if ((jacocoCheckElement == null) && (jacocoReportFilePathPresent)) {
+                if ((jacocoCheckElement == null) && (jacocoPrepareAgentPresent)) {
                     Node jacocoCheckInheritance = pom.importNode(TemplateReader.extractTemplate(Constants.JACOCO_CHECK_INHERIT_TEMPLATE), true);
                     Element jacocoCheckInheritanceTemplate = (Element) jacocoCheckInheritance;
                     jacocoCheckInheritanceTemplate.getElementsByTagName(Constants.JACOCO_TAG_REPORT_READ).item(0).setTextContent(jacocoReportFilePath);
                     executions.appendChild(jacocoCheckInheritance);
-                } else if (jacocoCheckElement != null && (jacocoReportFilePathPresent)) { //If jacoco check rule is present, add report file path information
-
+                    log.debug("Report path configured for inheriting check rule");
+                } else if (jacocoCheckElement != null) {
+                    /*
+                    If jacoco check rule is present, add report file path information for inheriting jacoco
+                    prepare-agent execution
+                     */
                     createNode(pom, jacocoCheckElement, Constants.JACOCO_POM_PATH_DATA_FILE).setTextContent(jacocoReportFilePath);
+                    log.debug("Report path configured for existing Check rule");
                 }
             }
         }
@@ -508,7 +529,25 @@ public class JacocoCoverage {
                 configuration.appendChild(argLine);
                 log.debug("Modified Maven Surefire argument line for locally available Jacoco agent");
             } else {
-                log.debug("Ignoring Surefire argument inheritance due to missing locally defined Jacoco argument line");
+                /*
+                If surefire is defined but prepare agent is not present in the child, surefire argument line should be
+                the argument line defined in parent. But this locally defined surefire definition might contain a different
+                argument line overriding what we define in the parent. Hence it should be configured accordingly if <argLine>
+                available locally. First check this step has been already done and add otherwise.
+                 */
+                NodeList argLines = ((Element) surefirePlugin).getElementsByTagName(Constants.SUREFIRE_TAG_ARGLINE);
+                for (int i = 0; i < argLines.getLength(); i++) {
+
+                    /*If argument line already exists in the Surefire definition, skip inheriting*/
+                    if (argLines.item(i).getTextContent().contains(getArgument(jacocoArgumentLine))) {
+                        log.debug("Locally defined Surefire plugin is already configured for the inheriting Jacoco plugin");
+                        return;
+                    }
+                }
+                Node newArgLine = pom.createElement(Constants.SUREFIRE_TAG_ARGLINE);
+                newArgLine.setTextContent(getArgument(jacocoArgumentLine));
+                createNode(pom, surefirePlugin, Constants.SUREFIRE_POM_PATH_CONFIGURATION).appendChild(newArgLine);
+                log.debug("Local Surefire definition configured for inheriting jacoco prepare-agent");
             }
         }
     }

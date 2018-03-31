@@ -34,6 +34,7 @@ public class Constants {
     public static final String[] JACOCO_POM_PATH_MINIMUM = {"configuration", "rules", "rule", "limits", "limit", "minimum"};
     public static final String[] JACOCO_POM_PATH_ELEMENT = {"configuration", "rules", "rule", "element"};
     public static final String[] JACOCO_POM_PATH_DATA_FILE = {"configuration", "dataFile"};
+    public static final String[] SUREFIRE_POM_PATH_CONFIGURATION = {"configuration"};
     public static final String MAVEN_TAG_PLUGIN = "plugin";
     public static final String MAVEN_TAG_EXECUTION = "execution";
     public static final String MAVEN_TAG_GOAL = "goal";
@@ -74,7 +75,7 @@ public class Constants {
     public static final String GIT_EMAIL = "github.email";
     public static final String DEFAULT_JACOCO_REPORT_PATH = "target/jacoco.exec";
     public static final String DEFAULT_JACOCO_SUREFIRE_ARGLINE = "argLine";
-    public static final String DEFAULT_JACOCO_SUREFIRE_PROPERTY_NAME = "surefireArgLine";
+    public static final String DEFAULT_JACOCO_SUREFIRE_PROPERTY_NAME = "argLine";
     public static final String BUILD_TARGET_FOLDER = File.separator + "target";
     public static final String EMPTY_STRING = "";
     public static final String BUILD_CLASSES_FOLDER = "classes";

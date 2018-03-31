@@ -76,12 +76,12 @@ public class CoverageCheckEnforcer {
         repo.gitClone();
         log.info("--Processing pom files..");
         if (!automaticCoverageThreshold) {
-            FeatureAdder.intergrateJacocoCoverageCheck(
+            FeatureAdder.integrateJacocoCoverageCheck(
                     repo.getClonedPath(),
                     coveragePerElement,
                     coverageThreshold);
         } else {
-            FeatureAdder.intergrateJacocoCoverageCheck(
+            FeatureAdder.integrateJacocoCoverageCheck(
                     repo.getClonedPath());
         }
         log.info("--Committing..");

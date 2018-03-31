@@ -26,6 +26,7 @@ import org.wso2.testcoverageenforcer.Maven.POM.ParentMavenPom;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -48,7 +49,7 @@ public class FeatureAdder {
      * @throws TransformerException         Error while writing pom file back
      * @throws XmlPullParserException       Error while parsing pom xml files
      */
-    public static void intergrateJacocoCoverageCheck(
+    public static void integrateJacocoCoverageCheck(
             String projectPath,
             String coveragePerElement,
             String coverageThreshold) throws IOException, XmlPullParserException, ParserConfigurationException, SAXException, TransformerException {
@@ -69,7 +70,7 @@ public class FeatureAdder {
      * @throws XmlPullParserException       Error while parsing pom xml files
      * @throws InterruptedException         Waiting until the build to happen is failed
      */
-    public static void intergrateJacocoCoverageCheck(
+    public static void integrateJacocoCoverageCheck(
             String projectPath)
             throws IOException, XmlPullParserException, ParserConfigurationException, SAXException, TransformerException,
             InterruptedException {
@@ -96,19 +97,15 @@ public class FeatureAdder {
 
         if (parent.hasChildren()) {
             log.debug("Child modules are available. Analysing <PluginManagement> node");
-            parent.enforceCoverageCheckUnderPluginManagement(coveragePerElement, coverageThreshold);
-            parent.inheritCoverageCheckInChildren(parent.getChildren(), coveragePerElement, coverageThreshold);
+            ArrayList<Object> results = parent.enforceCoverageCheckUnderPluginManagement(coveragePerElement, coverageThreshold);
+            String surefireArgumentLine = (String) results.get(1);
+            String jacocoReportPath = (String) results.get(2);
+            parent.inheritCoverageCheckInChildren(parent.getChildren(), coveragePerElement, coverageThreshold, surefireArgumentLine, jacocoReportPath);
         } else if (parent.hasTests()) {
             log.debug("Tests are available in parent. Analysing <buildPlugin> node");
             parent.enforceCoverageCheckUnderBuildPlugins(coveragePerElement, coverageThreshold);
         } else if (!parent.hasTests()) {
             log.debug("Tests are not available in parent. Skipping coverage addition ");
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-
-        intergrateJacocoCoverageCheck("/home/tharindu/my-projects/TestResources/siddhi-map-json", "BUNDLE",
-                "0.89");
     }
 }

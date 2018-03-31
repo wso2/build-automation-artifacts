@@ -57,12 +57,14 @@ public class ChildMavenPom extends MavenPom {
      *
      * @param coveragePerElement Per which element jacoco coverage check should be performed
      * @param coverageThreshold  Line coverage threshold to break the build
+     * @param surefireArgumentLine surefire argument name in the parent pom
+     * @param jacocoReportPath jacoco report file path used in the parent pom
      * @throws ParserConfigurationException Error while parsing the pom file
      * @throws IOException                  Error reading the pom file
      * @throws SAXException                 Error while parsing the pom's file input stream
      * @throws TransformerException         Error while writing pom file back
      */
-    public void inheritCoverageCheckFromParent(String coveragePerElement, String coverageThreshold)
+    public void inheritCoverageCheckFromParent(String coveragePerElement, String coverageThreshold, String surefireArgumentLine, String jacocoReportPath)
             throws ParserConfigurationException, IOException, SAXException, TransformerException {
 
         Document pomFile = DocumentReader.readDocument(pomFilePath);
@@ -70,7 +72,9 @@ public class ChildMavenPom extends MavenPom {
         Document jacocoInheritedPom = JacocoCoverage.inheritCoverageCheckFromParent(
                 pomFile,
                 coveragePerElement,
-                coverageThreshold);
+                coverageThreshold,
+                surefireArgumentLine,
+                jacocoReportPath);
         DocumentWriter.writeDocument(jacocoInheritedPom, pomFilePath);
     }
 

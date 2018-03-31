@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.print.Doc;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -63,23 +64,29 @@ public class ParentMavenPom extends MavenPom {
      *
      * @param coveragePerElement Per which element jacoco coverage check should be performed
      * @param coverageThreshold  Line coverage threshold to break the build
+     * @return An ArrayList of objects in the order of,
+     * Jacoco inserted pom file as an org.w3c.Document object
+     * Maven surefire argument line String in the processed document,
+     * Jacoco report path String in the processed document
      * @throws ParserConfigurationException Error while parsing the pom file
      * @throws IOException                  Error reading the pom file
      * @throws SAXException                 Error while parsing the pom's file input stream
      * @throws TransformerException         Error while writing pom file back
      */
-    public void enforceCoverageCheckUnderPluginManagement(String coveragePerElement,
-                                                          String coverageThreshold)
+    public ArrayList<Object> enforceCoverageCheckUnderPluginManagement(String coveragePerElement,
+                                                                       String coverageThreshold)
             throws TransformerException, ParserConfigurationException, IOException, SAXException {
 
         Document pomFile = DocumentReader.readDocument(pomFilePath);
         pomFile.setDocumentURI(pomFilePath);
-        Document jacocoInsertedPom = JacocoCoverage.insertJacocoCoverageCheck(
+        ArrayList<Object> processedData = JacocoCoverage.insertJacocoCoverageCheck(
                 pomFile,
                 Constants.MAVEN_TAG_PLUGIN_MANAGEMENT,
                 coveragePerElement,
                 coverageThreshold);
+        Document jacocoInsertedPom = (Document) processedData.get(0);
         DocumentWriter.writeDocument(jacocoInsertedPom, pomFilePath);
+        return processedData;
     }
 
     /**
@@ -88,20 +95,23 @@ public class ParentMavenPom extends MavenPom {
      * @param children           A list of child maven objects
      * @param coveragePerElement Per which element jacoco coverage check should be performed
      * @param coverageThreshold  Line coverage threshold to break the build
+     * @param surefireArgumentLine surefire argument name in the parent pom
+     * @param jacocoReportPath jacoco report file path used in the parent pom
      * @throws ParserConfigurationException Error while parsing the pom file
      * @throws IOException                  Error reading the pom file
      * @throws SAXException                 Error while parsing the pom's file input stream
      * @throws TransformerException         Error while writing pom file back
      * @throws XmlPullParserException       Error while parsing pom xml files
      */
-    public void inheritCoverageCheckInChildren(List<ChildMavenPom> children, String coveragePerElement, String coverageThreshold)
+    public void inheritCoverageCheckInChildren(List<ChildMavenPom> children, String coveragePerElement, String coverageThreshold,
+                                               String surefireArgumentLine, String jacocoReportPath)
             throws SAXException, IOException, XmlPullParserException, ParserConfigurationException, TransformerException {
 
         for (ChildMavenPom child : children) {
             if (child.hasChildren()) {
-                inheritCoverageCheckInChildren(child.getChildren(), coveragePerElement, coverageThreshold);
+                inheritCoverageCheckInChildren(child.getChildren(), coveragePerElement, coverageThreshold, surefireArgumentLine, jacocoReportPath);
             } else if (child.hasTests()) {
-                child.inheritCoverageCheckFromParent(coveragePerElement, coverageThreshold);
+                child.inheritCoverageCheckFromParent(coveragePerElement, coverageThreshold, surefireArgumentLine, jacocoReportPath);
             } else if (!child.hasTests()) {
                 log.debug("Ignoring child module due to missing tests in " + child.getPomFilePath());
             }
