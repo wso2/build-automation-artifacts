@@ -171,6 +171,12 @@ public class JacocoCoverage {
                 executions.appendChild(jacocoCheckExecutionNodeTemplate);
                 log.debug("Jacoco check execution template added in under " + pluginsParent + " for " + pom.getDocumentURI());
             }
+            if (
+                    nodeAnalysisReport.get(Constants.JACOCO_GOAL_AGENT_INVOKE) &&
+                    nodeAnalysisReport.get(Constants.JACOCO_GOAL_REPORT) &&
+                    nodeAnalysisReport.get(Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE)) {
+                log.debug("Jacoco Plugin already available");
+            }
         }
 
         setSurefireArgumentLineForJacoco(pom, surefirePluginAvailable, mavenSurefirePlugin, surefireArgLine);
@@ -231,6 +237,7 @@ public class JacocoCoverage {
             plugins.appendChild(inheritedJacocoPluginTemplate);
             log.debug("Jacoco plugin configuration inherited from parent in " + pom.getDocumentURI());
         } else {
+            log.debug("Jacoco plugin is already inherited in " + pom.getDocumentURI());
             /*
             If jacoco plugin and executions exists, update coverage threshold and coverage per element.
             If inheritance is already present, ignore enforcing inheritance of coverage check

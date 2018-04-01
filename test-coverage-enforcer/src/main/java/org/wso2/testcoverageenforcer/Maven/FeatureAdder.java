@@ -108,4 +108,8 @@ public class FeatureAdder {
             log.debug("Tests are not available in parent. Skipping coverage addition ");
         }
     }
+
+    public static void main(String[] args) throws Exception{
+        integrateJacocoCoverageCheck("/home/tharindu/Jenkins_Test/Wso2_repos/analytics-apim", "BUNDLE", "0.0");
+    }
 }
