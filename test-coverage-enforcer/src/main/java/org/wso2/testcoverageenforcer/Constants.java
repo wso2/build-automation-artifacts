@@ -59,7 +59,7 @@ public class Constants {
     public static final short GITHUB_COMMITS_OF_INTEREST_COUNT = 8;
     public static final short GITHUB_RECENT_COMMITS_THRESHOLD = 3;
     public static final String GIT_JENKINS_BOT = "wso2-jenkins-bot";
-    public static final String COMMIT_MESSAGE_COVERAGE_CHECK = "Jacoco Coverage Check Added";
+    public static final String COMMIT_MESSAGE_COVERAGE_CHECK = "Other: Jacoco Coverage Check Integration";
     public static final String TEST_FOLDER = "src" + File.separator + "test";
     public static final String COVERAGE_PER_ELEMENT = "BUNDLE";
     public static final String GIT_PR_BODY = "pullRequestMessage.txt";
@@ -73,7 +73,7 @@ public class Constants {
     public static final String GIT_USERNAME = "github.username";
     public static final String GIT_PASSWORD = "github.password";
     public static final String GIT_EMAIL = "github.email";
-    public static final String DEFAULT_JACOCO_REPORT_PATH = "target/jacoco.exec";
+    public static final String DEFAULT_JACOCO_REPORT_PATH = "${project.build.directory}/jacoco.exec";
     public static final String DEFAULT_JACOCO_SUREFIRE_ARGLINE = "argLine";
     public static final String DEFAULT_JACOCO_SUREFIRE_PROPERTY_NAME = "argLine";
     public static final String BUILD_TARGET_FOLDER = File.separator + "target";

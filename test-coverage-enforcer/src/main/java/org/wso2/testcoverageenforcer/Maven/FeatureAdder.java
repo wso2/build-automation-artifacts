@@ -110,6 +110,6 @@ public class FeatureAdder {
     }
 
     public static void main(String[] args) throws Exception{
-        integrateJacocoCoverageCheck("/home/tharindu/Jenkins_Test/Wso2_repos/analytics-apim", "BUNDLE", "0.0");
+        integrateJacocoCoverageCheck("/home/tharindu/Jenkins_Test/Wso2_repos/analytics-data-agents/java-instrumentation-agent/src", "BUNDLE", "0.0");
     }
 }

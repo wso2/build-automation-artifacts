@@ -4,7 +4,7 @@
 		<goal>check</goal>
 	</goals>
 	<configuration>
-		<dataFile>target/jacoco.exec</dataFile>
+		<dataFile>${project.build.directory}/jacoco.exec</dataFile>
 		<rules>
 			<!-- implementation is needed only for Maven 2 -->
 			<rule implementation="org.jacoco.maven.RuleConfiguration">

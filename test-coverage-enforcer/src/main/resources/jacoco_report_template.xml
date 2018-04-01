@@ -4,6 +4,6 @@
 		<goal>report</goal>
 	</goals>
     <configuration>
-        <dataFile>target/jacoco.exec</dataFile>
+        <dataFile>${project.build.directory}/jacoco.exec</dataFile>
     </configuration>
 </execution>
