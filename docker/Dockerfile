@@ -131,6 +131,9 @@ apt-get update && apt-get -y install python-pip \
 && pip install mkdocs && mkdocs --version \
 && pip install mkdocs-material
 
+RUN \
+pip install beautifulsoup4 && pip install lxml \
+
 ENV PATH=$PATH:/build/software/nodejs/node-v8.8.1-linux-x64/bin
 
 RUN \
