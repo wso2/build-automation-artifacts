@@ -92,4 +92,5 @@ public class Constants {
     public static final String JACOCO_CHECK_INHERIT_TEMPLATE = "jacoco_check_inheritance_template.xml";
     public static final String SUREFIRE_SIMPLE_INHERIT_TEMPLATE = "surefire_simple_inherit.xml";
     public static final String SUREFIRE_INHERIT_WITH_ARGLINE_TEMPLATE = "surefire_inherit_with_arg_line.xml";
+    public static final String XML_STYLE_SHEET = "xml_indent.xsl";
 }

@@ -64,6 +64,12 @@ public class CoverageReportReader {
         create();
     }
 
+    public static void main(String[] args) throws Exception {
+
+        CoverageReportReader reader = new CoverageReportReader(new File("/home/tharindu/Jenkins_Test/Wso2_repos/carbon-event-processing/components/event-processor/org.wso2.carbon.event.processor.core/target"));
+        System.out.println(reader.getCoverageThresholdForBundle());
+    }
+
     /**
      * Create the report.
      *

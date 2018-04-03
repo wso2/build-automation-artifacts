@@ -55,10 +55,10 @@ public class ChildMavenPom extends MavenPom {
      * in the pom file. If the inherit jacoco coverage check is not present at all in the pom file, this will add
      * the whole template.
      *
-     * @param coveragePerElement Per which element jacoco coverage check should be performed
-     * @param coverageThreshold  Line coverage threshold to break the build
+     * @param coveragePerElement   Per which element jacoco coverage check should be performed
+     * @param coverageThreshold    Line coverage threshold to break the build
      * @param surefireArgumentLine surefire argument name in the parent pom
-     * @param jacocoReportPath jacoco report file path used in the parent pom
+     * @param jacocoReportPath     jacoco report file path used in the parent pom
      * @throws ParserConfigurationException Error while parsing the pom file
      * @throws IOException                  Error reading the pom file
      * @throws SAXException                 Error while parsing the pom's file input stream

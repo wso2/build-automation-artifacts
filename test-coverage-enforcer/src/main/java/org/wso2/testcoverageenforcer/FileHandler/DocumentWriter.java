@@ -19,14 +19,21 @@
 package org.wso2.testcoverageenforcer.FileHandler;
 
 import org.w3c.dom.Document;
+import org.wso2.testcoverageenforcer.Constants;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 /**
  * Contains methods to write org.w3c.dom.Document objects to xml files
@@ -39,13 +46,16 @@ public class DocumentWriter {
      * @param xml           org.w3c.dom.Document object
      * @param targetXmlPath File path to write pom file
      * @throws TransformerException Error occurred while writing document object to the file stream
+     * @throws IOException Reading error in xml writer style sheet
      */
-    public static void writeDocument(Document xml, String targetXmlPath) throws TransformerException {
+    public static void writeDocument(Document xml, String targetXmlPath) throws TransformerException, IOException{
 
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Transformer transformer = transformerFactory.newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        Path tempFile = Files.createTempFile("xml_indent_temp", ".xsl");
+        try (InputStream stream = TemplateReader.class.getClassLoader().getResourceAsStream(Constants.XML_STYLE_SHEET)) {
+            Files.copy(stream, tempFile, StandardCopyOption.REPLACE_EXISTING);
+        }
+        Transformer transformer = transformerFactory.newTransformer(new StreamSource(tempFile.toString()));
         DOMSource source = new DOMSource(xml);
         StreamResult result = new StreamResult(new File(targetXmlPath));
         transformer.transform(source, result);

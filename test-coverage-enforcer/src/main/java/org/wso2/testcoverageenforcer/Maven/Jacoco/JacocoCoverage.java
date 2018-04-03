@@ -31,7 +31,6 @@ import org.xml.sax.SAXException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -173,8 +172,8 @@ public class JacocoCoverage {
             }
             if (
                     nodeAnalysisReport.get(Constants.JACOCO_GOAL_AGENT_INVOKE) &&
-                    nodeAnalysisReport.get(Constants.JACOCO_GOAL_REPORT) &&
-                    nodeAnalysisReport.get(Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE)) {
+                            nodeAnalysisReport.get(Constants.JACOCO_GOAL_REPORT) &&
+                            nodeAnalysisReport.get(Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE)) {
                 log.debug("Jacoco Plugin already available");
             }
         }
@@ -189,11 +188,11 @@ public class JacocoCoverage {
     /**
      * Given Document model and a plugins node in that Document, this will add jacoco plugin inheritance to the model
      *
-     * @param pom                Pom file as an org.w3c.Document object to inherit jacoco
-     * @param coveragePerElement Per which element jacoco coverage check should be performed
-     * @param coverageThreshold  Line coverage threshold to break the build
+     * @param pom                          Pom file as an org.w3c.Document object to inherit jacoco
+     * @param coveragePerElement           Per which element jacoco coverage check should be performed
+     * @param coverageThreshold            Line coverage threshold to break the build
      * @param surefireArgumentLineInParent surefire argument name in the parent pom
-     * @param jacocoReportPathInParent jacoco report file path used in the parent pom
+     * @param jacocoReportPathInParent     jacoco report file path used in the parent pom
      * @return Jacoco inherited pom file as an org.w3c.Document object
      * @throws ParserConfigurationException Error while parsing the pom file
      * @throws IOException                  Error reading the pom file
@@ -418,7 +417,7 @@ public class JacocoCoverage {
      * @param pom                     Pom file model to set surefire argument line
      * @param surefirePluginAvailable Surefire plugin definition is present in the pom
      * @param surefirePlugin          Maven Surefire plugin element if exists. Otherwise this is equal to the maven
-     *                               <plugins> element
+     *                                <plugins> element
      * @param jacocoArgumentLine      Name of the argument line set by jacoco plugin for Maven Surefire plugin
      * @throws ParserConfigurationException Error while parsing the pom file
      * @throws IOException                  Error reading the pom file
@@ -475,12 +474,12 @@ public class JacocoCoverage {
      * Inherit surefire plugin in to the child pom from the parent. If jacoco coverage is defined locally, inheritance
      * will adjust surefire for the local jacoco coverage definition
      *
-     * @param pom                          Pom file model to inherit surefire argument line
-     * @param surefirePluginAvailable      surefire plugin definition is present in the pom file
-     * @param surefirePlugin               Maven Surefire plugin element if exists. Otherwise this should equal to maven plugins
-     *                                     element
+     * @param pom                              Pom file model to inherit surefire argument line
+     * @param surefirePluginAvailable          surefire plugin definition is present in the pom file
+     * @param surefirePlugin                   Maven Surefire plugin element if exists. Otherwise this should equal to maven plugins
+     *                                         element
      * @param localJacocoPrepareAgentAvailable Jacoco prepare-agent execution definition is available
-     * @param jacocoArgumentLine           Argument to be added
+     * @param jacocoArgumentLine               Argument to be added
      * @throws ParserConfigurationException Error while parsing the pom file
      * @throws IOException                  Error reading the pom file
      * @throws SAXException                 Error while parsing the pom's file input stream

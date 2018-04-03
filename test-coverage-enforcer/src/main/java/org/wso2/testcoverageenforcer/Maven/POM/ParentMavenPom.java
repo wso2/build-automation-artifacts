@@ -33,7 +33,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.print.Doc;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -92,11 +91,11 @@ public class ParentMavenPom extends MavenPom {
     /**
      * Deep traverse through children and inherit coverage check from the parent
      *
-     * @param children           A list of child maven objects
-     * @param coveragePerElement Per which element jacoco coverage check should be performed
-     * @param coverageThreshold  Line coverage threshold to break the build
+     * @param children             A list of child maven objects
+     * @param coveragePerElement   Per which element jacoco coverage check should be performed
+     * @param coverageThreshold    Line coverage threshold to break the build
      * @param surefireArgumentLine surefire argument name in the parent pom
-     * @param jacocoReportPath jacoco report file path used in the parent pom
+     * @param jacocoReportPath     jacoco report file path used in the parent pom
      * @throws ParserConfigurationException Error while parsing the pom file
      * @throws IOException                  Error reading the pom file
      * @throws SAXException                 Error while parsing the pom's file input stream
@@ -152,20 +151,22 @@ public class ParentMavenPom extends MavenPom {
      * @throws IOException            Error in opening files
      * @throws XmlPullParserException Error while parsing pom files
      */
-    private double getMinimumBundleCoverage(List<ChildMavenPom> children)
+    private double getCurrentBundleCoverage(List<ChildMavenPom> children)
             throws IOException, XmlPullParserException {
 
         double minimumCoverage = 1;
         for (ChildMavenPom child : children) {
             if (child.hasChildren()) {
-                getMinimumBundleCoverage(child.getChildren());
+                getCurrentBundleCoverage(child.getChildren());
             } else if (child.hasTests()) {
                 double bundleCoverage = child.getBundleCoverage();
+                //add log for calculated coverages
                 if (bundleCoverage < minimumCoverage) {
                     minimumCoverage = bundleCoverage;
                 }
             }
         }
+        //print minimun value
         return minimumCoverage;
     }
 
@@ -181,6 +182,6 @@ public class ParentMavenPom extends MavenPom {
             throws IOException, XmlPullParserException, InterruptedException {
 
         this.buildProject();
-        return this.getMinimumBundleCoverage(this.getChildren());
+        return this.getCurrentBundleCoverage(this.getChildren());
     }
 }

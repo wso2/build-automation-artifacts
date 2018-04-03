@@ -78,8 +78,8 @@ public class FeatureAdder {
         ParentMavenPom parent = new ParentMavenPom(projectPath);
         //Apply jacoco coverage check with zero coverage threshold per bundle in the beginning
         String coveragePerElement = Constants.COVERAGE_PER_ELEMENT;
-        String coverageThreshold = Constants.ZERO;
-        applyJacocoCoverageCheck(parent, coveragePerElement, coverageThreshold);
+        String defaultCoverageThreshold = Constants.ZERO;
+        applyJacocoCoverageCheck(parent, coveragePerElement, defaultCoverageThreshold);
         //Build the project and get current code coverage value
         double minimumBundleCoverageRatio = parent.buildAndCalculateMinimumBundleCoverage();
         //Apply coverage check again with the newly calculated coverage ratio value
@@ -109,7 +109,8 @@ public class FeatureAdder {
         }
     }
 
-    public static void main(String[] args) throws Exception{
-        integrateJacocoCoverageCheck("/home/tharindu/Jenkins_Test/Wso2_repos/analytics-data-agents/java-instrumentation-agent/src", "BUNDLE", "0.0");
+    public static void main(String[] args) throws Exception {
+
+        integrateJacocoCoverageCheck("/home/tharindu/Jenkins_Test/Wso2_repos/carbon-event-processing", "BUNDLE", "0.0");
     }
 }
