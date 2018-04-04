@@ -138,6 +138,22 @@ apt-get install -y libxml2-dev libxslt-dev \
 
 ENV PATH=$PATH:/build/software/nodejs/node-v8.8.1-linux-x64/bin
 
+ENV JAVA_HOME /build/software/java/jdk1.8.0_144
+
+RUN \
+wget -P /build/software/gradle https://services.gradle.org/distributions/gradle-4.2.1-bin.zip \
+&& unzip /build/software/gradle/gradle-4.2.1-bin.zip  -d /build/software/gradle/ \
+&& rm /build/software/gradle/gradle-4.2.1-bin.zip
+
+RUN \
+wget -P /build/software/android https://dl.google.com/android/repository/sdk-tools-linux-3859397.zip \
+&&unzip /build/software/android/sdk-tools-linux-3859397.zip -d /build/software/android/ \
+&& rm /build/software/android/sdk-tools-linux-3859397.zip \
+&& yes | /build/software/android/tools/bin/sdkmanager --licenses \
+&& chmod 777 -R /build/software/android/
+
+ENV PATH=$PATH:/build/software/gradle/gradle-4.2.1/bin
+
 RUN \
 echo "net.ipv4.ip_local_port_range=15000 61000" >> /etc/sysctl.conf \
 && echo "net.ipv4.tcp_fin_timeout=30" >> /etc/sysctl.conf \
