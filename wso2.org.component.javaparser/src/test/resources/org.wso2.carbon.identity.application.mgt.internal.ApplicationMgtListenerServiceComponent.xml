@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.0.0">
+    <scr:component immediate="true" name="org.wso2.carbon.identity.application.mgt.listener">
+        <implementation
+                class="org.wso2.carbon.identity.application.mgt.internal.ApplicationMgtListenerServiceComponent"/>
+        <reference name="application.mgt.event.listener.service"
+                   interface="org.wso2.carbon.identity.application.mgt.listener.ApplicationMgtListener"
+                   cardinality="0..n" policy="dynamic" bind="setApplicationMgtListenerService"
+                   unbind="unsetApplicationMgtListenerService"/>
+    </scr:component>
+</components>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Targets>
+    <targetPath name="targetNames">
+
+        <Path>/home/dineth/javaparserTest/tmp/OLD_XML</Path>
+
+        <Path>/home/dineth/javaparserTest/tmp/OLD_XML/metatype</Path>
+
+        <Path>/home/dineth/javaparserTest/tmp/OLD_XML/org.wso2.carbon.identity.captcha-1.0.32-SNAPSHOT.jar</Path>
+
+        <Path>/home/dineth/javaparserTest/tmp/OLD_XML/org.wso2.carbon.identity.governance-1.0.32-SNAPSHOT.jar</Path>
+
+        <Path>/home/dineth/javaparserTest/tmp/OLD_XML/scr-plugin</Path>
+
+        <Path>/home/dineth/javaparserTest/tmp/OLD_XML/org.wso2.carbon.identity.recovery.ui-1.0.32-SNAPSHOT.jar</Path>
+
+        <Path>
+            /home/dineth/javaparserTest/tmp/OLD_XML/org.wso2.carbon.identity.account.suspension.notification.task-1.0.32-SNAPSHOT.jar
+        </Path>
+
+        <Path>/home/dineth/javaparserTest/tmp/OLD_XML/org.wso2.carbon.identity.recovery-1.0.32-SNAPSHOT.jar</Path>
+
+        <Path>/home/dineth/javaparserTest/tmp/OLD_XML/org.wso2.carbon.identity.password.policy-1.0.32-SNAPSHOT.jar
+        </Path>
+
+        <Path>/home/dineth/javaparserTest/tmp/OLD_XML/org.wso2.carbon.identity.password.history-1.0.32-SNAPSHOT.jar
+        </Path>
+    </targetPath>
+</Targets>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0">
+    <scr:component immediate="true" name="identity.application.management.component" activate="activate"
+                   deactivate="deactivate">
+        <implementation
+                class="org.wso2.carbon.identity.application.mgt.internal.ApplicationManagementServiceComponent"/>
+        <reference name="registry.service" interface="org.wso2.carbon.registry.core.service.RegistryService"
+                   cardinality="1..1" policy="dynamic" bind="setRegistryService" unbind="unsetRegistryService"/>
+        <reference name="user.realmservice.default" interface="org.wso2.carbon.user.core.service.RealmService"
+                   cardinality="1..1" policy="dynamic" bind="setRealmService" unbind="unsetRealmService"/>
+        <reference name="configuration.context.service" interface="org.wso2.carbon.utils.ConfigurationContextService"
+                   cardinality="1..1" policy="dynamic" bind="setConfigurationContextService"
+                   unbind="unsetConfigurationContextService"/>
+        <reference name="application.mgt.authenticator"
+                   interface="org.wso2.carbon.identity.application.mgt.AbstractInboundAuthenticatorConfig"
+                   cardinality="0..n" policy="dynamic" bind="setInboundAuthenticatorConfig"
+                   unbind="unsetInboundAuthenticatorConfig"/>
+    </scr:component>
+</components>
