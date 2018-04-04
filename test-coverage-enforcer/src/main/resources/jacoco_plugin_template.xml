@@ -4,7 +4,7 @@
 	<version>0.8.0</version>
 	<executions>
 		<execution>
-			<id>default-prepare-agent</id>
+			<id>default-prepare-agent-by-coverage-enforcer</id>
 			<goals>
 				<goal>prepare-agent</goal>
 			</goals>
@@ -14,7 +14,7 @@
 			</configuration>
 		</execution>
 		<execution>
-			<id>default-report</id>
+			<id>default-report-by-coverage-enforcer</id>
 			<goals>
 				<goal>report</goal>
 			</goals>
@@ -23,7 +23,7 @@
 			</configuration>
 		</execution>
 		<execution>
-			<id>default-check</id>
+			<id>default-check-by-coverage-enforcer</id>
 			<goals>
 				<goal>check</goal>
 			</goals>

@@ -1,5 +1,5 @@
 <execution>
-	<id>default-check</id>
+	<id>default-check-by-coverage-enforcer</id>
 	<goals>
 		<goal>check</goal>
 	</goals>

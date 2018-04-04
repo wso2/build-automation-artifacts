@@ -1,5 +1,5 @@
 <execution>
-	<id>default-report</id>
+	<id>default-report-by-coverage-enforcer</id>
 	<goals>
 		<goal>report</goal>
 	</goals>
