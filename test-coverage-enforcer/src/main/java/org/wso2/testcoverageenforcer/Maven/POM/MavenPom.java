@@ -19,6 +19,7 @@
 package org.wso2.testcoverageenforcer.Maven.POM;
 
 import org.apache.maven.model.Model;
+import org.apache.maven.model.Profile;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.w3c.dom.Document;
 import org.wso2.testcoverageenforcer.Constants;
@@ -32,6 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -72,7 +74,14 @@ abstract class MavenPom {
      */
     public Boolean hasChildren() {
 
-        return this.pomFile.getModules().size() > 0;
+        if (!(this.pomFile.getModules().size() > 0)) { //Check with profiles for children
+            for (Profile eachProfile : this.pomFile.getProfiles()) {
+                if (eachProfile.getModules().size() > 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -85,7 +94,30 @@ abstract class MavenPom {
     public List<ChildMavenPom> getChildren() throws IOException, XmlPullParserException {
 
         List<ChildMavenPom> childMavenPomList = new ArrayList<>(0);
-        for (String eachChildPomPath : this.pomFile.getModules()) {
+        /*
+        Sometimes modules are available under <profiles> tag. Not under <modules> tag.
+        In that case, look under <profiles> tag for modules and add coverage check for
+        all available modules
+         */
+        List<String> modules = this.pomFile.getModules();
+        if (modules.size() == 0) {
+            List<Profile> profilesList = this.pomFile.getProfiles();
+
+            //Both <modules> and <profiles> are not present, pom does not have children
+            if (profilesList.size() == 0) return null;
+            List<List<String>> modulesList = new ArrayList<>();
+            for (Profile eachProfile : profilesList) {
+                List<String> modulesInProfile = eachProfile.getModules();
+                if (modulesInProfile.size() > 0) {
+                    modulesList.add(modulesInProfile);
+                }
+            }
+
+            //No modules are present in available profiles
+            if (modulesList.size() == 0) return null;
+            modules = modulesList.stream().flatMap(x -> x.stream()).collect(Collectors.toList());
+        }
+        for (String eachChildPomPath : modules) {
             childMavenPomList.add(new ChildMavenPom(this.pomFilePath.replace(Constants.POM_NAME,
                     "") + eachChildPomPath));
         }
@@ -111,7 +143,7 @@ abstract class MavenPom {
      *
      * @param coveragePerElement Per which element jacoco coverage check should be performed
      * @param coverageThreshold  Line coverage threshold to break the build
-     * @return An ArrayList of objects in the order of,
+     * @return An Array List of objects in the order of,
      * Jacoco inserted pom file as an org.w3c.Document object
      * Maven surefire argument line String in the processed document,
      * Jacoco report path String in the processed document
