@@ -18,10 +18,12 @@
 
 package org.wso2.testcoverageenforcer.Maven.POM;
 
+import org.apache.log4j.Logger;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Profile;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.w3c.dom.Document;
+import org.wso2.testcoverageenforcer.Application;
 import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentReader;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentWriter;
@@ -42,6 +44,11 @@ import javax.xml.transform.TransformerException;
  * under build plugins
  */
 abstract class MavenPom {
+
+    /**
+     * Logging
+     */
+    private static final Logger log = Logger.getLogger(MavenPom.class);
 
     /**
      * Path required to read the pom file data
@@ -80,6 +87,8 @@ abstract class MavenPom {
                     return true;
                 }
             }
+        } else {
+            return true;
         }
         return false;
     }
@@ -118,6 +127,10 @@ abstract class MavenPom {
             modules = modulesList.stream().flatMap(x -> x.stream()).collect(Collectors.toList());
         }
         for (String eachChildPomPath : modules) {
+            if (eachChildPomPath.contains(Constants.CHILD_NAME_TESTS_INTEGRATION)) {
+                log.info("Skipping " + this.pomFilePath.replace(Constants.POM_NAME, "") + eachChildPomPath + ". Integration test module");
+                continue;    //Neglect the module 'tests-integration'
+            }
             childMavenPomList.add(new ChildMavenPom(this.pomFilePath.replace(Constants.POM_NAME,
                     "") + eachChildPomPath));
         }
