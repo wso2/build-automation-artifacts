@@ -67,7 +67,7 @@ public class CoverageCheckEnforcer {
         GitHubProject repo = new GitHubProject(repositoryName, propertiesFilePath);
 
         //If the repository is inactive for a time span of interest, ignore the procedure
-        if (!(repo.getActiveStatus(Constants.GIT_TIME_PERIOD_OF_INTEREST))) {
+        if (!(repo.getActiveStatusByCommit(Constants.GIT_TIME_PERIOD_OF_INTEREST))) {
             log.warn("Inactive repository for the past six months. Aborting procedure for this repository");
             return false;
         }

@@ -204,7 +204,7 @@ public class GitHubProject {
      */
     public boolean getActiveStatus(int timePeriodOfInterest) throws IOException {
 
-        //Check a Fixed number of commits ordered from latest to oldest and count the number of recent commits
+        // Check a Fixed number of commits ordered from latest to oldest and count the number of recent commits
         PagedIterable<GHCommit> commitsList = this.projectRepository.listCommits();
         short recentCommitCount = 0;
         short commitsCount = 0;
@@ -226,5 +226,35 @@ public class GitHubProject {
             commitsCount++;
         }
         return recentCommitCount >= Constants.GITHUB_RECENT_COMMITS_THRESHOLD;
+    }
+
+    /**
+     * Check activity of the repository using latest previous commit
+     */
+    public boolean getActiveStatusByCommit(int timePeriodOfInterest) throws IOException {
+
+        // Check a Fixed number of commits ordered from latest to oldest and count the number of recent commits
+        PagedIterable<GHCommit> commitsList = this.projectRepository.listCommits();
+        Calendar currentTime = Calendar.getInstance();
+        for (GHCommit commit : commitsList) {
+            if (commit.getAuthor() != null) {
+                switch (commit.getAuthor().getLogin()) {    // Ignore commits from specific authors
+                    case Constants.GIT_JENKINS_BOT:
+                        continue;
+                    case Constants.GIT_MAHESHIKA:
+                        continue;
+                }
+            }
+            Calendar commitTime = Calendar.getInstance();
+            commitTime.setTime(commit.getCommitDate());
+            int yearDifference = currentTime.get(Calendar.YEAR) - commitTime.get(Calendar.YEAR);
+            int monthsDifference = yearDifference * 12 + currentTime.get(Calendar.MONTH) - commitTime.get(Calendar.MONTH);
+            if (monthsDifference < timePeriodOfInterest) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
     }
 }

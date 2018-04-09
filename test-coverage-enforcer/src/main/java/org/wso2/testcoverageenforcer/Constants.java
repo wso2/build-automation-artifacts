@@ -60,6 +60,7 @@ public class Constants {
     public static final short GITHUB_COMMITS_OF_INTEREST_COUNT = 8;
     public static final short GITHUB_RECENT_COMMITS_THRESHOLD = 3;
     public static final String GIT_JENKINS_BOT = "wso2-jenkins-bot";
+    public static final String GIT_MAHESHIKA = "maheshika";
     public static final String COMMIT_MESSAGE_COVERAGE_CHECK = "Other: Jacoco Coverage Check Integration";
     public static final String TEST_FOLDER = "src" + File.separator + "test";
     public static final String COVERAGE_PER_ELEMENT = "BUNDLE";
