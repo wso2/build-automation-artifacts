@@ -47,7 +47,6 @@ public class DocumentReader {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setValidating(false);
         DocumentBuilder db = dbf.newDocumentBuilder();
-
         try (FileInputStream documentStream = new FileInputStream(new File(xmlPath))) {
             return db.parse(documentStream);
         }

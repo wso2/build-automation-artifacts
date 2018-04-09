@@ -23,7 +23,6 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.Profile;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.w3c.dom.Document;
-import org.wso2.testcoverageenforcer.Application;
 import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentReader;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentWriter;
@@ -100,9 +99,9 @@ abstract class MavenPom {
      * @throws IOException            Catch errors while reading child pom files
      * @throws XmlPullParserException Catch errors while parsing child pom files
      */
-    public List<ChildMavenPom> getChildren() throws IOException, XmlPullParserException {
+    public List<ChildPom> getChildren() throws IOException, XmlPullParserException {
 
-        List<ChildMavenPom> childMavenPomList = new ArrayList<>(0);
+        List<ChildPom> childPomList = new ArrayList<>(0);
         /*
         Sometimes modules are available under <profiles> tag. Not under <modules> tag.
         In that case, look under <profiles> tag for modules and add coverage check for
@@ -131,10 +130,10 @@ abstract class MavenPom {
                 log.info("Skipping " + this.pomFilePath.replace(Constants.POM_NAME, "") + eachChildPomPath + ". Integration test module");
                 continue;    //Neglect the module 'tests-integration'
             }
-            childMavenPomList.add(new ChildMavenPom(this.pomFilePath.replace(Constants.POM_NAME,
+            childPomList.add(new ChildPom(this.pomFilePath.replace(Constants.POM_NAME,
                     "") + eachChildPomPath));
         }
-        return childMavenPomList;
+        return childPomList;
     }
 
     /**

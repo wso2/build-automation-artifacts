@@ -115,12 +115,7 @@ public class Application {
                 SQLServer externalServer = new SQLServer(cmd.getOptionValue("properties"));
                 try {
                     String gitHubRepository;
-                    while (true) {
-                        gitHubRepository = externalServer.getNextRepositoryURL();
-                        if (gitHubRepository == null) {
-                            log.info("Reached to the end of the table");
-                            break;
-                        }
+                    while ((gitHubRepository = externalServer.getNextRepositoryURL()) != null) {
                         /*
                         If the coverage check integration failed due to Git or GitHub exception, log the message
                         and skip current repository

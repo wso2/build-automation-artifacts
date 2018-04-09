@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Properties;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -56,6 +57,8 @@ public class DocumentWriter {
             Files.copy(stream, tempFile, StandardCopyOption.REPLACE_EXISTING);
         }
         Transformer transformer = transformerFactory.newTransformer(new StreamSource(tempFile.toString()));
+        if (xml.getXmlEncoding() != null) transformer.setOutputProperty(OutputKeys.ENCODING, xml.getXmlEncoding());
+        if (xml.getXmlVersion() != null) transformer.setOutputProperty(OutputKeys.VERSION, xml.getXmlVersion());
         DOMSource source = new DOMSource(xml);
         StreamResult result = new StreamResult(new File(targetXmlPath));
         transformer.transform(source, result);

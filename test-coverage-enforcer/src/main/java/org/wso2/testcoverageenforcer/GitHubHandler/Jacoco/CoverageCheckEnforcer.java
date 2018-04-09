@@ -26,6 +26,7 @@ import org.wso2.testcoverageenforcer.GitHubHandler.GitHubProject;
 import org.wso2.testcoverageenforcer.Maven.FeatureAdder;
 import org.xml.sax.SAXException;
 
+import java.io.File;
 import java.io.IOException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -48,6 +49,7 @@ public class CoverageCheckEnforcer {
      * @param coveragePerElement Per which element coverage checking to be performed(per BUNDLE, CLASS etc)
      * @param coverageThreshold  Coverage threshold value to break the build
      * @param enablePR           Create a pull request after jacoco check rule integration in the forked repository
+     * @return Successfully completed all the steps
      * @throws IOException                  Error in reading xml files or while initializing GitHub repository
      * @throws GitAPIException              Error while performing GitHub operations
      * @throws XmlPullParserException       Error while parsing xml files in the jacoco integration procedure
@@ -55,10 +57,10 @@ public class CoverageCheckEnforcer {
      * @throws SAXException                 Error while parsing pom file's input stream
      * @throws ParserConfigurationException Error while parsing the pom file
      */
-    public static void createPullRequestWithCoverageCheck(String repositoryName, String propertiesFilePath,
-                                                          String localWorkspacePath, String coveragePerElement,
-                                                          String coverageThreshold, boolean enablePR,
-                                                          boolean automaticCoverageThreshold)
+    public static boolean createPullRequestWithCoverageCheck(String repositoryName, String propertiesFilePath,
+                                                             String localWorkspacePath, String coveragePerElement,
+                                                             String coverageThreshold, boolean enablePR,
+                                                             boolean automaticCoverageThreshold)
             throws IOException, GitAPIException, XmlPullParserException, TransformerException, SAXException,
             ParserConfigurationException, InterruptedException {
 
@@ -67,22 +69,41 @@ public class CoverageCheckEnforcer {
         //If the repository is inactive for a time span of interest, ignore the procedure
         if (!(repo.getActiveStatus(Constants.GIT_TIME_PERIOD_OF_INTEREST))) {
             log.warn("Inactive repository for the past six months. Aborting procedure for this repository");
-            return;
+            return false;
         }
+        log.info("--Removing any previously forked projects if exists..");
+        repo.gitFork();
+        repo.gitDeleteForked();
         log.info("--Forking..");
         repo.gitFork();
         repo.setWorkspace(localWorkspacePath);
         log.info("--Cloning..");
         repo.gitClone();
-        log.info("--Processing pom files..");
+        log.info("--Inspecting support for Jacoco coverage check ");
+        boolean coverageChekSupport = FeatureAdder.inspectJacocoSupport(repo.getClonedPath());
+        if (!coverageChekSupport) {
+            log.warn("Project build did not include Jacoco coverage check. Possibly an already failing build or coverage check addition problem");
+            return false;
+        }
+        log.info("--Coverage check addition is supported in the project. Cleaning build files..");
+        FeatureAdder.cleanProject(repo.getClonedPath());
+        log.info("--Invoking coverage check rule..");
+        boolean coverageCheckAddition;  // Committing is done only if at least a one module having tests inherited check rule
         if (!automaticCoverageThreshold) {
-            FeatureAdder.integrateJacocoCoverageCheck(
+            coverageCheckAddition = FeatureAdder.integrateJacocoCoverageCheck(
                     repo.getClonedPath(),
                     coveragePerElement,
                     coverageThreshold);
         } else {
-            FeatureAdder.integrateJacocoCoverageCheck(
+            coverageCheckAddition = FeatureAdder.integrateJacocoCoverageCheck(
                     repo.getClonedPath());
+        }
+        /*
+        Skip rest of the steps if the project did not inherited coverage check rule because of having zero tests
+         */
+        if (!coverageCheckAddition) {
+            log.warn("Skipping project for not having unit tests");
+            return false;
         }
         log.info("--Committing..");
         repo.gitCommit(Constants.COMMIT_MESSAGE_COVERAGE_CHECK);
@@ -92,5 +113,6 @@ public class CoverageCheckEnforcer {
             log.info("--Making a pull request..");
             repo.gitPullRequest();
         }
+        return true;
     }
 }

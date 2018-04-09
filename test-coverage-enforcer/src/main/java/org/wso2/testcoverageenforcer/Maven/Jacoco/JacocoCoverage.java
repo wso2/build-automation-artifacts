@@ -63,10 +63,10 @@ public class JacocoCoverage {
                                                               String coverageThreshold)
             throws ParserConfigurationException, IOException, SAXException {
 
-        /*
-        To return multiple objects
-         */
+
+        /*To return multiple objects*/
         ArrayList<Object> output = new ArrayList<>();
+
         /*<plugins> node might not be present in some cases. Uses existing or create otherwise*/
         Node plugins = createPluginsNode(pom, pluginsParent);
         /*
@@ -139,7 +139,8 @@ public class JacocoCoverage {
                          */
                         createNode(pom, execution, Constants.JACOCO_POM_PATH_ELEMENT).setTextContent(coveragePerElement);
                         createNode(pom, execution, Constants.JACOCO_POM_PATH_MINIMUM).setTextContent(coverageThreshold);
-                        log.debug("Both coverage element and coverage threshold parameters are updated for " + pom.getDocumentURI());
+                        createNode(pom, execution, Constants.JACOCO_POM_PATH_DATA_FILE).setTextContent(jacocoReportFilePath);
+                        log.debug("Coverage element, coverage threshold and data file path parameters are updated for " + pom.getDocumentURI());
                         nodeAnalysisReport.put(Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE, true);
                         break;
                 }
@@ -387,11 +388,22 @@ public class JacocoCoverage {
      */
     private static String getJacocoReportPath(Element execution) {
 
+        // Search for Jacoco report file writing path under execution <configurations> tag
         NodeList destFileNodeList = execution.getElementsByTagName(Constants.JACOCO_DESTFILE);
         if (destFileNodeList.getLength() > 0) {
             return destFileNodeList.item(0).getTextContent();
         } else {
-            return Constants.DEFAULT_JACOCO_REPORT_PATH;
+            /*
+            If Jacoco report destination file definition is unavailable in the execution go to the jacoco plugin node
+             and search under whole node for the <destFile> tag
+             */
+            Element jacocoPluginElement = (Element) execution.getParentNode().getParentNode();
+            destFileNodeList = jacocoPluginElement.getElementsByTagName(Constants.JACOCO_DESTFILE);
+            if (destFileNodeList.getLength() > 0) {
+                return destFileNodeList.item(0).getTextContent();
+            } else {
+                return Constants.DEFAULT_JACOCO_REPORT_PATH;
+            }
         }
     }
 

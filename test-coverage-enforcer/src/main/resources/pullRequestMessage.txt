@@ -8,8 +8,9 @@ Integrate Jacoco Maven plugin with Maven Surefire plugin to generate unit test c
 -- Invoke jacoco maven plugin with coverage check in the parent pom under <build><pluginManagement>
 -- Inherit jacoco maven plugin in child poms
 -- Invoke jacoco maven plugin with coverage check in a non-multi-module maven project pom file under <build>
-If any part of existing jacoco implementation is present during this procedure, nothing will be added or modified.
-However jacoco argument line for Maven Surefire plugin will replace existing Maven Surefire plugin arguments.
+-- Reformat pom files for proper indentation and formatting
+* If any part of existing jacoco implementation is present during this procedure, nothing will be added or modified.
+* However jacoco argument line for Maven Surefire plugin will replace existing Maven Surefire plugin arguments.
 
 ## User stories
 N/A

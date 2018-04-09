@@ -36,7 +36,7 @@ import javax.xml.transform.TransformerException;
  * A Maven pom representation with added capabilities to inherit jacoco coverage check
  * from a parent pom file
  */
-public class ChildMavenPom extends MavenPom {
+public class ChildPom extends MavenPom {
 
     /**
      * Class constructor
@@ -45,7 +45,7 @@ public class ChildMavenPom extends MavenPom {
      * @throws IOException            Error reading the pom file
      * @throws XmlPullParserException Error while parsing pom xml
      */
-    public ChildMavenPom(String pomFilePath) throws IOException, XmlPullParserException {
+    public ChildPom(String pomFilePath) throws IOException, XmlPullParserException {
 
         super(pomFilePath);
     }
