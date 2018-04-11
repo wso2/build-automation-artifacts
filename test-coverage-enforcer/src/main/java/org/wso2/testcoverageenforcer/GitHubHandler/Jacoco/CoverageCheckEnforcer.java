@@ -86,7 +86,7 @@ public class CoverageCheckEnforcer {
 
         log.info("--Inspecting support for Jacoco coverage check ");
         HashMap<String, Float> buildAnalysisWithCoverageCheck = FeatureAdder.inspectJacocoSupport(repo.getClonedPath());
-        if (buildAnalysisWithCoverageCheck.get(Constants.UNIT_TESTS_AVAILABLE) == (Constants.STATUS_TRUE)) {
+        if (buildAnalysisWithCoverageCheck.get(Constants.UNIT_TESTS_AVAILABLE) == (Constants.STATUS_FALSE)) {
             log.warn("Skipping project due to unavailability of unit tests");
             return false;
         } else if (buildAnalysisWithCoverageCheck.get(Constants.BUILD_LOG_BUILD_SUCCESS) == (Constants.STATUS_FALSE)) {
@@ -105,7 +105,8 @@ public class CoverageCheckEnforcer {
         String coverageThreshold = inputCoverageThreshold;
         if (automaticCoverageThreshold) {
             coveragePerElement = Constants.COVERAGE_PER_ELEMENT;
-            coverageThreshold = Float.toString(buildAnalysisWithCoverageCheck.get(Constants.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE));
+            float coverageThresholdValue = buildAnalysisWithCoverageCheck.get(Constants.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE);
+            coverageThreshold = String.format(java.util.Locale.US, "%.2f", (Math.floor(coverageThresholdValue * 100) / 100));
         }
 
         log.info("--Applying coverage rule with " + coverageThreshold + " threshold " + "per " + coveragePerElement + "..");

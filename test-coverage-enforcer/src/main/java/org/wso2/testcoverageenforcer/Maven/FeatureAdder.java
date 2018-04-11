@@ -139,12 +139,14 @@ public class FeatureAdder {
 
         // Apply Jacoco check rule with zero threshold
         boolean unitTestsAvailable = integrateJacocoCoverageCheck(projectPath, Constants.COVERAGE_PER_ELEMENT, Constants.ZERO);
+        HashMap<String, Float> output = new HashMap<>();
         if (!unitTestsAvailable) {
-            HashMap<String, Float> output = new HashMap<>();
             output.put(Constants.UNIT_TESTS_AVAILABLE, Constants.STATUS_FALSE);
             return output;
         }
-        return analyzeBuildForCoverageCheckRule(projectPath);
+        output = analyzeBuildForCoverageCheckRule(projectPath);
+        output.put(Constants.UNIT_TESTS_AVAILABLE, Constants.STATUS_TRUE);
+        return output;
     }
 
     /**
