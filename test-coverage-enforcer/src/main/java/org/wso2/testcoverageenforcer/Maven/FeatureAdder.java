@@ -30,7 +30,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -132,44 +134,34 @@ public class FeatureAdder {
      * @param projectPath Path to the project
      * @return True project supports Jacoco check rule. False otherwise.
      */
-    public static boolean inspectJacocoSupport(String projectPath)
+    public static HashMap<String, Float> inspectJacocoSupport(String projectPath)
             throws IOException, XmlPullParserException, ParserConfigurationException, SAXException, TransformerException, InterruptedException {
 
         // Apply Jacoco check rule with zero threshold
-        integrateJacocoCoverageCheck(projectPath, Constants.COVERAGE_PER_ELEMENT, Constants.ZERO);
-
-        return searchCoverageCheckRule(buildProject(projectPath, true));
+        boolean unitTestsAvailable = integrateJacocoCoverageCheck(projectPath, Constants.COVERAGE_PER_ELEMENT, Constants.ZERO);
+        if (!unitTestsAvailable) {
+            HashMap<String, Float> output = new HashMap<>();
+            output.put(Constants.UNIT_TESTS_AVAILABLE, Constants.STATUS_FALSE);
+            return output;
+        }
+        return analyzeBuildForCoverageCheckRule(projectPath);
     }
 
     /**
      * Build the maven project
      *
-     * @param getBuildOutput Get output stream of the build process
+     * @param getBuildOutput Get output of the build process
      * @return Status of the build. 0 if healthy. -1 otherwise
      * @throws IOException          IO errors occurring during the build
      * @throws InterruptedException Current thread interrupted by another thread while waiting
      */
-    public static String buildProject(String projectPath, boolean getBuildOutput) throws IOException, InterruptedException {
+    public static BufferedReader buildProject(String projectPath, boolean getBuildOutput) throws IOException, InterruptedException {
 
         ProcessBuilder projectBuilder = getProjectBuilder(projectPath);
+        projectBuilder.inheritIO();
         Process process = projectBuilder.start();
-        BufferedReader logBuffer = null;
-        if (getBuildOutput) {
-            logBuffer = (new BufferedReader(new InputStreamReader(process.getInputStream())));
-        } else {
-            projectBuilder.inheritIO();
-        }
-        int exitCode = process.waitFor();
-        if (getBuildOutput) {
-            StringBuilder logOutput = new StringBuilder();
-            String line;
-            while ((line = logBuffer.readLine()) != null) {
-                logOutput.append(line);
-                logOutput.append(System.getProperty(Constants.LINE_SEPERATOR));
-            }
-            return logOutput.toString();
-        }
-        return Integer.toString(exitCode);
+        process.waitFor();
+        return null;
     }
 
     /**
@@ -184,9 +176,58 @@ public class FeatureAdder {
     /**
      * Inspect for Jacoco coverage check metric inspection available in a given build log as a String
      */
-    private static boolean searchCoverageCheckRule(String buildLog) {
+    private static HashMap<String, Float> analyzeBuildForCoverageCheckRule(String projectPath)
+            throws InterruptedException, IOException, XmlPullParserException {
 
-        return buildLog.contains(Constants.JACOCO_COVERAGE_CHECK_SUCCESS_MESSAGE);
+        HashMap<String, Float> analysisLog = new HashMap<>();
+        analysisLog.put(Constants.BUILD_LOG_COVERAGE_CHECK_SUCCESS, Constants.STATUS_FALSE);
+        analysisLog.put(Constants.BUILD_LOG_BUILD_SUCCESS, Constants.STATUS_FALSE);
+        analysisLog.put(Constants.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE, null);
+
+        ProcessBuilder projectBuilder = getProjectBuilder(projectPath);
+        Process buildProcess = projectBuilder.start();
+        String line;
+        BufferedReader buildOutputBuffer = new BufferedReader(new InputStreamReader(buildProcess.getInputStream()));
+        /*
+        Build outputs can be large enough to fill internal buffer. This causes process to wait until buffer is cleared
+        while we wait in the main thread until process to finish, resulting a deadlock. So the buffer is analyzed periodically
+        for coverage check rule success message to prevent this.
+         */
+        while (buildProcess.isAlive()) {
+            analyzeBuildBuffer(buildOutputBuffer, analysisLog);
+            Thread.sleep(Constants.BUILD_OUTPUT_BUFFER_TIMEOUT);
+        }
+        /**
+         * Build process is completed while main thread was asleep. But there are still data in the
+         * buffered reader which are not yet analysed.
+         */
+        analyzeBuildBuffer(buildOutputBuffer, analysisLog);
+
+        /**
+         * As the project is built with Jacoco plugin at this moment we can get minimum live coverage
+         * currently available in the project
+         */
+        ParentPom parent = new ParentPom(projectPath);
+        analysisLog.put(Constants.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE, (float) parent.getMinimumBundleCoverage(parent.getChildren()));
+        buildOutputBuffer.close();
+        return analysisLog;
+    }
+
+    /**
+     * Analyse data available in a BufferedReader and set analysis results
+     */
+    private static void analyzeBuildBuffer(BufferedReader buildOutputBuffer, Map<String, Float> analysisLog)
+            throws IOException {
+
+        String line;
+        while (((line = buildOutputBuffer.readLine()) != null)) {
+            if (line.contains(Constants.BUILD_LOG_JACOCO_COVERAGE_CHECK_SUCCESS_MESSAGE)) {
+                analysisLog.put(Constants.BUILD_LOG_COVERAGE_CHECK_SUCCESS, Constants.STATUS_TRUE);
+            }
+            if (line.contains(Constants.BUILD_LOG_BUILD_SUCCESS_MESSAGE)) {
+                analysisLog.put(Constants.BUILD_LOG_BUILD_SUCCESS, Constants.STATUS_TRUE);
+            }
+        }
     }
 
     /**

@@ -28,6 +28,7 @@ import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -46,8 +47,8 @@ public class CoverageCheckEnforcer {
      *
      * @param repositoryName     Name of the GitHub repository to integrate coverage check in the form of 'userName/repositoryName'
      * @param localWorkspacePath Path to the folder to be used for temporary cloning of the repository
-     * @param coveragePerElement Per which element coverage checking to be performed(per BUNDLE, CLASS etc)
-     * @param coverageThreshold  Coverage threshold value to break the build
+     * @param inputCoveragePerElement Per which element coverage checking to be performed(per BUNDLE, CLASS etc)
+     * @param inputCoverageThreshold  Coverage threshold value to break the build
      * @param enablePR           Create a pull request after jacoco check rule integration in the forked repository
      * @return Successfully completed all the steps
      * @throws IOException                  Error in reading xml files or while initializing GitHub repository
@@ -58,8 +59,8 @@ public class CoverageCheckEnforcer {
      * @throws ParserConfigurationException Error while parsing the pom file
      */
     public static boolean createPullRequestWithCoverageCheck(String repositoryName, String propertiesFilePath,
-                                                             String localWorkspacePath, String coveragePerElement,
-                                                             String coverageThreshold, boolean enablePR,
+                                                             String localWorkspacePath, String inputCoveragePerElement,
+                                                             String inputCoverageThreshold, boolean enablePR,
                                                              boolean automaticCoverageThreshold)
             throws IOException, GitAPIException, XmlPullParserException, TransformerException, SAXException,
             ParserConfigurationException, InterruptedException {
@@ -71,44 +72,54 @@ public class CoverageCheckEnforcer {
             log.warn("Inactive repository for the past six months. Aborting procedure for this repository");
             return false;
         }
+
         log.info("--Removing any previously forked projects if exists..");
         repo.gitFork();
         repo.gitDeleteForked();
+
         log.info("--Forking..");
         repo.gitFork();
         repo.setWorkspace(localWorkspacePath);
+
         log.info("--Cloning..");
         repo.gitClone();
+
         log.info("--Inspecting support for Jacoco coverage check ");
-        boolean coverageChekSupport = FeatureAdder.inspectJacocoSupport(repo.getClonedPath());
-        if (!coverageChekSupport) {
-            log.warn("Project build did not include Jacoco coverage check. Possibly an already failing build or coverage check addition problem");
+        HashMap<String, Float> buildAnalysisWithCoverageCheck = FeatureAdder.inspectJacocoSupport(repo.getClonedPath());
+        if (buildAnalysisWithCoverageCheck.get(Constants.UNIT_TESTS_AVAILABLE) == (Constants.STATUS_TRUE)) {
+            log.warn("Skipping project due to unavailability of unit tests");
+            return false;
+        } else if (buildAnalysisWithCoverageCheck.get(Constants.BUILD_LOG_BUILD_SUCCESS) == (Constants.STATUS_FALSE)) {
+            log.error("Build failed with coverage check. Possibly an already failing build or coverage check configuration error");
+            return false;
+        } else if (buildAnalysisWithCoverageCheck.get(Constants.BUILD_LOG_COVERAGE_CHECK_SUCCESS) == (Constants.STATUS_FALSE)) {
+            log.warn("Coverage check integration failed in the build even though the build succeeded. Maybe this project does not have any unit tests");
             return false;
         }
-        log.info("--Coverage check addition is supported in the project. Cleaning build files..");
+
+        log.info("--Project is a healthy build and supports coverage check rule. Cleaning build files..");
         FeatureAdder.cleanProject(repo.getClonedPath());
+
         log.info("--Invoking coverage check rule..");
-        boolean coverageCheckAddition;  // Committing is done only if at least a one module having tests inherited check rule
-        if (!automaticCoverageThreshold) {
-            coverageCheckAddition = FeatureAdder.integrateJacocoCoverageCheck(
-                    repo.getClonedPath(),
-                    coveragePerElement,
-                    coverageThreshold);
-        } else {
-            coverageCheckAddition = FeatureAdder.integrateJacocoCoverageCheck(
-                    repo.getClonedPath());
+        String coveragePerElement = inputCoveragePerElement;
+        String coverageThreshold = inputCoverageThreshold;
+        if (automaticCoverageThreshold) {
+            coveragePerElement = Constants.COVERAGE_PER_ELEMENT;
+            coverageThreshold = Float.toString(buildAnalysisWithCoverageCheck.get(Constants.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE));
         }
-        /*
-        Skip rest of the steps if the project did not inherited coverage check rule because of having zero tests
-         */
-        if (!coverageCheckAddition) {
-            log.warn("Skipping project for not having unit tests");
-            return false;
-        }
+
+        log.info("--Applying coverage rule with " + coverageThreshold + " threshold " + "per " + coveragePerElement + "..");
+        FeatureAdder.integrateJacocoCoverageCheck(
+                repo.getClonedPath(),
+                coveragePerElement,
+                coverageThreshold);
+
         log.info("--Committing..");
         repo.gitCommit(Constants.COMMIT_MESSAGE_COVERAGE_CHECK);
+
         log.info("--Pushing..");
         repo.gitPush();
+
         if (enablePR) {
             log.info("--Making a pull request..");
             repo.gitPullRequest();

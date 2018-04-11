@@ -111,10 +111,10 @@ public class ParentPom extends MavenPom {
         boolean checkRuleAddition = false; // Jacoco coverage check rule added at least in any child
         for (ChildPom child : children) {
             if (child.hasChildren()) {
-                inheritCoverageCheckInChildren(child.getChildren(), coveragePerElement, coverageThreshold, surefireArgumentLine, jacocoReportPath);
+                checkRuleAddition = checkRuleAddition || inheritCoverageCheckInChildren(child.getChildren(), coveragePerElement, coverageThreshold, surefireArgumentLine, jacocoReportPath);
             } else if (child.hasTests()) {
                 child.inheritCoverageCheckFromParent(coveragePerElement, coverageThreshold, surefireArgumentLine, jacocoReportPath);
-                checkRuleAddition = true;
+                checkRuleAddition = checkRuleAddition || true;
             } else if (!child.hasTests()) {
                 log.debug("Ignoring child module due to missing tests in " + child.getPomFilePath());
             }
@@ -130,13 +130,13 @@ public class ParentPom extends MavenPom {
      * @throws IOException            Error in opening files
      * @throws XmlPullParserException Error while parsing pom files
      */
-    private double getCurrentBundleCoverage(List<ChildPom> children)
+    public double getMinimumBundleCoverage(List<ChildPom> children)
             throws IOException, XmlPullParserException {
 
         double minimumCoverage = 1;
         for (ChildPom child : children) {
             if (child.hasChildren()) {
-                getCurrentBundleCoverage(child.getChildren());
+                getMinimumBundleCoverage(child.getChildren());
             } else if (child.hasTests()) {
                 double bundleCoverage = child.getBundleCoverage();
                 //add log for calculated coverages
@@ -161,6 +161,6 @@ public class ParentPom extends MavenPom {
             throws IOException, XmlPullParserException, InterruptedException {
 
         FeatureAdder.buildProject(this.pomFilePath.replace(File.separator + Constants.POM_NAME, ""), false);
-        return this.getCurrentBundleCoverage(this.getChildren());
+        return this.getMinimumBundleCoverage(this.getChildren());
     }
 }

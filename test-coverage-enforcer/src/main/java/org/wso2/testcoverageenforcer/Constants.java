@@ -53,7 +53,7 @@ public class Constants {
     public static final String JACOCO_TAG_REPORT_READ = "dataFile";
     public static final String JACOCO_TAG_SUREFIRE_ARGLINE_NAME = "propertyName";
     public static final String JACOCO_DESTFILE = "destFile";
-    public static final String JACOCO_COVERAGE_CHECK_SUCCESS_MESSAGE = "All coverage checks have been met";
+    public static final String BUILD_LOG_JACOCO_COVERAGE_CHECK_SUCCESS_MESSAGE = "All coverage checks have been met";
     public static final String GIT_PR_TITLE = "Integration of Jacoco coverage check";
     public static final String GIT_PR_MASTER = "master";
     public static final short GIT_TIME_PERIOD_OF_INTEREST = 6;
@@ -97,4 +97,13 @@ public class Constants {
     public static final String XML_STYLE_SHEET = "xml_indent.xsl";
     public static final String CHILD_NAME_TESTS_INTEGRATION = "tests-integration";
     public static final String LINE_SEPERATOR = "line.seperator";
+    public static final int BUILD_OUTPUT_BUFFER_TIMEOUT = 200; // Milliseconds
+    public static final String BUILD_LOG_COVERAGE_CHECK_SUCCESS = "Coverage Check Rule Performed";
+    public static final String BUILD_LOG_BUILD_SUCCESS = "Build Successfully Completed";
+    public static final String BUILD_LOG_BUILD_SUCCESS_MESSAGE = "BUILD SUCCESS";
+    public static final String BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE = "Minimum available code coverage";
+    public static final float STATUS_TRUE = (float) 1;
+    public static final float STATUS_FALSE = (float) 0;
+    public static final String UNIT_TESTS_AVAILABLE = "Unit tests are available";
+
 }
