@@ -39,10 +39,9 @@ public class POMReader {
      *
      * @param path path of the pom.xml
      * @return org.apache.maven.model.Model Object corresponding to the pom.xml file given;
-     * @throws IOException            Issues creating InputStreamReader for the pom file
-     * @throws XmlPullParserException Issues parsing pom file in to maven model object
+     * @throws PomFileReadException Error occured while reading a pom file in to a org.apache.maven.model.Model
      */
-    public static Model getPOMModel(String path) throws IOException, XmlPullParserException {
+    public static Model getPOMModel(String path) throws PomFileReadException {
 
         File pomFile = new File(path);
         MavenXpp3Reader mavenReader = new MavenXpp3Reader();
@@ -52,6 +51,8 @@ public class POMReader {
             Model model = mavenReader.read(reader);
             model.setPomFile(pomFile);
             return model;
+        } catch (IOException | XmlPullParserException e) {
+            throw new PomFileReadException(e.getMessage());
         }
     }
 }

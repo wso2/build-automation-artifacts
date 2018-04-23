@@ -36,7 +36,7 @@
 						<limits>
 							<!-- implementation is needed only for Maven 2 -->
 							<limit implementation="org.jacoco.report.check.Limit">
-								<counter>COMPLEXITY</counter>
+                                <counter>LINE</counter>
 								<value>COVEREDRATIO</value>
 								<minimum>0.10</minimum>
 							</limit>

@@ -23,6 +23,8 @@ import org.w3c.dom.Document;
 import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentReader;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentWriter;
+import org.wso2.testcoverageenforcer.FileHandler.PomFileReadException;
+import org.wso2.testcoverageenforcer.FileHandler.PomFileWriteException;
 import org.wso2.testcoverageenforcer.Maven.Jacoco.CoverageReportReader;
 import org.wso2.testcoverageenforcer.Maven.Jacoco.JacocoCoverage;
 import org.xml.sax.SAXException;
@@ -45,7 +47,7 @@ public class ChildPom extends MavenPom {
      * @throws IOException            Error reading the pom file
      * @throws XmlPullParserException Error while parsing pom xml
      */
-    public ChildPom(String pomFilePath) throws IOException, XmlPullParserException {
+    public ChildPom(String pomFilePath) throws PomFileReadException {
 
         super(pomFilePath);
     }
@@ -65,7 +67,7 @@ public class ChildPom extends MavenPom {
      * @throws TransformerException         Error while writing pom file back
      */
     public void inheritCoverageCheckFromParent(String coveragePerElement, String coverageThreshold, String surefireArgumentLine, String jacocoReportPath)
-            throws ParserConfigurationException, IOException, SAXException, TransformerException {
+            throws PomFileReadException, PomFileWriteException {
 
         Document pomFile = DocumentReader.readDocument(pomFilePath);
         pomFile.setDocumentURI(pomFilePath);

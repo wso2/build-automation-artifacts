@@ -59,13 +59,15 @@ public class SQLServer {
 
         Properties properties = new Properties();
         properties.load(new FileInputStream(propertiesFilePath));
-        this.sqlRepositoryColumn = properties.getProperty(Constants.SQL_REPO_COLLUMN);
+        this.sqlRepositoryColumn = properties.getProperty(Constants.Sql.SQL_REPO_COLLUMN);
 
         this.m_connection = DriverManager.getConnection(
-                properties.getProperty(Constants.SQL_URL),
-                properties.getProperty(Constants.SQL_USERNAME),
-                properties.getProperty(Constants.SQL_PASSWORD));
-        PreparedStatement stat = this.m_connection.prepareStatement("SELECT * FROM " + properties.getProperty(Constants.SQL_TABLE),
+                properties.getProperty(Constants.Sql.SQL_URL),
+                properties.getProperty(Constants.Sql.SQL_USERNAME),
+                properties.getProperty(Constants.Sql.SQL_PASSWORD));
+        PreparedStatement stat = this.m_connection.prepareStatement("SELECT "
+                        + properties.getProperty(Constants.Sql.SQL_REPO_COLLUMN) + " FROM "
+                        + properties.getProperty(Constants.Sql.SQL_TABLE),
                 ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         stat.setFetchSize(Integer.MIN_VALUE);
         this.repositoryTableData = stat.executeQuery();
@@ -80,7 +82,7 @@ public class SQLServer {
     public String getNextRepositoryURL() throws SQLException {
 
         if (this.repositoryTableData.next()) {
-            return this.repositoryTableData.getString(sqlRepositoryColumn).replace(Constants.GITHUB_URL, Constants.EMPTY_STRING);
+            return this.repositoryTableData.getString(sqlRepositoryColumn).replace(Constants.Git.GITHUB_URL, Constants.EMPTY_STRING);
         } else {
             return null;
         }

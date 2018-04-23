@@ -42,24 +42,26 @@ public class TemplateReader {
      *
      * @param xmlPath xml file path
      * @return Root element of the xml file
-     * @throws ParserConfigurationException Error while parsing the template file
-     * @throws IOException                  Error reading the template file
-     * @throws SAXException                 Error while parsing the template's file input stream
+     * @throws PomFileReadException Error occurred while reading a pom file in to a org.w3c.dom.Document object
      */
     public static Node extractTemplate(String xmlPath)
-            throws ParserConfigurationException, IOException, SAXException {
+            throws PomFileReadException {
 
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        dbf.setValidating(false);
-        DocumentBuilder db = dbf.newDocumentBuilder();
+        try {
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            dbf.setValidating(false);
+            DocumentBuilder db = dbf.newDocumentBuilder();
 
-        Path tempFile = Files.createTempFile("template_temp", ".xml");
-        try (InputStream stream = TemplateReader.class.getClassLoader().getResourceAsStream(xmlPath)) {
-            Files.copy(stream, tempFile, StandardCopyOption.REPLACE_EXISTING);
-        }
-        try (FileInputStream xmlFileStream = new FileInputStream(tempFile.toFile())) {
-            Document xmlFile = db.parse(xmlFileStream);
-            return xmlFile.getDocumentElement();
+            Path tempFile = Files.createTempFile("template_temp", ".xml");
+            try (InputStream stream = TemplateReader.class.getClassLoader().getResourceAsStream(xmlPath)) {
+                Files.copy(stream, tempFile, StandardCopyOption.REPLACE_EXISTING);
+            }
+            try (FileInputStream xmlFileStream = new FileInputStream(tempFile.toFile())) {
+                Document xmlFile = db.parse(xmlFileStream);
+                return xmlFile.getDocumentElement();
+            }
+        } catch (ParserConfigurationException | IOException | SAXException e) {
+            throw new PomFileReadException(e.getMessage());
         }
     }
 }

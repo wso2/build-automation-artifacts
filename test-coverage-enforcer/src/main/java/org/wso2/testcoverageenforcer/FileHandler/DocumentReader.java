@@ -38,17 +38,19 @@ public class DocumentReader {
      *
      * @param xmlPath File path to the pom
      * @return org.w3c.dom.Document object for the pom file
-     * @throws ParserConfigurationException Error while parsing the pom file
-     * @throws IOException                  Error reading the pom file
-     * @throws SAXException                 Error while parsing the pom's file input stream
+     * @throws PomFileReadException Error occurred while reading a pom file in to a org.w3c.dom.Document object
      */
-    public static Document readDocument(String xmlPath) throws ParserConfigurationException, IOException, SAXException {
+    public static Document readDocument(String xmlPath) throws PomFileReadException {
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setValidating(false);
-        DocumentBuilder db = dbf.newDocumentBuilder();
-        try (FileInputStream documentStream = new FileInputStream(new File(xmlPath))) {
-            return db.parse(documentStream);
+        try {
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            try (FileInputStream documentStream = new FileInputStream(new File(xmlPath))) {
+                return db.parse(documentStream);
+            }
+        } catch (ParserConfigurationException | IOException | SAXException e) {
+            throw new PomFileReadException(e.getMessage());
         }
     }
 }

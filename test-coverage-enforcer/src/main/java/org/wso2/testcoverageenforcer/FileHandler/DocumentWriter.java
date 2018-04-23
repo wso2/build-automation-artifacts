@@ -46,21 +46,24 @@ public class DocumentWriter {
      *
      * @param xml           org.w3c.dom.Document object
      * @param targetXmlPath File path to write pom file
-     * @throws TransformerException Error occurred while writing document object to the file stream
-     * @throws IOException Reading error in xml writer style sheet
+     * @throws PomFileWriteException Error occurred while writing org.w3c.dom.Document object to a pom file
      */
-    public static void writeDocument(Document xml, String targetXmlPath) throws TransformerException, IOException{
+    public static void writeDocument(Document xml, String targetXmlPath) throws PomFileWriteException {
 
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Path tempFile = Files.createTempFile("xml_indent_temp", ".xsl");
-        try (InputStream stream = TemplateReader.class.getClassLoader().getResourceAsStream(Constants.XML_STYLE_SHEET)) {
-            Files.copy(stream, tempFile, StandardCopyOption.REPLACE_EXISTING);
+        try {
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Path tempFile = Files.createTempFile("xml_indent_temp", ".xsl");
+            try (InputStream stream = TemplateReader.class.getClassLoader().getResourceAsStream(Constants.XML_STYLE_SHEET)) {
+                Files.copy(stream, tempFile, StandardCopyOption.REPLACE_EXISTING);
+            }
+            Transformer transformer = transformerFactory.newTransformer(new StreamSource(tempFile.toString()));
+            if (xml.getXmlEncoding() != null) transformer.setOutputProperty(OutputKeys.ENCODING, xml.getXmlEncoding());
+            if (xml.getXmlVersion() != null) transformer.setOutputProperty(OutputKeys.VERSION, xml.getXmlVersion());
+            DOMSource source = new DOMSource(xml);
+            StreamResult result = new StreamResult(new File(targetXmlPath));
+            transformer.transform(source, result);
+        } catch (TransformerException | IOException e) {
+            throw new PomFileWriteException(e.getMessage());
         }
-        Transformer transformer = transformerFactory.newTransformer(new StreamSource(tempFile.toString()));
-        if (xml.getXmlEncoding() != null) transformer.setOutputProperty(OutputKeys.ENCODING, xml.getXmlEncoding());
-        if (xml.getXmlVersion() != null) transformer.setOutputProperty(OutputKeys.VERSION, xml.getXmlVersion());
-        DOMSource source = new DOMSource(xml);
-        StreamResult result = new StreamResult(new File(targetXmlPath));
-        transformer.transform(source, result);
     }
 }

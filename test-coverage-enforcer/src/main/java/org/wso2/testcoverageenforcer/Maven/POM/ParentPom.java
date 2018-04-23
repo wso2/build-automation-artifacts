@@ -26,6 +26,8 @@ import org.wso2.testcoverageenforcer.Application;
 import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentReader;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentWriter;
+import org.wso2.testcoverageenforcer.FileHandler.PomFileReadException;
+import org.wso2.testcoverageenforcer.FileHandler.PomFileWriteException;
 import org.wso2.testcoverageenforcer.Maven.FeatureAdder;
 import org.wso2.testcoverageenforcer.Maven.Jacoco.JacocoCoverage;
 import org.xml.sax.SAXException;
@@ -33,6 +35,7 @@ import org.xml.sax.SAXException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -52,7 +55,7 @@ public class ParentPom extends MavenPom {
      * @throws IOException            Catch errors while reading child pom files
      * @throws XmlPullParserException Catch errors while parsing child pom files
      */
-    public ParentPom(String pomFilePath) throws IOException, XmlPullParserException {
+    public ParentPom(String pomFilePath) throws PomFileReadException {
 
         super(pomFilePath);
     }
@@ -73,18 +76,18 @@ public class ParentPom extends MavenPom {
      * @throws SAXException                 Error while parsing the pom's file input stream
      * @throws TransformerException         Error while writing pom file back
      */
-    public ArrayList<Object> enforceCoverageCheckUnderPluginManagement(String coveragePerElement,
-                                                                       String coverageThreshold)
-            throws TransformerException, ParserConfigurationException, IOException, SAXException {
+    public HashMap<String, Object> enforceCoverageCheckUnderPluginManagement(String coveragePerElement,
+                                                                             String coverageThreshold)
+            throws PomFileReadException, PomFileWriteException {
 
         Document pomFile = DocumentReader.readDocument(pomFilePath);
         pomFile.setDocumentURI(pomFilePath);
-        ArrayList<Object> processedData = JacocoCoverage.insertJacocoCoverageCheck(
+        HashMap<String, Object> processedData = JacocoCoverage.insertJacocoCoverageCheck(
                 pomFile,
-                Constants.MAVEN_TAG_PLUGIN_MANAGEMENT,
+                Constants.Maven.MAVEN_TAG_PLUGIN_MANAGEMENT,
                 coveragePerElement,
                 coverageThreshold);
-        Document jacocoInsertedPom = (Document) processedData.get(0);
+        Document jacocoInsertedPom = (Document) processedData.get(Constants.Jacoco.JACOCO_INSERTED_POM);
         DocumentWriter.writeDocument(jacocoInsertedPom, pomFilePath);
         return processedData;
     }
@@ -106,7 +109,7 @@ public class ParentPom extends MavenPom {
      */
     public boolean inheritCoverageCheckInChildren(List<ChildPom> children, String coveragePerElement, String coverageThreshold,
                                                   String surefireArgumentLine, String jacocoReportPath)
-            throws SAXException, IOException, XmlPullParserException, ParserConfigurationException, TransformerException {
+            throws PomFileReadException, PomFileWriteException {
 
         boolean checkRuleAddition = false; // Jacoco coverage check rule added at least in any child
         for (ChildPom child : children) {
@@ -131,7 +134,7 @@ public class ParentPom extends MavenPom {
      * @throws XmlPullParserException Error while parsing pom files
      */
     public double getMinimumBundleCoverage(List<ChildPom> children)
-            throws IOException, XmlPullParserException {
+            throws PomFileReadException {
 
         double minimumCoverage = 1;
         for (ChildPom child : children) {
@@ -139,28 +142,14 @@ public class ParentPom extends MavenPom {
                 getMinimumBundleCoverage(child.getChildren());
             } else if (child.hasTests()) {
                 double bundleCoverage = child.getBundleCoverage();
+                log.info("Line coverage per bundle is " + Double.toString(bundleCoverage) + " for " + child.getPomFilePath());
                 //add log for calculated coverages
                 if (bundleCoverage < minimumCoverage) {
                     minimumCoverage = bundleCoverage;
                 }
             }
         }
-        //print minimun value
+        // Print minimum value
         return minimumCoverage;
-    }
-
-    /**
-     * Build the project with coverage check generation and calculate minimum bundle coverage
-     *
-     * @return Calculated minimum coverage value
-     * @throws IOException            Error in opening files
-     * @throws XmlPullParserException Error while parsing pom files
-     * @throws InterruptedException   Current thread interrupted by another thread while waiting
-     */
-    public double buildAndCalculateMinimumBundleCoverage()
-            throws IOException, XmlPullParserException, InterruptedException {
-
-        FeatureAdder.buildProject(this.pomFilePath.replace(File.separator + Constants.POM_NAME, ""), false);
-        return this.getMinimumBundleCoverage(this.getChildren());
     }
 }

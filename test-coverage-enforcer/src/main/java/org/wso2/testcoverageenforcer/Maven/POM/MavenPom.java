@@ -27,12 +27,15 @@ import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentReader;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentWriter;
 import org.wso2.testcoverageenforcer.FileHandler.POMReader;
+import org.wso2.testcoverageenforcer.FileHandler.PomFileReadException;
+import org.wso2.testcoverageenforcer.FileHandler.PomFileWriteException;
 import org.wso2.testcoverageenforcer.Maven.Jacoco.JacocoCoverage;
 import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
@@ -67,7 +70,7 @@ abstract class MavenPom {
      * @throws IOException            Error reading the pom file
      * @throws XmlPullParserException Error parsing pom file to the maven Model
      */
-    MavenPom(String pomFilePath) throws IOException, XmlPullParserException {
+    MavenPom(String pomFilePath) throws PomFileReadException {
 
         this.pomFilePath = pomFilePath + File.separator + Constants.POM_NAME;
         this.pomFile = POMReader.getPOMModel(this.pomFilePath);
@@ -99,7 +102,7 @@ abstract class MavenPom {
      * @throws IOException            Catch errors while reading child pom files
      * @throws XmlPullParserException Catch errors while parsing child pom files
      */
-    public List<ChildPom> getChildren() throws IOException, XmlPullParserException {
+    public List<ChildPom> getChildren() throws PomFileReadException {
 
         List<ChildPom> childPomList = new ArrayList<>(0);
         /*
@@ -129,6 +132,9 @@ abstract class MavenPom {
             if (eachChildPomPath.contains(Constants.CHILD_NAME_TESTS_INTEGRATION)) {
                 log.info("Skipping " + this.pomFilePath.replace(Constants.POM_NAME, "") + eachChildPomPath + ". Integration test module");
                 continue;    //Neglect the module 'tests-integration'
+            } else if (eachChildPomPath.contains(Constants.CHILD_NAME_OSGI)) {
+                log.info("Skipping " + this.pomFilePath.replace(Constants.POM_NAME, "") + eachChildPomPath + ". OSGI test module");
+                continue;
             }
             childPomList.add(new ChildPom(this.pomFilePath.replace(Constants.POM_NAME,
                     "") + eachChildPomPath));
@@ -164,14 +170,14 @@ abstract class MavenPom {
      * @throws SAXException                 Error while parsing the pom's file input stream
      * @throws TransformerException         Error while writing pom file back
      */
-    public ArrayList<Object> enforceCoverageCheckUnderBuildPlugins(String coveragePerElement, String coverageThreshold)
-            throws TransformerException, ParserConfigurationException, IOException, SAXException {
+    public HashMap<String, Object> enforceCoverageCheckUnderBuildPlugins(String coveragePerElement, String coverageThreshold)
+            throws PomFileReadException, PomFileWriteException {
 
         Document pomFile = DocumentReader.readDocument(pomFilePath);
         pomFile.setDocumentURI(pomFilePath);
-        ArrayList<Object> processedData = JacocoCoverage.insertJacocoCoverageCheck(
+        HashMap<String, Object> processedData = JacocoCoverage.insertJacocoCoverageCheck(
                 pomFile,
-                Constants.MAVEN_TAG_BUILD,
+                Constants.Maven.MAVEN_TAG_BUILD,
                 coveragePerElement,
                 coverageThreshold);
         Document jacocoInsertedPom = (Document) processedData.get(0);

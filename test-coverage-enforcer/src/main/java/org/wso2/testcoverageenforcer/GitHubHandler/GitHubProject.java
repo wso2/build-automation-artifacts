@@ -83,9 +83,9 @@ public class GitHubProject {
         Properties properties = new Properties();
         properties.load(new FileInputStream(propertiesFilePath));
 
-        this.login = properties.getProperty(Constants.GIT_USERNAME);
-        this.password = properties.getProperty(Constants.GIT_PASSWORD);
-        this.email = properties.getProperty(Constants.GIT_EMAIL);
+        this.login = properties.getProperty(Constants.Git.GIT_USERNAME);
+        this.password = properties.getProperty(Constants.Git.GIT_PASSWORD);
+        this.email = properties.getProperty(Constants.Git.GIT_EMAIL);
 
         GitHub github = GitHub.connectUsingPassword(this.login, this.password);
         this.projectRepository = github.getRepository(repositoryName);
@@ -125,7 +125,7 @@ public class GitHubProject {
         }
 
         this.clonedRepository = Git.cloneRepository()
-                .setURI(Constants.GITHUB_URL + this.forkedRepository.getFullName() + ".git")
+                .setURI(Constants.Git.GITHUB_URL + this.forkedRepository.getFullName() + ".git")
                 .setDirectory(cloneFolder)
                 .call();
     }
@@ -168,15 +168,15 @@ public class GitHubProject {
     public void gitPullRequest() throws IOException {
 
         Path tempFile = Files.createTempFile("pr_message_temp", ".txt");
-        try (InputStream stream = TemplateReader.class.getClassLoader().getResourceAsStream(Constants.GIT_PR_BODY)) {
+        try (InputStream stream = TemplateReader.class.getClassLoader().getResourceAsStream(Constants.Git.GIT_PR_BODY)) {
             Files.copy(stream, tempFile, StandardCopyOption.REPLACE_EXISTING);
         }
         byte[] encoded = Files.readAllBytes(tempFile);
         String pullRequestMessage = new String(encoded);
         this.projectRepository.createPullRequest(
-                Constants.GIT_PR_TITLE,
-                this.forkedRepository.getOwnerName() + Constants.COLON + Constants.GIT_PR_MASTER,
-                Constants.GIT_PR_MASTER,
+                Constants.Git.GIT_PR_TITLE,
+                this.forkedRepository.getOwnerName() + Constants.COLON + Constants.Git.GIT_PR_MASTER,
+                Constants.Git.GIT_PR_MASTER,
                 pullRequestMessage);
     }
 
@@ -211,9 +211,9 @@ public class GitHubProject {
         Calendar currentTime = Calendar.getInstance();
         for (GHCommit commit : commitsList) {
             if ((commit.getAuthor() != null)) {
-                if (commit.getAuthor().getLogin().equals(Constants.GIT_JENKINS_BOT)) continue;
+                if (commit.getAuthor().getLogin().equals(Constants.Git.GIT_JENKINS_BOT)) continue;
             }
-            if (commitsCount == Constants.GITHUB_COMMITS_OF_INTEREST_COUNT) {
+            if (commitsCount == Constants.Git.GITHUB_COMMITS_OF_INTEREST_COUNT) {
                 break;
             }
             Calendar commitTime = Calendar.getInstance();
@@ -225,7 +225,7 @@ public class GitHubProject {
             }
             commitsCount++;
         }
-        return recentCommitCount >= Constants.GITHUB_RECENT_COMMITS_THRESHOLD;
+        return recentCommitCount >= Constants.Git.GITHUB_RECENT_COMMITS_THRESHOLD;
     }
 
     /**
@@ -239,9 +239,9 @@ public class GitHubProject {
         for (GHCommit commit : commitsList) {
             if (commit.getAuthor() != null) {
                 switch (commit.getAuthor().getLogin()) {    // Ignore commits from specific authors
-                    case Constants.GIT_JENKINS_BOT:
+                    case Constants.Git.GIT_JENKINS_BOT:
                         continue;
-                    case Constants.GIT_MAHESHIKA:
+                    case Constants.Git.GIT_MAHESHIKA:
                         continue;
                 }
             }
