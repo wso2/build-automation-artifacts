@@ -19,26 +19,22 @@ Instructions for using the tool can be found under help.
 java -jar test-coverage-enforcer-1.0-SNAPSHOT.jar -r "user_name/repo_name" -w "path/to/your/clone/directory" -e "BUNDLE" -p "true" -prop "./path/to/your/enforcer.properties"
 ```
 ```bash
--e,--element <arg>          Per which element this coverage check should
-                            be performed(BUNDLE, PACKAGE, CLASS,
+-e,--element                Per which element this coverage check should be performed(BUNDLE, PACKAGE, CLASS,
                             SOURCEFILE or METHOD). Default is `BUNDLE`
  -h,--help                  Get help with usage
- -p,--pullRequest <arg>     Make a pull request once changes are
-                            done(boolean value: `true` or `false`). Default is `true`
- -prop,--properties <arg>   Properties file containing configurations for
-                            SQL server and GitHub account. This is mandatory.
- -r,--repository <arg>      GitHub repository name to add coverage
-                            check(Format: 'user_name/repository_name'). If this 
-                            parameter is not present, tool will use sql configurations
-                            to use data from the sql server 
- -t,--threshold <arg>       Line coverage threshold to break the
-                            build(float value between 0 and 1). If this
-                            parameter is not available then the tool will
-                            build the project to calculate existing line coverage
-                            and a slightly lower value to the existing coverage
+ -p,--pullRequest           Make a pull request once changes are done(boolean value: `true` or `false`). 
+                            Default is `true`
+ -prop,--properties         Properties file containing configurations for SQL server and GitHub account. 
+                            This is mandatory.                          
+ -r,--repository            GitHub repository name to add coverage check(Format: 'user_name/repository_name'). 
+                            If this parameter is not present, tool will use sql configurations to use data
+                            from the sql server 
+ -t,--threshold             Line coverage threshold to break the build(a float value between 0 and 1). If this  
+                            parameter is not available then the tool will build the project to calculate
+                            existing line coverage and a slightly lower value to the existing coverage
                             will be used to prevent the build from braking
- -w,--workspacePath <arg>   Folder to temporally clone the repository/repositories
-                            during the procedure. This is mandatory
+ -w,--workspacePath         Folder to temporally clone the repository/repositories during the procedure. 
+                            This is mandatory
 ```
 ### Important Notes ###
 * This tool will preserve any existing original jacoco line coverage configurations. However in order to 
