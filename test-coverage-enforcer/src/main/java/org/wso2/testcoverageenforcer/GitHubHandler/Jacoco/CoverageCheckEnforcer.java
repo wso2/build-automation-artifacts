@@ -141,7 +141,7 @@ public class CoverageCheckEnforcer {
         String coverageThreshold = this.coverageThreshold;
         if (automaticCoverageThreshold) {
             coveragePerElement = Constants.COVERAGE_PER_ELEMENT;
-            float coverageThresholdValue = buildAnalysisWithCoverageCheck.get(Constants.Build.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE);
+            float coverageThresholdValue = buildAnalysisWithCoverageCheck.get(Constants.Build.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE).floatValue();
             coverageThreshold = String.format(Locale.US, "%.2f", (Math.floor(coverageThresholdValue * 100) / 100));
         }
 

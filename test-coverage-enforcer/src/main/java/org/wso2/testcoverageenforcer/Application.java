@@ -93,8 +93,11 @@ public class Application {
             If the threshold value and coverage per element value is not present, automatic calculation of threshold value will take place.
             In this case coverage per element would be set to BUNDLE.
              */
-            if (!(cmd.hasOption("t")) && !(cmd.hasOption("e"))) {
+            if (!(cmd.hasOption("t"))) {
                 automaticCoverageThresholdStatus = true;
+            } else if (!(cmd.hasOption("e"))) {
+                // Threshold is present but coverage per element is not available
+                throw new MissingOptionException("Coverage per element is missing");
             }
             /*
             Pull request making after coverage threshold integration default value is set to true otherwise user

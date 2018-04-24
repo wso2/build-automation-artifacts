@@ -163,7 +163,7 @@ public class FeatureAdder {
 
         ParentPom parent = new ParentPom(projectPath);
         float minimumBundleCoverage = (float) parent.getMinimumBundleCoverage(parent.getChildren());
-        analysisLog.put(Constants.Build.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE, minimumBundleCoverage);
+        analysisLog.put(Constants.Build.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE, new Float(minimumBundleCoverage));
         log.info("Minimum bundle coverage is " + Float.toString(minimumBundleCoverage) + " for " + projectPath);
 
         return analysisLog;
