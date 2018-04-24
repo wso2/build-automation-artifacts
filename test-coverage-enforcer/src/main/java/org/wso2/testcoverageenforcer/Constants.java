@@ -100,7 +100,7 @@ public class Constants {
         public static final short GITHUB_RECENT_COMMITS_THRESHOLD = 3;
         public static final String GIT_JENKINS_BOT = "wso2-jenkins-bot";
         public static final String GIT_MAHESHIKA = "maheshika";
-        public static final String GIT_PR_BODY = "pullRequestMessage.txt";
+        public static final String GIT_PR_BODY = "pullRequestMessage.md";
         public static final String GITHUB_URL = "https://github.com/";
         public static final String GIT_USERNAME = "github.username";
         public static final String O_AUTH_TOKEN = "github.OAuthToken";

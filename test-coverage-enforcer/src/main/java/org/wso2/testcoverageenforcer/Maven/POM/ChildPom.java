@@ -18,7 +18,6 @@
 
 package org.wso2.testcoverageenforcer.Maven.POM;
 
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.w3c.dom.Document;
 import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentReader;
@@ -27,12 +26,9 @@ import org.wso2.testcoverageenforcer.FileHandler.PomFileReadException;
 import org.wso2.testcoverageenforcer.FileHandler.PomFileWriteException;
 import org.wso2.testcoverageenforcer.Maven.Jacoco.CoverageReportReader;
 import org.wso2.testcoverageenforcer.Maven.Jacoco.JacocoCoverage;
-import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 
 /**
  * A Maven pom representation with added capabilities to inherit jacoco coverage check
@@ -60,7 +56,7 @@ public class ChildPom extends MavenPom {
      * @param coverageThreshold    Line coverage threshold to break the build
      * @param surefireArgumentLine surefire argument name in the parent pom
      * @param jacocoReportPath     jacoco report file path used in the parent pom
-     * @throws PomFileReadException Error while reading child pom
+     * @throws PomFileReadException  Error while reading child pom
      * @throws PomFileWriteException Error while writing child pom file
      */
     public void inheritCoverageCheckFromParent(String coveragePerElement, String coverageThreshold, String surefireArgumentLine, String jacocoReportPath)

@@ -20,7 +20,6 @@ package org.wso2.testcoverageenforcer.Maven.POM;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.w3c.dom.Document;
 import org.wso2.testcoverageenforcer.Application;
 import org.wso2.testcoverageenforcer.Constants;
@@ -29,13 +28,10 @@ import org.wso2.testcoverageenforcer.FileHandler.DocumentWriter;
 import org.wso2.testcoverageenforcer.FileHandler.PomFileReadException;
 import org.wso2.testcoverageenforcer.FileHandler.PomFileWriteException;
 import org.wso2.testcoverageenforcer.Maven.Jacoco.JacocoCoverage;
-import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 
 /**
  * A Maven pom representation with added capabilities to enforce jacoco coverage check
@@ -67,7 +63,7 @@ public class ParentPom extends MavenPom {
      * Jacoco inserted pom file as an org.w3c.Document object
      * Maven surefire argument line String in the processed document,
      * Jacoco report path String in the processed document
-     * @throws PomFileReadException Error while reading the pom
+     * @throws PomFileReadException  Error while reading the pom
      * @throws PomFileWriteException Error while writing the pom file
      */
     public HashMap<String, Object> enforceCoverageCheckUnderPluginManagement(String coveragePerElement,
@@ -95,7 +91,7 @@ public class ParentPom extends MavenPom {
      * @param surefireArgumentLine surefire argument name in the parent pom
      * @param jacocoReportPath     jacoco report file path used in the parent pom
      * @return Check rule added at least in any child
-     * @throws PomFileReadException Error while reading the pom
+     * @throws PomFileReadException  Error while reading the pom
      * @throws PomFileWriteException Error while writing the pom file
      */
     public boolean inheritCoverageCheckInChildren(List<ChildPom> children, String coveragePerElement, String coverageThreshold,
@@ -122,7 +118,7 @@ public class ParentPom extends MavenPom {
      * Get minimum line coverage value in the project
      *
      * @return Minimum coverage ratio value among bundles
-     * @throws IOException            Error in opening files
+     * @throws IOException          Error in opening files
      * @throws PomFileReadException Error while reading the pom
      */
     public double getMinimumBundleCoverage(List<ChildPom> children)

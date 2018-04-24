@@ -48,7 +48,7 @@ public class FeatureAdder {
      * @param coveragePerElement Per which element jacoco coverage check should be performed
      * @param coverageThreshold  Line coverage threshold to break the build
      * @return Coverage check added at least in on module
-     * @throws PomFileReadException Error while reading child pom
+     * @throws PomFileReadException  Error while reading child pom
      * @throws PomFileWriteException Error while writing child pom file
      */
     public static boolean integrateJacocoCoverageCheck(

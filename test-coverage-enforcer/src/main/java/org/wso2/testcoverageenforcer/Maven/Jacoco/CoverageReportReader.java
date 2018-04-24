@@ -39,16 +39,12 @@ import java.util.Iterator;
  */
 public class CoverageReportReader {
 
+    private static final Logger log = Logger.getLogger(Application.class);
     private final String title;
-
     private final File executionDataFile;
     private final File classesDirectory;
-
     private ExecFileLoader execFileLoader;
-
     private IBundleCoverage bundleCoverage;
-
-    private static final Logger log = Logger.getLogger(Application.class);
 
     /**
      * Create a new reader for the jacoco report file

@@ -21,7 +21,6 @@ package org.wso2.testcoverageenforcer.Maven.POM;
 import org.apache.log4j.Logger;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Profile;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.w3c.dom.Document;
 import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentReader;
@@ -30,16 +29,12 @@ import org.wso2.testcoverageenforcer.FileHandler.POMReader;
 import org.wso2.testcoverageenforcer.FileHandler.PomFileReadException;
 import org.wso2.testcoverageenforcer.FileHandler.PomFileWriteException;
 import org.wso2.testcoverageenforcer.Maven.Jacoco.JacocoCoverage;
-import org.xml.sax.SAXException;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 
 /**
  * A Maven pom representation with essential methods to enforce Jacoco coverage rule
@@ -163,7 +158,7 @@ abstract class MavenPom {
      * Jacoco inserted pom file as an org.w3c.Document object
      * Maven surefire argument line String in the processed document,
      * Jacoco report path String in the processed document
-     * @throws PomFileReadException Error while reading the pom
+     * @throws PomFileReadException  Error while reading the pom
      * @throws PomFileWriteException Error while writing the pom file
      */
     public HashMap<String, Object> enforceCoverageCheckUnderBuildPlugins(String coveragePerElement, String coverageThreshold)
