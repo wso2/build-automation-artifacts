@@ -27,18 +27,14 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.wso2.testcoverageenforcer.FileHandler.PomFileReadException;
 import org.wso2.testcoverageenforcer.FileHandler.PomFileWriteException;
 import org.wso2.testcoverageenforcer.GitHubHandler.Jacoco.CoverageCheckEnforcer;
 import org.wso2.testcoverageenforcer.ServerHandler.SQLServer;
-import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 
 /**
  * Provide application interface to create pull requests for multiple github projects to add jacoco coverage check
@@ -56,7 +52,7 @@ public class Application {
 
         Option cliHelp = new Option("h", "help", false, "Get help with usage");
         Option repositoryName = new Option("r", "repository", true,
-                "GitHub repository name to add coverage check(Format: 'username/repositoryname'). If urls are" +
+                "GitHub repository name to add coverage check(Format: 'username/repositoryName'). If urls are" +
                         " received from an external server, this option is ignored");
         Option workspacePath = new Option("w", "workspacePath", true,
                 "Folder to temporally clone the repository during the procedure");
@@ -154,11 +150,12 @@ public class Application {
                 checkEnforcer.createPullRequestWithCoverageCheck();
             }
         } catch (MissingOptionException e) {
-            log.error("Missing required options" + e);
+            log.error(e);
+            help.printHelp("java -jar test-coverage-enforcer-1.0-SNAPSHOT.jar", options, true);
         } catch (ParseException e) {
             log.error("Arguments parsing error: " + e.getMessage(), e);
         } catch (IOException e) {
-            log.error("File reading error", e);
+            log.error("Input or output operation error", e);
         } catch (PomFileReadException e) {
             log.error("Error while reading a pom file", e);
         } catch (PomFileWriteException e) {

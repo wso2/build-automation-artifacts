@@ -1,10 +1,10 @@
 <execution>
-	<id>default-prepare-agent-by-coverage-enforcer</id>
-	<goals>
-		<goal>prepare-agent</goal>
-	</goals>
-	<configuration>
+    <id>default-prepare-agent-by-coverage-enforcer</id>
+    <goals>
+        <goal>prepare-agent</goal>
+    </goals>
+    <configuration>
         <propertyName>argLine</propertyName>
-		<destFile>${project.build.directory}/jacoco.exec</destFile>
-	</configuration>
+        <destFile>${project.build.directory}/jacoco.exec</destFile>
+    </configuration>
 </execution>

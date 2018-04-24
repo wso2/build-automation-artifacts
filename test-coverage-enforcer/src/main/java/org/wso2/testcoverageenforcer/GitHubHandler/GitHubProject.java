@@ -48,7 +48,7 @@ public class GitHubProject {
      * Credentials
      */
     private String login;
-    private String password;
+    private String OAuthToken;
     private String email;
 
     /**
@@ -84,10 +84,10 @@ public class GitHubProject {
         properties.load(new FileInputStream(propertiesFilePath));
 
         this.login = properties.getProperty(Constants.Git.GIT_USERNAME);
-        this.password = properties.getProperty(Constants.Git.GIT_PASSWORD);
+        this.OAuthToken = properties.getProperty(Constants.Git.O_AUTH_TOKEN);
         this.email = properties.getProperty(Constants.Git.GIT_EMAIL);
 
-        GitHub github = GitHub.connectUsingPassword(this.login, this.password);
+        GitHub github = GitHub.connectUsingOAuth(this.OAuthToken);
         this.projectRepository = github.getRepository(repositoryName);
     }
 
@@ -155,7 +155,7 @@ public class GitHubProject {
     public void gitPush() throws GitAPIException, IOException {
 
         this.clonedRepository.push()
-                .setCredentialsProvider(new UsernamePasswordCredentialsProvider(this.login, this.password))
+                .setCredentialsProvider(new UsernamePasswordCredentialsProvider(this.OAuthToken, Constants.Git.OAUTH_PASSWORD))
                 .call();
         FileUtils.deleteDirectory(cloneFolder);
     }
@@ -249,11 +249,7 @@ public class GitHubProject {
             commitTime.setTime(commit.getCommitDate());
             int yearDifference = currentTime.get(Calendar.YEAR) - commitTime.get(Calendar.YEAR);
             int monthsDifference = yearDifference * 12 + currentTime.get(Calendar.MONTH) - commitTime.get(Calendar.MONTH);
-            if (monthsDifference < timePeriodOfInterest) {
-                return true;
-            } else {
-                return false;
-            }
+            return monthsDifference < timePeriodOfInterest;
         }
         return false;
     }

@@ -28,13 +28,10 @@ import org.wso2.testcoverageenforcer.FileHandler.DocumentReader;
 import org.wso2.testcoverageenforcer.FileHandler.DocumentWriter;
 import org.wso2.testcoverageenforcer.FileHandler.PomFileReadException;
 import org.wso2.testcoverageenforcer.FileHandler.PomFileWriteException;
-import org.wso2.testcoverageenforcer.Maven.FeatureAdder;
 import org.wso2.testcoverageenforcer.Maven.Jacoco.JacocoCoverage;
 import org.xml.sax.SAXException;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
@@ -52,8 +49,7 @@ public class ParentPom extends MavenPom {
      * Class constructor
      *
      * @param pomFilePath File path to the pom file
-     * @throws IOException            Catch errors while reading child pom files
-     * @throws XmlPullParserException Catch errors while parsing child pom files
+     * @throws PomFileReadException Error while reading the pom
      */
     public ParentPom(String pomFilePath) throws PomFileReadException {
 
@@ -71,10 +67,8 @@ public class ParentPom extends MavenPom {
      * Jacoco inserted pom file as an org.w3c.Document object
      * Maven surefire argument line String in the processed document,
      * Jacoco report path String in the processed document
-     * @throws ParserConfigurationException Error while parsing the pom file
-     * @throws IOException                  Error reading the pom file
-     * @throws SAXException                 Error while parsing the pom's file input stream
-     * @throws TransformerException         Error while writing pom file back
+     * @throws PomFileReadException Error while reading the pom
+     * @throws PomFileWriteException Error while writing the pom file
      */
     public HashMap<String, Object> enforceCoverageCheckUnderPluginManagement(String coveragePerElement,
                                                                              String coverageThreshold)
@@ -101,11 +95,8 @@ public class ParentPom extends MavenPom {
      * @param surefireArgumentLine surefire argument name in the parent pom
      * @param jacocoReportPath     jacoco report file path used in the parent pom
      * @return Check rule added at least in any child
-     * @throws ParserConfigurationException Error while parsing the pom file
-     * @throws IOException                  Error reading the pom file
-     * @throws SAXException                 Error while parsing the pom's file input stream
-     * @throws TransformerException         Error while writing pom file back
-     * @throws XmlPullParserException       Error while parsing pom xml files
+     * @throws PomFileReadException Error while reading the pom
+     * @throws PomFileWriteException Error while writing the pom file
      */
     public boolean inheritCoverageCheckInChildren(List<ChildPom> children, String coveragePerElement, String coverageThreshold,
                                                   String surefireArgumentLine, String jacocoReportPath)
@@ -114,10 +105,11 @@ public class ParentPom extends MavenPom {
         boolean checkRuleAddition = false; // Jacoco coverage check rule added at least in any child
         for (ChildPom child : children) {
             if (child.hasChildren()) {
-                checkRuleAddition = checkRuleAddition || inheritCoverageCheckInChildren(child.getChildren(), coveragePerElement, coverageThreshold, surefireArgumentLine, jacocoReportPath);
+                boolean ruleAdded = inheritCoverageCheckInChildren(child.getChildren(), coveragePerElement, coverageThreshold, surefireArgumentLine, jacocoReportPath);
+                checkRuleAddition = checkRuleAddition || ruleAdded;
             } else if (child.hasTests()) {
                 child.inheritCoverageCheckFromParent(coveragePerElement, coverageThreshold, surefireArgumentLine, jacocoReportPath);
-                checkRuleAddition = checkRuleAddition || true;
+                checkRuleAddition = true;
             } else if (!child.hasTests()) {
                 log.debug("Ignoring child module due to missing tests in " + child.getPomFilePath());
             }
@@ -131,10 +123,10 @@ public class ParentPom extends MavenPom {
      *
      * @return Minimum coverage ratio value among bundles
      * @throws IOException            Error in opening files
-     * @throws XmlPullParserException Error while parsing pom files
+     * @throws PomFileReadException Error while reading the pom
      */
     public double getMinimumBundleCoverage(List<ChildPom> children)
-            throws PomFileReadException {
+            throws PomFileReadException, IOException {
 
         double minimumCoverage = 1;
         for (ChildPom child : children) {

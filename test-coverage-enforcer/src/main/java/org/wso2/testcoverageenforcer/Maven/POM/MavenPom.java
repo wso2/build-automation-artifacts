@@ -55,7 +55,7 @@ abstract class MavenPom {
     /**
      * Path required to read the pom file data
      */
-    String pomFilePath;
+    final String pomFilePath;
 
     /**
      * org.apache.maven.model.model representation of the pom file
@@ -67,8 +67,7 @@ abstract class MavenPom {
      * To initialize pom file path, pom file model and jacoco template file path
      *
      * @param pomFilePath Path for the attribute 'pomFilePath'
-     * @throws IOException            Error reading the pom file
-     * @throws XmlPullParserException Error parsing pom file to the maven Model
+     * @throws PomFileReadException Error while reading the pom
      */
     MavenPom(String pomFilePath) throws PomFileReadException {
 
@@ -99,8 +98,7 @@ abstract class MavenPom {
      * Get a list of child modules to examine each
      *
      * @return A list of child modules if available. Empty list if not.
-     * @throws IOException            Catch errors while reading child pom files
-     * @throws XmlPullParserException Catch errors while parsing child pom files
+     * @throws PomFileReadException Error while reading the pom
      */
     public List<ChildPom> getChildren() throws PomFileReadException {
 
@@ -129,10 +127,10 @@ abstract class MavenPom {
             modules = modulesList.stream().flatMap(x -> x.stream()).collect(Collectors.toList());
         }
         for (String eachChildPomPath : modules) {
-            if (eachChildPomPath.contains(Constants.CHILD_NAME_TESTS_INTEGRATION)) {
+            if (eachChildPomPath.contains(Constants.Child.CHILD_NAME_TESTS_INTEGRATION)) {
                 log.info("Skipping " + this.pomFilePath.replace(Constants.POM_NAME, "") + eachChildPomPath + ". Integration test module");
                 continue;    //Neglect the module 'tests-integration'
-            } else if (eachChildPomPath.contains(Constants.CHILD_NAME_OSGI)) {
+            } else if (eachChildPomPath.contains(Constants.Child.CHILD_NAME_OSGI)) {
                 log.info("Skipping " + this.pomFilePath.replace(Constants.POM_NAME, "") + eachChildPomPath + ". OSGI test module");
                 continue;
             }
@@ -165,10 +163,8 @@ abstract class MavenPom {
      * Jacoco inserted pom file as an org.w3c.Document object
      * Maven surefire argument line String in the processed document,
      * Jacoco report path String in the processed document
-     * @throws ParserConfigurationException Error while parsing the pom file
-     * @throws IOException                  Error reading the pom file
-     * @throws SAXException                 Error while parsing the pom's file input stream
-     * @throws TransformerException         Error while writing pom file back
+     * @throws PomFileReadException Error while reading the pom
+     * @throws PomFileWriteException Error while writing the pom file
      */
     public HashMap<String, Object> enforceCoverageCheckUnderBuildPlugins(String coveragePerElement, String coverageThreshold)
             throws PomFileReadException, PomFileWriteException {
@@ -180,7 +176,7 @@ abstract class MavenPom {
                 Constants.Maven.MAVEN_TAG_BUILD,
                 coveragePerElement,
                 coverageThreshold);
-        Document jacocoInsertedPom = (Document) processedData.get(0);
+        Document jacocoInsertedPom = (Document) processedData.get(Constants.Jacoco.JACOCO_INSERTED_POM);
         DocumentWriter.writeDocument(jacocoInsertedPom, pomFilePath);
         return processedData;
     }

@@ -19,20 +19,16 @@
 package org.wso2.testcoverageenforcer.GitHubHandler.Jacoco;
 
 import org.apache.log4j.Logger;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.FileHandler.PomFileReadException;
 import org.wso2.testcoverageenforcer.FileHandler.PomFileWriteException;
 import org.wso2.testcoverageenforcer.GitHubHandler.GitHubProject;
 import org.wso2.testcoverageenforcer.Maven.FeatureAdder;
-import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 
 /**
  * Contains methods to integrate jacoco coverage check with an existing GitHub project
@@ -46,31 +42,31 @@ public class CoverageCheckEnforcer {
     /**
      * Name of the GitHub repository to integrate coverage check in the form of 'userName/repositoryName'
      */
-    private String repositoryName;
+    private final String repositoryName;
     /**
      * Properties file with credentials to the GitHub account and mysql server
      */
-    private String propertiesFilePath;
+    private final String propertiesFilePath;
     /**
      * Path to the folder to be used for temporary cloning of the repository
      */
-    private String localWorkspace;
+    private final String localWorkspace;
     /**
      * Per which element coverage checking to be performed(per BUNDLE, CLASS etc)
      */
-    private String coveragePerElement;
+    private final String coveragePerElement;
     /**
      * Coverage threshold value to break the build
      */
-    private String coverageThreshold;
+    private final String coverageThreshold;
     /**
      * Create a pull request after jacoco check rule integration in the forked repository
      */
-    private boolean pullRequest;
+    private final boolean pullRequest;
     /**
      * Build the project prior to applying coverage check to calculate suitable coverage threshold automatically
      */
-    private boolean automaticCoverageThreshold;
+    private final boolean automaticCoverageThreshold;
 
     /**
      * Initialize required parameters with a builder object
@@ -92,10 +88,10 @@ public class CoverageCheckEnforcer {
      * Add jacoco coverage check to an existing repo and make a pull request
      *
      * @return Successfully completed all the steps
-     * @throws IOException                  Error in reading xml files or while initializing GitHub repository
-     * @throws GitAPIException              Error while performing GitHub operations
-     * @throws InterruptedException Build process disturbed by another thread
-     * @throws PomFileReadException Error while reading pom file in to a org.w3c.dom.Document object
+     * @throws IOException           Error in reading xml files or while initializing GitHub repository
+     * @throws GitAPIException       Error while performing GitHub operations
+     * @throws InterruptedException  Build process disturbed by another thread
+     * @throws PomFileReadException  Error while reading pom file in to a org.w3c.dom.Document object
      * @throws PomFileWriteException Error while writing org.w3c.dom.Document object to a pom file
      */
     public boolean createPullRequestWithCoverageCheck()
@@ -126,13 +122,13 @@ public class CoverageCheckEnforcer {
         and the build should be successful in order to proceed for a pull request
          */
         HashMap<String, Float> buildAnalysisWithCoverageCheck = FeatureAdder.inspectJacocoSupport(repo.getClonedPath());
-        if (buildAnalysisWithCoverageCheck.get(Constants.UNIT_TESTS_AVAILABLE) == (Constants.STATUS_FALSE)) {
+        if (buildAnalysisWithCoverageCheck.get(Constants.UNIT_TESTS_AVAILABLE) == (Constants.Status.STATUS_FALSE)) {
             log.warn("Skipping project due to unavailability of unit tests");
             return false;
-        } else if (buildAnalysisWithCoverageCheck.get(Constants.BUILD_LOG_BUILD_SUCCESS) == (Constants.STATUS_FALSE)) {
+        } else if (buildAnalysisWithCoverageCheck.get(Constants.Build.BUILD_LOG_BUILD_SUCCESS) == (Constants.Status.STATUS_FALSE)) {
             log.error("Build failed with coverage check. Possibly an already failing build or coverage check configuration error");
             return false;
-        } else if (buildAnalysisWithCoverageCheck.get(Constants.BUILD_LOG_COVERAGE_CHECK_SUCCESS) == (Constants.STATUS_FALSE)) {
+        } else if (buildAnalysisWithCoverageCheck.get(Constants.Build.BUILD_LOG_COVERAGE_CHECK_SUCCESS) == (Constants.Status.STATUS_FALSE)) {
             log.warn("Coverage check integration failed in the build even though the build succeeded. Maybe this project does not have any unit tests");
             return false;
         }
@@ -145,7 +141,7 @@ public class CoverageCheckEnforcer {
         String coverageThreshold = this.coverageThreshold;
         if (automaticCoverageThreshold) {
             coveragePerElement = Constants.COVERAGE_PER_ELEMENT;
-            float coverageThresholdValue = buildAnalysisWithCoverageCheck.get(Constants.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE);
+            float coverageThresholdValue = buildAnalysisWithCoverageCheck.get(Constants.Build.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE);
             coverageThreshold = String.format(Locale.US, "%.2f", (Math.floor(coverageThresholdValue * 100) / 100));
         }
 

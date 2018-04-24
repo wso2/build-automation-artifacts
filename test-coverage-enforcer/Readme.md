@@ -19,4 +19,4 @@ Instructions for using the tool can be found under help. Use -h tag.
 * This tool will preserve any existing original jacoco line coverage configurations. However in order to 
 ensure coverage check rule's execution, existing values in Maven Surefire argument line would be replaced with
 jacoco agent argument line.
-* More information about the process can be found in [Here](https://github.com/tharindu-bandara/build-automation-artifacts/tree/master/test-coverage-enforcer)
+* Current version only supports adding jacoco coverage check rule for modules having a unit test folder. Hence performing tests in a separate folder will not be subjected for this rule addition like OSGI test. Any module name contains substrings 'OSGI' or 'integration' will be skipped  

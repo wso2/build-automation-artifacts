@@ -59,14 +59,14 @@ public class SQLServer {
 
         Properties properties = new Properties();
         properties.load(new FileInputStream(propertiesFilePath));
-        this.sqlRepositoryColumn = properties.getProperty(Constants.Sql.SQL_REPO_COLLUMN);
+        this.sqlRepositoryColumn = properties.getProperty(Constants.Sql.SQL_REPO_COLUMN);
 
         this.m_connection = DriverManager.getConnection(
                 properties.getProperty(Constants.Sql.SQL_URL),
                 properties.getProperty(Constants.Sql.SQL_USERNAME),
                 properties.getProperty(Constants.Sql.SQL_PASSWORD));
         PreparedStatement stat = this.m_connection.prepareStatement("SELECT "
-                        + properties.getProperty(Constants.Sql.SQL_REPO_COLLUMN) + " FROM "
+                        + properties.getProperty(Constants.Sql.SQL_REPO_COLUMN) + " FROM "
                         + properties.getProperty(Constants.Sql.SQL_TABLE),
                 ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         stat.setFetchSize(Integer.MIN_VALUE);

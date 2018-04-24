@@ -19,34 +19,24 @@
 package org.wso2.testcoverageenforcer.Maven;
 
 import org.apache.log4j.Logger;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.wso2.testcoverageenforcer.Application;
 import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.FileHandler.PomFileReadException;
 import org.wso2.testcoverageenforcer.FileHandler.PomFileWriteException;
 import org.wso2.testcoverageenforcer.GitHubHandler.GitHubProject;
 import org.wso2.testcoverageenforcer.Maven.POM.ParentPom;
-import org.xml.sax.SAXException;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 
 /**
  * Contain methods to features to a multi-module maven project
@@ -62,11 +52,8 @@ public class FeatureAdder {
      * @param coveragePerElement Per which element jacoco coverage check should be performed
      * @param coverageThreshold  Line coverage threshold to break the build
      * @return Coverage check added at least in on module
-     * @throws ParserConfigurationException Error while parsing the pom file
-     * @throws IOException                  Error reading the pom file
-     * @throws SAXException                 Error while parsing the pom's file input stream
-     * @throws TransformerException         Error while writing pom file back
-     * @throws XmlPullParserException       Error while parsing pom xml files
+     * @throws PomFileReadException Error while reading child pom
+     * @throws PomFileWriteException Error while writing child pom file
      */
     public static boolean integrateJacocoCoverageCheck(
             String projectPath,
@@ -86,8 +73,8 @@ public class FeatureAdder {
         if (parent.hasChildren()) {
             log.debug("Child modules are available. Analysing <PluginManagement> node");
             HashMap<String, Object> results = parent.enforceCoverageCheckUnderPluginManagement(coveragePerElement, coverageThreshold);
-            String surefireArgumentLine = (String) results.get(Constants.SUREFIRE_ARGLINE_IN_THE_POM);
-            String jacocoReportPath = (String) results.get(Constants.Jacoco.JACOCO_INSERTED_POM);
+            String surefireArgumentLine = (String) results.get(Constants.Surefire.SUREFIRE_ARGLINE_IN_THE_POM);
+            String jacocoReportPath = (String) results.get(Constants.Jacoco.JACOCO_REPORT_PATH_IN_THE_POM);
             checkRuleAddition = parent.inheritCoverageCheckInChildren(
                     parent.getChildren(),
                     coveragePerElement,
@@ -117,11 +104,11 @@ public class FeatureAdder {
         boolean unitTestsAvailable = integrateJacocoCoverageCheck(projectPath, Constants.COVERAGE_PER_ELEMENT, Constants.ZERO);
         HashMap<String, Float> output = new HashMap<>();
         if (!unitTestsAvailable) {
-            output.put(Constants.UNIT_TESTS_AVAILABLE, Constants.STATUS_FALSE);
+            output.put(Constants.UNIT_TESTS_AVAILABLE, Constants.Status.STATUS_FALSE);
             return output;
         }
         output = analyzeBuildForCoverageCheckRule(projectPath);
-        output.put(Constants.UNIT_TESTS_AVAILABLE, Constants.STATUS_TRUE);
+        output.put(Constants.UNIT_TESTS_AVAILABLE, Constants.Status.STATUS_TRUE);
         return output;
     }
 
@@ -129,7 +116,6 @@ public class FeatureAdder {
      * Build the maven project
      *
      * @param getBuildOutput Get output of the build process
-     * @return Status of the build. 0 if healthy. -1 otherwise
      * @throws IOException          IO errors occurring during the build
      * @throws InterruptedException Current thread interrupted by another thread while waiting
      */
@@ -157,24 +143,31 @@ public class FeatureAdder {
             throws InterruptedException, IOException, PomFileReadException {
 
         HashMap<String, Float> analysisLog = new HashMap<>();
-        analysisLog.put(Constants.BUILD_LOG_COVERAGE_CHECK_SUCCESS, Constants.STATUS_FALSE);
-        analysisLog.put(Constants.BUILD_LOG_BUILD_SUCCESS, Constants.STATUS_FALSE);
-        analysisLog.put(Constants.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE, null);
+        analysisLog.put(Constants.Build.BUILD_LOG_COVERAGE_CHECK_SUCCESS, Constants.Status.STATUS_FALSE);
+        analysisLog.put(Constants.Build.BUILD_LOG_BUILD_SUCCESS, Constants.Status.STATUS_FALSE);
+        analysisLog.put(Constants.Build.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE, null);
 
         ProcessBuilder projectBuilder = getProjectBuilder(projectPath);
-        Path tempBuildLog = Files.createTempFile(Constants.TEMP_BUILD_OUTPUT_PREFIX, Constants.TEMP_BUILD_OUTPUT_SUFFIX);
 
-        projectBuilder.redirectOutput(tempBuildLog.toFile());
-        projectBuilder.redirectError(tempBuildLog.toFile());
+        File buildLog = new File(Constants.Build.BUILD_LOGS_FILE_PATH);
+        if (!buildLog.exists()) {
+            buildLog.createNewFile();
+        } else {
+            buildLog.delete();
+            buildLog.createNewFile();
+        }
+
+        projectBuilder.redirectErrorStream(true);
+        projectBuilder.redirectOutput(ProcessBuilder.Redirect.appendTo(buildLog));
 
         Process buildProcess = projectBuilder.start();
         buildProcess.waitFor();
 
-        analyzeBuildBuffer(tempBuildLog.toFile(), analysisLog);
+        analyzeBuildBuffer(buildLog, analysisLog);
 
         ParentPom parent = new ParentPom(projectPath);
         float minimumBundleCoverage = (float) parent.getMinimumBundleCoverage(parent.getChildren());
-        analysisLog.put(Constants.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE, minimumBundleCoverage);
+        analysisLog.put(Constants.Build.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE, minimumBundleCoverage);
         log.info("Minimum bundle coverage is " + Float.toString(minimumBundleCoverage) + " for " + projectPath);
 
         return analysisLog;
@@ -189,11 +182,11 @@ public class FeatureAdder {
         BufferedReader logBuffer = new BufferedReader(new FileReader(buildLog));
         String buildLine;
         while (((buildLine = logBuffer.readLine()) != null)) {
-            if (buildLine != null && buildLine.contains(Constants.BUILD_LOG_JACOCO_COVERAGE_CHECK_SUCCESS_MESSAGE)) {
-                analysisLog.put(Constants.BUILD_LOG_COVERAGE_CHECK_SUCCESS, Constants.STATUS_TRUE);
+            if (buildLine != null && buildLine.contains(Constants.Build.BUILD_LOG_JACOCO_COVERAGE_CHECK_SUCCESS_MESSAGE)) {
+                analysisLog.put(Constants.Build.BUILD_LOG_COVERAGE_CHECK_SUCCESS, Constants.Status.STATUS_TRUE);
             }
-            if (buildLine != null && buildLine.contains(Constants.BUILD_LOG_BUILD_SUCCESS_MESSAGE)) {
-                analysisLog.put(Constants.BUILD_LOG_BUILD_SUCCESS, Constants.STATUS_TRUE);
+            if (buildLine != null && buildLine.contains(Constants.Build.BUILD_LOG_BUILD_SUCCESS_MESSAGE)) {
+                analysisLog.put(Constants.Build.BUILD_LOG_BUILD_SUCCESS, Constants.Status.STATUS_TRUE);
             }
             log.debug(buildLine);
         }
@@ -233,10 +226,10 @@ public class FeatureAdder {
 
     public static void main(String[] args) throws Exception {
 
-        //integrateJacocoCoverageCheck("/home/tharindu/Jenkins_Test/Wso2_repos/carbon-store", "BUNDLE", "0.0");
+        integrateJacocoCoverageCheck("/home/tharindu/Jenkins_Test/Wso2_repos/carbon-governance", "BUNDLE", "0.0");
 
         /*String product = "wso2/analytics-is";
-        testJacoco(product);*/
+        testJacoco(product);
 
         String filePath = "/home/tharindu/Desktop/Platform Extensions Investigation/non-sonar-jobs.txt";
         File f = new File(filePath);
@@ -254,7 +247,7 @@ public class FeatureAdder {
             }
         }
         fBuffer.close();
-        fOutBuffer.close();
+        fOutBuffer.close();*/
 
     }
 
@@ -298,13 +291,13 @@ public class FeatureAdder {
             project.gitClone();
             boolean success = true;
             HashMap<String, Float> buildAnalysisWithCoverageCheck = FeatureAdder.inspectJacocoSupport(project.getClonedPath());
-            if (buildAnalysisWithCoverageCheck.get(Constants.UNIT_TESTS_AVAILABLE) == (Constants.STATUS_FALSE)) {
+            if (buildAnalysisWithCoverageCheck.get(Constants.UNIT_TESTS_AVAILABLE) == (Constants.Status.STATUS_FALSE)) {
                 log.warn("Skipping project due to unavailability of unit tests");
                 success = false;
-            } else if (buildAnalysisWithCoverageCheck.get(Constants.BUILD_LOG_BUILD_SUCCESS) == (Constants.STATUS_FALSE)) {
+            } else if (buildAnalysisWithCoverageCheck.get(Constants.Build.BUILD_LOG_BUILD_SUCCESS) == (Constants.Status.STATUS_FALSE)) {
                 log.error("Build failed with coverage check. Possibly an already failing build or coverage check configuration error");
                 success = false;
-            } else if (buildAnalysisWithCoverageCheck.get(Constants.BUILD_LOG_COVERAGE_CHECK_SUCCESS) == (Constants.STATUS_FALSE)) {
+            } else if (buildAnalysisWithCoverageCheck.get(Constants.Build.BUILD_LOG_COVERAGE_CHECK_SUCCESS) == (Constants.Status.STATUS_FALSE)) {
                 log.warn("Coverage check integration failed in the build even though the build succeeded. Maybe this project does not have any unit tests");
                 success = false;
             }

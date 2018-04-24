@@ -39,7 +39,7 @@ public class POMReader {
      *
      * @param path path of the pom.xml
      * @return org.apache.maven.model.Model Object corresponding to the pom.xml file given;
-     * @throws PomFileReadException Error occured while reading a pom file in to a org.apache.maven.model.Model
+     * @throws PomFileReadException Error occurred while reading a pom file in to a org.apache.maven.model.Model
      */
     public static Model getPOMModel(String path) throws PomFileReadException {
 
