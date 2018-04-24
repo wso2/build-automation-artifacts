@@ -1,0 +1,9 @@
+<execution>
+    <id>default-report-by-coverage-enforcer</id>
+    <goals>
+        <goal>report</goal>
+    </goals>
+    <configuration>
+        <dataFile>${project.build.directory}/jacoco.exec</dataFile>
+    </configuration>
+</execution>
