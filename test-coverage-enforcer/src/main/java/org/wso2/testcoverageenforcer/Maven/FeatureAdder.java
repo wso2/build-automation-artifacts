@@ -23,20 +23,16 @@ import org.wso2.testcoverageenforcer.Application;
 import org.wso2.testcoverageenforcer.Constants;
 import org.wso2.testcoverageenforcer.FileHandler.PomFileReadException;
 import org.wso2.testcoverageenforcer.FileHandler.PomFileWriteException;
-import org.wso2.testcoverageenforcer.GitHubHandler.GitHubProject;
 import org.wso2.testcoverageenforcer.Maven.POM.ParentPom;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 
 /**
  * Contain methods to features to a multi-module maven project
@@ -222,97 +218,5 @@ public class FeatureAdder {
         builder.command(commands);
         builder.directory(new File(projectPath));
         return builder;
-    }
-
-    public static void main(String[] args) throws Exception {
-
-        integrateJacocoCoverageCheck("/home/tharindu/Jenkins_Test/Wso2_repos/carbon-governance", "BUNDLE", "0.0");
-
-        /*String product = "wso2/analytics-is";
-        testJacoco(product);
-
-        String filePath = "/home/tharindu/Desktop/Platform Extensions Investigation/non-sonar-jobs.txt";
-        File f = new File(filePath);
-        File fout = new File("/home/tharindu/Desktop/Platform Extensions Investigation/processed.txt");
-        if (!fout.exists()) fout.createNewFile();
-        BufferedReader fBuffer = new BufferedReader(new FileReader(f));
-        BufferedWriter fOutBuffer = new BufferedWriter(new FileWriter(fout));
-        String line;
-        while ((line = fBuffer.readLine()) != null) {
-            System.out.println(line.trim() + ": ");
-            boolean status = Inspect(line.trim());
-            if (status) {
-                System.out.println("Success!");
-                fOutBuffer.write(line.trim() + System.getProperty("line.separator"));
-            }
-        }
-        fBuffer.close();
-        fOutBuffer.close();*/
-
-    }
-
-    private static void testJacoco(String gitRepo) throws Exception {
-
-        GitHubProject project = new GitHubProject(gitRepo, "/home/tharindu/Desktop/git.properties");
-
-        try {
-            project.gitFork();
-            System.out.println("Forking..");
-            project.setWorkspace("/home/tharindu/Jenkins_Test/Wso2_repos");
-            System.out.println("Cloning...");
-            project.gitClone();
-            integrateJacocoCoverageCheck(project.getClonedPath(), "BUNDLE", "0.0");
-            System.out.println("Commiting..");
-            project.gitCommit("Jacoco plugin integration for unit tests");
-            System.out.println("Pushing..");
-            project.gitPush();
-            System.out.println("Done");
-            System.out.println("Delete forked?");
-            Scanner input = new Scanner(System.in);
-            short inC = input.nextShort();
-            if (inC == 1) {
-                System.out.println("Deleting forked");
-                project.gitDeleteForked();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static boolean Inspect(String gitRepo) throws Exception {
-
-        GitHubProject project = new GitHubProject(gitRepo, "/home/tharindu/Desktop/git.properties");
-
-        try {
-            project.gitFork();
-            System.out.println("Forking..");
-            project.setWorkspace("/home/tharindu/Jenkins_Test/Wso2_repos");
-            System.out.println("Cloning...");
-            project.gitClone();
-            boolean success = true;
-            HashMap<String, Float> buildAnalysisWithCoverageCheck = FeatureAdder.inspectJacocoSupport(project.getClonedPath());
-            if (buildAnalysisWithCoverageCheck.get(Constants.UNIT_TESTS_AVAILABLE) == (Constants.Status.STATUS_FALSE)) {
-                log.warn("Skipping project due to unavailability of unit tests");
-                success = false;
-            } else if (buildAnalysisWithCoverageCheck.get(Constants.Build.BUILD_LOG_BUILD_SUCCESS) == (Constants.Status.STATUS_FALSE)) {
-                log.error("Build failed with coverage check. Possibly an already failing build or coverage check configuration error");
-                success = false;
-            } else if (buildAnalysisWithCoverageCheck.get(Constants.Build.BUILD_LOG_COVERAGE_CHECK_SUCCESS) == (Constants.Status.STATUS_FALSE)) {
-                log.warn("Coverage check integration failed in the build even though the build succeeded. Maybe this project does not have any unit tests");
-                success = false;
-            }
-
-            System.out.println("Commiting..");
-            project.gitCommit("Jacoco plugin integration for unit tests");
-            System.out.println("Pushing..");
-            project.gitPush();
-            System.out.println("Done");
-            System.out.println("Delete forked..");
-            project.gitDeleteForked();
-            return success;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
     }
 }
