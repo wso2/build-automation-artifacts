@@ -1,8 +1,15 @@
 package hudson.plugins.jacoco;
 
-import hudson.*;
-import hudson.model.*;
-import hudson.plugins.jacoco.portlet.bean.JacocoDeltaCoverageResultSummary;
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.Util;
+import hudson.model.Result;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.plugins.jacoco.portlet.utils.Utils;
 import hudson.plugins.jacoco.report.CoverageReport;
 import hudson.remoting.VirtualChannel;
@@ -10,22 +17,24 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import jenkins.MasterToSlaveFileCallable;
 import jenkins.tasks.SimpleBuildStep;
-import org.apache.commons.io.FileUtils;
 import org.apache.tools.ant.DirectoryScanner;
-import org.jacoco.core.tools.ExecFileLoader;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.Nonnull;
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import hudson.plugins.jacoco.portlet.bean.JacocoDeltaCoverageResultSummary;
 
 /**
  * {@link Publisher} that captures jacoco coverage reports.
@@ -33,6 +42,7 @@ import java.util.zip.ZipOutputStream;
  * @author Kohsuke Kawaguchi
  * @author Jonathan Fuerth
  * @author Ognjen Bubalo
+ * 
  */
 public class JacocoPublisher extends Recorder implements SimpleBuildStep {
 
@@ -54,7 +64,7 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
     // Delta coverage thresholds to apply
     public JacocoHealthReportDeltaThresholds deltaHealthReport;
 
-
+    
     /**
      * Variables containing the configuration set by the user.
      */
@@ -90,13 +100,8 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
     private String deltaMethodCoverage;
     private String deltaClassCoverage;
     private boolean buildOverBuild;
-    private boolean createZipFiles;
-
-    private static final String DIR_SEP = "\\s*,\\s*";
-    private static final String CLASS_DIRECTORY = "/jacoco/classes";
-    private static final String SOURCE_DIRECTORY = "/jacoco/sources";
-    private static final String JACOCO_RESOURCES = "/jacocoResources";
-    private static final String RESOURCE_ZIP_FILE_NAME = "/resources.zip";
+    
+	private static final String DIR_SEP = "\\s*,\\s*";
 
     private static final Integer THRESHOLD_DEFAULT = 0;
 
@@ -128,36 +133,35 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
         this.deltaMethodCoverage = "0";
         this.deltaClassCoverage = "0";
         this.buildOverBuild = false;
-        this.createZipFiles = false;
     }
 
-    /**
+	/**
      * Loads the configuration set by user.
      */
     @Deprecated
     public JacocoPublisher(String execPattern, String classPattern, String sourcePattern, String inclusionPattern, String exclusionPattern, boolean skipCopyOfSrcFiles, String maximumInstructionCoverage, String maximumBranchCoverage
-            , String maximumComplexityCoverage, String maximumLineCoverage, String maximumMethodCoverage, String maximumClassCoverage, String minimumInstructionCoverage, String minimumBranchCoverage
-            , String minimumComplexityCoverage, String minimumLineCoverage, String minimumMethodCoverage, String minimumClassCoverage, boolean changeBuildStatus,
-                           String deltaInstructionCoverage, String deltaBranchCoverage, String deltaComplexityCoverage, String deltaLineCoverage, String deltaMethodCoverage, String deltaClassCoverage, boolean buildOverBuild, boolean createZipFiles) {
-        this.execPattern = execPattern;
-        this.classPattern = classPattern;
-        this.sourcePattern = sourcePattern;
-        this.inclusionPattern = inclusionPattern;
-        this.exclusionPattern = exclusionPattern;
+    		, String maximumComplexityCoverage, String maximumLineCoverage, String maximumMethodCoverage, String maximumClassCoverage, String minimumInstructionCoverage, String minimumBranchCoverage
+    		, String minimumComplexityCoverage, String minimumLineCoverage, String minimumMethodCoverage, String minimumClassCoverage, boolean changeBuildStatus,
+                           String deltaInstructionCoverage, String deltaBranchCoverage, String deltaComplexityCoverage, String deltaLineCoverage, String deltaMethodCoverage, String deltaClassCoverage, boolean buildOverBuild) {
+    	this.execPattern = execPattern;
+    	this.classPattern = classPattern;
+    	this.sourcePattern = sourcePattern;
+    	this.inclusionPattern = inclusionPattern;
+    	this.exclusionPattern = exclusionPattern;
         this.skipCopyOfSrcFiles = skipCopyOfSrcFiles;
-        this.minimumInstructionCoverage = minimumInstructionCoverage;
-        this.minimumBranchCoverage = minimumBranchCoverage;
-        this.minimumComplexityCoverage = minimumComplexityCoverage;
-        this.minimumLineCoverage = minimumLineCoverage;
-        this.minimumMethodCoverage = minimumMethodCoverage;
-        this.minimumClassCoverage = minimumClassCoverage;
-        this.maximumInstructionCoverage = maximumInstructionCoverage;
-        this.maximumBranchCoverage = maximumBranchCoverage;
-        this.maximumComplexityCoverage = maximumComplexityCoverage;
-        this.maximumLineCoverage = maximumLineCoverage;
-        this.maximumMethodCoverage = maximumMethodCoverage;
-        this.maximumClassCoverage = maximumClassCoverage;
-        this.changeBuildStatus = changeBuildStatus;
+    	this.minimumInstructionCoverage = minimumInstructionCoverage;
+    	this.minimumBranchCoverage = minimumBranchCoverage;
+    	this.minimumComplexityCoverage = minimumComplexityCoverage;
+    	this.minimumLineCoverage = minimumLineCoverage;
+    	this.minimumMethodCoverage = minimumMethodCoverage;
+    	this.minimumClassCoverage = minimumClassCoverage;
+    	this.maximumInstructionCoverage = maximumInstructionCoverage;
+    	this.maximumBranchCoverage = maximumBranchCoverage;
+    	this.maximumComplexityCoverage = maximumComplexityCoverage;
+    	this.maximumLineCoverage = maximumLineCoverage;
+    	this.maximumMethodCoverage = maximumMethodCoverage;
+    	this.maximumClassCoverage = maximumClassCoverage;
+    	this.changeBuildStatus = changeBuildStatus;
         this.deltaInstructionCoverage = deltaInstructionCoverage;
         this.deltaBranchCoverage = deltaBranchCoverage;
         this.deltaComplexityCoverage = deltaComplexityCoverage;
@@ -165,41 +169,40 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
         this.deltaMethodCoverage = deltaMethodCoverage;
         this.deltaClassCoverage = deltaClassCoverage;
         this.buildOverBuild = buildOverBuild;
-        this.createZipFiles = createZipFiles;
     }
-
+    
     private Integer convertThresholdInputToInteger(String input, EnvVars env) {
-        if ((input == null) || ("".equals(input))) {
-            return THRESHOLD_DEFAULT;
-        }
-        try {
-            String expandedInput = env.expand(input);
+    	if ((input == null) || ("".equals(input))) {
+    		return THRESHOLD_DEFAULT;
+    	}
+    	try {
+    		String expandedInput = env.expand(input);
             //noinspection ResultOfMethodCallIgnored
             return Integer.parseInt(expandedInput);
-        } catch (NumberFormatException nfe) {
-            return THRESHOLD_DEFAULT;
-        }
+    	} catch(NumberFormatException nfe) {
+    		return  THRESHOLD_DEFAULT;
+    	}
     }
 
 
-    @Override
-    public String toString() {
-        return "JacocoPublisher [execPattern=" + execPattern
-                + ", classPattern=" + classPattern + ", sourcePattern="
-                + sourcePattern + ", inclusionPattern=" + inclusionPattern
-                + ", exclusionPattern=" + exclusionPattern
-                + ", minimumInstructionCoverage=" + minimumInstructionCoverage
-                + ", minimumBranchCoverage=" + minimumBranchCoverage
-                + ", minimumComplexityCoverage=" + minimumComplexityCoverage
-                + ", minimumLineCoverage=" + minimumLineCoverage
-                + ", minimumMethodCoverage=" + minimumMethodCoverage
-                + ", minimumClassCoverage=" + minimumClassCoverage
-                + ", maximumInstructionCoverage=" + maximumInstructionCoverage
-                + ", maximumBranchCoverage=" + maximumBranchCoverage
-                + ", maximumComplexityCoverage=" + maximumComplexityCoverage
-                + ", maximumLineCoverage=" + maximumLineCoverage
-                + ", maximumMethodCoverage=" + maximumMethodCoverage
-                + ", maximumClassCoverage=" + maximumClassCoverage
+	@Override
+	public String toString() {
+		return "JacocoPublisher [execPattern=" + execPattern
+				+ ", classPattern=" + classPattern + ", sourcePattern="
+				+ sourcePattern + ", inclusionPattern=" + inclusionPattern
+				+ ", exclusionPattern=" + exclusionPattern
+				+ ", minimumInstructionCoverage=" + minimumInstructionCoverage
+				+ ", minimumBranchCoverage=" + minimumBranchCoverage
+				+ ", minimumComplexityCoverage=" + minimumComplexityCoverage
+				+ ", minimumLineCoverage=" + minimumLineCoverage
+				+ ", minimumMethodCoverage=" + minimumMethodCoverage
+				+ ", minimumClassCoverage=" + minimumClassCoverage
+				+ ", maximumInstructionCoverage=" + maximumInstructionCoverage
+				+ ", maximumBranchCoverage=" + maximumBranchCoverage
+				+ ", maximumComplexityCoverage=" + maximumComplexityCoverage
+				+ ", maximumLineCoverage=" + maximumLineCoverage
+				+ ", maximumMethodCoverage=" + maximumMethodCoverage
+				+ ", maximumClassCoverage=" + maximumClassCoverage
                 + ", deltaInstructionCoverage=" + deltaInstructionCoverage
                 + ", deltaBranchCoverage=" + deltaBranchCoverage
                 + ", deltaComplexityCoverage=" + deltaComplexityCoverage
@@ -207,104 +210,112 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
                 + ", deltaMethodCoverage=" + deltaMethodCoverage
                 + ", deltaClassCoverage=" + deltaClassCoverage
                 + "]";
-    }
+	}
 
 
-    public String getExecPattern() {
-        return execPattern;
-    }
 
-    public String getClassPattern() {
-        return classPattern;
-    }
+	public String getExecPattern() {
+		return execPattern;
+	}
 
-    public String getSourcePattern() {
-        return sourcePattern;
-    }
+	public String getClassPattern() {
+		return classPattern;
+	}
 
-    public String getInclusionPattern() {
-        return inclusionPattern;
-    }
+	public String getSourcePattern() {
+		return sourcePattern;
+	}
+	
+	public String getInclusionPattern() {
+		return inclusionPattern;
+	}
 
-    public String getExclusionPattern() {
-        return exclusionPattern;
-    }
+	public String getExclusionPattern() {
+		return exclusionPattern;
+	}
 
     public boolean isSkipCopyOfSrcFiles() {
         return skipCopyOfSrcFiles;
     }
 
-    public boolean isCreateZipFiles() {
-        return createZipFiles;
-    }
-
-    public String getMinimumInstructionCoverage() {
-        return minimumInstructionCoverage;
-    }
+	public String getMinimumInstructionCoverage() {
+		return minimumInstructionCoverage;
+	}
 
 
-    public String getMinimumBranchCoverage() {
-        return minimumBranchCoverage;
-    }
+
+	public String getMinimumBranchCoverage() {
+		return minimumBranchCoverage;
+	}
 
 
-    public String getMinimumComplexityCoverage() {
-        return minimumComplexityCoverage;
-    }
+
+	public String getMinimumComplexityCoverage() {
+		return minimumComplexityCoverage;
+	}
 
 
-    public String getMinimumLineCoverage() {
-        return minimumLineCoverage;
-    }
+
+	public String getMinimumLineCoverage() {
+		return minimumLineCoverage;
+	}
 
 
-    public String getMinimumMethodCoverage() {
-        return minimumMethodCoverage;
-    }
+
+	public String getMinimumMethodCoverage() {
+		return minimumMethodCoverage;
+	}
 
 
-    public String getMinimumClassCoverage() {
-        return minimumClassCoverage;
-    }
+
+	public String getMinimumClassCoverage() {
+		return minimumClassCoverage;
+	}
 
 
-    public String getMaximumInstructionCoverage() {
-        return maximumInstructionCoverage;
-    }
+
+	public String getMaximumInstructionCoverage() {
+		return maximumInstructionCoverage;
+	}
 
 
-    public String getMaximumBranchCoverage() {
-        return maximumBranchCoverage;
-    }
+
+	public String getMaximumBranchCoverage() {
+		return maximumBranchCoverage;
+	}
 
 
-    public String getMaximumComplexityCoverage() {
-        return maximumComplexityCoverage;
-    }
+
+	public String getMaximumComplexityCoverage() {
+		return maximumComplexityCoverage;
+	}
 
 
-    public String getMaximumLineCoverage() {
-        return maximumLineCoverage;
-    }
+
+	public String getMaximumLineCoverage() {
+		return maximumLineCoverage;
+	}
 
 
-    public String getMaximumMethodCoverage() {
-        return maximumMethodCoverage;
-    }
+
+	public String getMaximumMethodCoverage() {
+		return maximumMethodCoverage;
+	}
 
 
-    public String getMaximumClassCoverage() {
-        return maximumClassCoverage;
-    }
+
+	public String getMaximumClassCoverage() {
+		return maximumClassCoverage;
+	}
 
 
-    public boolean isChangeBuildStatus() {
-        return changeBuildStatus;
-    }
+	public boolean isChangeBuildStatus() {
+		return changeBuildStatus;
+	}
 
     public boolean getChangeBuildStatus() {
-        return changeBuildStatus;
-    }
+		return changeBuildStatus;
+	}
 
     // Getter methods for delta coverage thresholds and build over build flag
     public String getDeltaInstructionCoverage() {
@@ -353,11 +364,6 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
     @DataBoundSetter
     public void setSkipCopyOfSrcFiles(boolean skipCopyOfSrcFiles) {
         this.skipCopyOfSrcFiles = skipCopyOfSrcFiles;
-    }
-
-    @DataBoundSetter
-    public void setCreateZipFiles(boolean createZipFiles) {
-        this.createZipFiles = createZipFiles;
     }
 
     @DataBoundSetter
@@ -471,54 +477,55 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
         this.buildOverBuild = buildOverBuild;
     }
 
-    protected static void saveCoverageReports(FilePath destFolder, FilePath sourceFolder) throws IOException, InterruptedException {
-        destFolder.mkdirs();
-
-        sourceFolder.copyRecursiveTo(destFolder);
-    }
-
+	protected static void saveCoverageReports(FilePath destFolder, FilePath sourceFolder) throws IOException, InterruptedException {
+		destFolder.mkdirs();
+		
+		sourceFolder.copyRecursiveTo(destFolder);
+	}
+	
     protected String resolveFilePaths(Run<?, ?> build, TaskListener listener, String input, Map<String, String> env) {
         try {
 
             final EnvVars environment = build.getEnvironment(listener);
             environment.overrideAll(env);
             return environment.expand(input);
-
+            
         } catch (Exception e) {
-            listener.getLogger().println("Failed to resolve parameters in string \"" +
-                    input + "\" due to following error:\n" + e.getMessage());
+            listener.getLogger().println("Failed to resolve parameters in string \""+
+            input+"\" due to following error:\n"+e.getMessage());
         }
         return input;
     }
 
     protected String resolveFilePaths(AbstractBuild<?, ?> build, TaskListener listener, String input) {
         try {
+
             final EnvVars environment = build.getEnvironment(listener);
             environment.overrideAll(build.getBuildVariables());
             return environment.expand(input);
 
         } catch (Exception e) {
-            listener.getLogger().println("Failed to resolve parameters in string \"" +
-                    input + "\" due to following error:\n" + e.getMessage());
+            listener.getLogger().println("Failed to resolve parameters in string \""+
+                    input+"\" due to following error:\n"+e.getMessage());
         }
         return input;
     }
 
     protected static FilePath[] resolveDirPaths(FilePath workspace, TaskListener listener, final String input) {
-        //final PrintStream logger = listener.getLogger();
-        FilePath[] directoryPaths = null;
-        try {
+		//final PrintStream logger = listener.getLogger();
+		FilePath[] directoryPaths = null;
+		try {
             directoryPaths = workspace.act(new ResolveDirPaths(input));
-        } catch (InterruptedException | IOException ie) {
-            ie.printStackTrace();
-        }
+		} catch(InterruptedException | IOException ie) {
+			ie.printStackTrace();
+		}
         return directoryPaths;
-    }
+	}
 
 
     @Override
     public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener taskListener) throws InterruptedException, IOException {
-        Map<String, String> envs = run instanceof AbstractBuild ? ((AbstractBuild<?, ?>) run).getBuildVariables() : Collections.<String, String>emptyMap();
+        Map<String, String> envs = run instanceof AbstractBuild ? ((AbstractBuild<?,?>) run).getBuildVariables() : Collections.<String, String>emptyMap();
 
         EnvVars env = run.getEnvironment(taskListener);
         env.overrideAll(envs);
@@ -535,8 +542,8 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
         final PrintStream logger = taskListener.getLogger();
         logger.println("[JaCoCo plugin] Collecting JaCoCo coverage data...");
 
-        if ((execPattern == null) || (classPattern == null) || (sourcePattern == null)) {
-            if (run.getResult().isWorseThan(Result.UNSTABLE)) {
+        if ((execPattern==null) || (classPattern==null) || (sourcePattern==null)) {
+            if(run.getResult().isWorseThan(Result.UNSTABLE)) {
                 return;
             }
 
@@ -545,19 +552,19 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
             return;
         }
 
-        logger.println("[JaCoCo plugin] " + execPattern + ";" + classPattern + ";" + sourcePattern + ";" + " locations are configured");
+        logger.println("[JaCoCo plugin] " + execPattern + ";" + classPattern +  ";" + sourcePattern + ";" + " locations are configured");
 
         JacocoReportDir reportDir = new JacocoReportDir(run.getRootDir());
 
         if (run instanceof AbstractBuild) {
-            execPattern = resolveFilePaths((AbstractBuild<?, ?>) run, taskListener, execPattern);
+            execPattern = resolveFilePaths((AbstractBuild<?,?>) run, taskListener, execPattern);
         }
 
         List<FilePath> matchedExecFiles = Arrays.asList(filePath.list(resolveFilePaths(run, taskListener, execPattern, env)));
         logger.println("[JaCoCo plugin] Number of found exec files for pattern " + execPattern + ": " + matchedExecFiles.size());
         logger.print("[JaCoCo plugin] Saving matched execfiles: ");
         reportDir.addExecFiles(matchedExecFiles);
-        logger.print(" " + Util.join(matchedExecFiles, " "));
+        logger.print(" " + Util.join(matchedExecFiles," "));
         FilePath[] matchedClassDirs = resolveDirPaths(filePath, taskListener, classPattern);
         logger.print("\n[JaCoCo plugin] Saving matched class directories for class-pattern: " + classPattern + ": ");
         final String warning = "\n[JaCoCo plugin] WARNING: You are using directory patterns with trailing /, /* or /** . This will most likely" +
@@ -571,7 +578,7 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
         }
 
         // Use skipCopyOfSrcFiles flag to determine if the source files should be copied or skipped. If skipped display appropriate logger message.
-        if (!this.skipCopyOfSrcFiles) {
+        if(!this.skipCopyOfSrcFiles) {
             FilePath[] matchedSrcDirs = resolveDirPaths(filePath, taskListener, sourcePattern);
             logger.print("\n[JaCoCo plugin] Saving matched source directories for source-pattern: " + sourcePattern + ": ");
             if (hasSubDirectories(sourcePattern)) logger.print(warning);
@@ -579,7 +586,8 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
                 int copied = reportDir.saveSourcesFrom(dir, "**/*.java");
                 logger.print("\n[JaCoCo plugin] - " + dir + " " + copied + " files");
             }
-        } else {
+        }
+        else{
             logger.print("\n[JaCoCo plugin] Skipping save of matched source directories for source-pattern: " + sourcePattern);
         }
 
@@ -614,49 +622,6 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
                     + ", line: " + result.getLineCoverage().getPercentage()
                     + ", branch: " + result.getBranchCoverage().getPercentage()
                     + ", instruction: " + result.getInstructionCoverage().getPercentage());
-
-            if (isCreateZipFiles()) {
-                logger.println("[JaCoCo plugin] Collecting .java , .class and jacoco.exec files");
-                final List<File> jacocoExecFiles = action.getJacocoReport().getExecFiles();
-                int fileSize = jacocoExecFiles.size();
-                if (fileSize == 0) {
-                    logger.println("[JaCoCo plugin] No jacoco.exec file recorded");
-                } else {
-                    String jobInfoDirectory = ((AbstractBuild<?, ?>) run).getRootDir().getAbsolutePath();
-                    logger.println("[JaCoCo plugin] Creating folder to store files");
-                    String jacocoResourcesFolder = jobInfoDirectory + JACOCO_RESOURCES;
-                    Path path = Paths.get(jacocoResourcesFolder);
-                    try {
-                        Files.createDirectories(path);
-                        logger.println("[JaCoCo plugin] File created successfully at " + jobInfoDirectory);
-                        FileUtils fileUtils = new FileUtils();
-                        logger.println("[JaCoCo plugin] Copying source and class folders to jacoco resource folder");
-                        fileUtils.copyDirectory(new File(jobInfoDirectory + CLASS_DIRECTORY), new File
-                                (jacocoResourcesFolder + "/classes"));
-                        fileUtils.copyDirectory(new File(jobInfoDirectory + SOURCE_DIRECTORY), new File
-                                (jacocoResourcesFolder + "/sources"));
-                        if (fileSize == 1) {
-                            fileUtils.copyFile(jacocoExecFiles.get(0), new File(jacocoResourcesFolder +
-                                    "/jacoco.exec"));
-                        } else {
-                            logger.println("[JaCoCo plugin] Found " + fileSize + " jacoco.exec files.Merging...");
-                            ExecFileLoader loader = new ExecFileLoader();
-                            for (File exec : jacocoExecFiles) {
-                                loader.load(exec);
-                            }
-                            logger.println("[JaCoCo plugin] Successfully merged jacoco.exec files");
-                            loader.save(new File(jacocoResourcesFolder + "/jacoco.exec"), false);
-                        }
-                        logger.println("[JaCoCo plugin] Compressing Jacoco resource folder...");
-                        compressAndCopy(jacocoResourcesFolder, jobInfoDirectory + RESOURCE_ZIP_FILE_NAME);
-                        logger.println("[JaCoCo plugin] Successfully compressed jacoco resource folder");
-                    } catch (IOException ex) {
-                        logger.println("Error occured while creating Jacoco resource zip file." + ex.getMessage());
-                    }
-                }
-            } else {
-                logger.println("Jacoco resources files zip not created.User disabled the feature.");
-            }
             result.setThresholds(healthReports);
 
             // Calculate final result of the current build according to the state of two flags: changeBuildStatus and buildOverBuild
@@ -665,63 +630,18 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
             Result applyMinMaxTh = Result.SUCCESS, applyDeltaTh = Result.SUCCESS;
             if (changeBuildStatus) {
                 applyMinMaxTh = checkResult(action); // Compare current coverage with minimum and maximum coverage thresholds
-                logger.println("[JaCoCo plugin] Health thresholds: " + healthReports.toString());
-                logger.println("[JaCoCo plugin] Apply Min/Max thresholds result: " + applyMinMaxTh.toString());
+                logger.println("[JaCoCo plugin] Health thresholds: "+ healthReports.toString());
+                logger.println("[JaCoCo plugin] Apply Min/Max thresholds result: "+ applyMinMaxTh.toString());
             }
-            if (buildOverBuild) {
+            if(buildOverBuild){
                 applyDeltaTh = checkBuildOverBuildResult(run, logger); // Compute delta coverage of current build and compare with delta thresholds
                 logger.println("[JaCoCo plugin] Delta thresholds: " + deltaHealthReport.toString());
-                logger.println("[JaCoCo plugin] Results of delta thresholds check: " + applyDeltaTh.toString());
+                logger.println("[JaCoCo plugin] Results of delta thresholds check: "+ applyDeltaTh.toString());
             }
-            if (changeBuildStatus || buildOverBuild) {
+            if(changeBuildStatus || buildOverBuild) {
                 run.setResult(Utils.applyLogicalAnd(applyMinMaxTh, applyDeltaTh));
             }
         }
-    }
-
-    /**
-     * This method compress a given folder
-     *
-     * @param sourceFile      path of the file to zip
-     * @param sourceFileName  name of the file to zip
-     * @param zipOutputStream ZipOutputStream to store the zipped content
-     * @throws IOException If the the given file is not exist, the metod will throw an IOException
-     */
-    private static void compressFile(File sourceFile, String sourceFileName, ZipOutputStream zipOutputStream) throws
-            IOException {
-        if (sourceFile.isDirectory()) {
-            File[] subFiles = sourceFile.listFiles();
-            for (File subFile : subFiles) {
-                compressFile(subFile, sourceFileName + File.separator + subFile.getName(), zipOutputStream);
-            }
-            return;
-        }
-        FileInputStream fileInputStream = new FileInputStream(sourceFile);
-        ZipEntry zipEntry = new ZipEntry(sourceFileName);
-        zipOutputStream.putNextEntry(zipEntry);
-        byte[] bytes = new byte[1024];
-        int length;
-        while ((length = fileInputStream.read(bytes)) >= 0) {
-            zipOutputStream.write(bytes, 0, length);
-        }
-        fileInputStream.close();
-    }
-
-    /**
-     * This method compress the file in the sourcePath and copy it to destinationPath
-     *
-     * @param sourcePath      file to zip
-     * @param destinationPath destination file path
-     * @throws IOException If the given source path is not available the method throws an IOException
-     */
-    private static void compressAndCopy(String sourcePath, String destinationPath) throws IOException {
-        FileOutputStream fileOutputStream = new FileOutputStream(destinationPath);
-        ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
-        File fileToZip = new File(sourcePath);
-        compressFile(fileToZip, fileToZip.getName(), zipOutputStream);
-        zipOutputStream.close();
-        fileOutputStream.close();
-        FileUtils.deleteDirectory(new File(sourcePath));
     }
 
     private boolean hasSubDirectories(String pattern) {
@@ -739,19 +659,19 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
     private JacocoHealthReportThresholds createJacocoHealthReportThresholds(EnvVars env) {
         try {
             return healthReports = new JacocoHealthReportThresholds(
-                    convertThresholdInputToInteger(minimumClassCoverage, env),
-                    convertThresholdInputToInteger(maximumClassCoverage, env),
-                    convertThresholdInputToInteger(minimumMethodCoverage, env),
-                    convertThresholdInputToInteger(maximumMethodCoverage, env),
-                    convertThresholdInputToInteger(minimumLineCoverage, env),
-                    convertThresholdInputToInteger(maximumLineCoverage, env),
-                    convertThresholdInputToInteger(minimumBranchCoverage, env),
-                    convertThresholdInputToInteger(maximumBranchCoverage, env),
-                    convertThresholdInputToInteger(minimumInstructionCoverage, env),
-                    convertThresholdInputToInteger(maximumInstructionCoverage, env),
-                    convertThresholdInputToInteger(minimumComplexityCoverage, env),
+                    convertThresholdInputToInteger(minimumClassCoverage, env), 
+                    convertThresholdInputToInteger(maximumClassCoverage, env), 
+                    convertThresholdInputToInteger(minimumMethodCoverage, env), 
+                    convertThresholdInputToInteger(maximumMethodCoverage, env), 
+                    convertThresholdInputToInteger(minimumLineCoverage, env), 
+                    convertThresholdInputToInteger(maximumLineCoverage, env), 
+                    convertThresholdInputToInteger(minimumBranchCoverage, env), 
+                    convertThresholdInputToInteger(maximumBranchCoverage, env), 
+                    convertThresholdInputToInteger(minimumInstructionCoverage, env), 
+                    convertThresholdInputToInteger(maximumInstructionCoverage, env), 
+                    convertThresholdInputToInteger(minimumComplexityCoverage, env), 
                     convertThresholdInputToInteger(maximumComplexityCoverage, env)
-            );
+                );
         } catch (NumberFormatException nfe) {
             return healthReports = new JacocoHealthReportThresholds(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         }
@@ -761,24 +681,24 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
      * Creates JacocoHealthReportDeltaThresholds object to encapsulate user configured delta threshold values.
      * The values entered by the user are validated to be in range of [0, 100] percentage
      */
-    private JacocoHealthReportDeltaThresholds createJacocoDeltaHealthReportThresholds() {
+    private JacocoHealthReportDeltaThresholds createJacocoDeltaHealthReportThresholds(){
         return new JacocoHealthReportDeltaThresholds(this.deltaInstructionCoverage, this.deltaBranchCoverage, this.deltaComplexityCoverage, this.deltaLineCoverage, this.deltaMethodCoverage, this.deltaClassCoverage);
     }
 
     public static Result checkResult(JacocoBuildAction action) {
-        if ((action.getBranchCoverage().getPercentageFloat() < action.getThresholds().getMinBranch()) || (action.getInstructionCoverage().getPercentageFloat() < action.getThresholds().getMinInstruction()) || (action.getClassCoverage().getPercentageFloat() < action.getThresholds().getMinClass()) || (action.getLineCoverage().getPercentageFloat() < action.getThresholds().getMinLine()) || (action.getComplexityScore().getPercentageFloat() < action.getThresholds().getMinComplexity()) || (action.getMethodCoverage().getPercentageFloat() < action.getThresholds().getMinMethod())) {
-            return Result.FAILURE;
-        }
-        if ((action.getBranchCoverage().getPercentageFloat() < action.getThresholds().getMaxBranch()) || (action.getInstructionCoverage().getPercentageFloat() < action.getThresholds().getMaxInstruction()) || (action.getClassCoverage().getPercentageFloat() < action.getThresholds().getMaxClass()) || (action.getLineCoverage().getPercentageFloat() < action.getThresholds().getMaxLine()) || (action.getComplexityScore().getPercentageFloat() < action.getThresholds().getMaxComplexity()) || (action.getMethodCoverage().getPercentageFloat() < action.getThresholds().getMaxMethod())) {
-            return Result.UNSTABLE;
-        }
-        return Result.SUCCESS;
-    }
+		if ((action.getBranchCoverage().getPercentageFloat() < action.getThresholds().getMinBranch()) || (action.getInstructionCoverage().getPercentageFloat() < action.getThresholds().getMinInstruction())  || (action.getClassCoverage().getPercentageFloat() < action.getThresholds().getMinClass())  || (action.getLineCoverage().getPercentageFloat() < action.getThresholds().getMinLine())  || (action.getComplexityScore().getPercentageFloat() < action.getThresholds().getMinComplexity())  || (action.getMethodCoverage().getPercentageFloat() < action.getThresholds().getMinMethod())) {
+			return Result.FAILURE;
+		}
+		if ((action.getBranchCoverage().getPercentageFloat() < action.getThresholds().getMaxBranch()) || (action.getInstructionCoverage().getPercentageFloat() < action.getThresholds().getMaxInstruction())  || (action.getClassCoverage().getPercentageFloat() < action.getThresholds().getMaxClass())  || (action.getLineCoverage().getPercentageFloat() < action.getThresholds().getMaxLine())  || (action.getComplexityScore().getPercentageFloat() < action.getThresholds().getMaxComplexity())  || (action.getMethodCoverage().getPercentageFloat() < action.getThresholds().getMaxMethod())) {
+			return Result.UNSTABLE;
+		}
+		return Result.SUCCESS;
+	}
 
     // Calculates actual delta coverage of the current build by subtracting it's coverage from coverage of last successful build
     // and compares if the delta coverage is less than or equal to user-configured delta thresholds
     // Returns success (if delta coverage is equal to or less than delta thresholds) OR (if delta coverage is bigger than delta thresholds AND current coverage is bigger than last successful coverage)
-    public Result checkBuildOverBuildResult(Run<?, ?> run, PrintStream logger) {
+    public Result checkBuildOverBuildResult(Run<?,?> run, PrintStream logger){
 
         JacocoDeltaCoverageResultSummary deltaCoverageResultSummary = JacocoDeltaCoverageResultSummary.build(run);
         logger.println("[JaCoCo plugin] Delta coverage: class: " + deltaCoverageResultSummary.getClassCoverage()
@@ -788,19 +708,19 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
                 + ", instruction: " + deltaCoverageResultSummary.getInstructionCoverage()
                 + ", complexity: " + deltaCoverageResultSummary.getComplexityCoverage());
 
-        if (Math.abs(deltaCoverageResultSummary.getInstructionCoverage()) <= deltaHealthReport.getDeltaInstruction() &&
+        if(Math.abs(deltaCoverageResultSummary.getInstructionCoverage()) <= deltaHealthReport.getDeltaInstruction() &&
                 Math.abs(deltaCoverageResultSummary.getBranchCoverage()) <= deltaHealthReport.getDeltaBranch() &&
                 Math.abs(deltaCoverageResultSummary.getComplexityCoverage()) <= deltaHealthReport.getDeltaComplexity() &&
                 Math.abs(deltaCoverageResultSummary.getLineCoverage()) <= deltaHealthReport.getDeltaLine() &&
                 Math.abs(deltaCoverageResultSummary.getMethodCoverage()) <= deltaHealthReport.getDeltaMethod() &&
                 Math.abs(deltaCoverageResultSummary.getClassCoverage()) <= deltaHealthReport.getDeltaClass())
             return Result.SUCCESS;
-        else if (deltaCoverageResultSummary.isCoverageBetterThanPrevious())
+        else if(deltaCoverageResultSummary.isCoverageBetterThanPrevious())
             return Result.SUCCESS;
         else
             return Result.FAILURE;
     }
-
+	
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
     }
@@ -810,7 +730,7 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
         return DESCRIPTOR;
     }
 
-    @Extension
+	@Extension
     public static final BuildStepDescriptor<Publisher> DESCRIPTOR = new DescriptorImpl();
 
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
@@ -818,12 +738,12 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
             super(JacocoPublisher.class);
         }
 
-        @Override
+		@Override
         public String getDisplayName() {
             return Messages.JacocoPublisher_DisplayName();
         }
 
-        @Override
+		@Override
         @SuppressWarnings("rawtypes")
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
             return true;
@@ -875,7 +795,7 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
 
         public FilePath[] invoke(File f, VirtualChannel channel) throws IOException {
             FilePath base = new FilePath(f);
-            ArrayList<FilePath> localDirectoryPaths = new ArrayList<>();
+            ArrayList<FilePath> localDirectoryPaths= new ArrayList<>();
             String[] includes = input.split(DIR_SEP);
             DirectoryScanner ds = new DirectoryScanner();
 

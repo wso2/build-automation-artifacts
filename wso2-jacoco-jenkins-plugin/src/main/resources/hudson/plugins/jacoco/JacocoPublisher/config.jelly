@@ -181,8 +181,5 @@
     	</tbody>
     </table>
   </f:entry>
-  <f:entry field="createZipFiles">
-      <f:checkbox checked="${instance.selected}" title="Save coverage data"/>
-    </f:entry>
 
 </j:jelly>
