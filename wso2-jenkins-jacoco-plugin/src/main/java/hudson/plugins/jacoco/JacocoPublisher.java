@@ -72,6 +72,7 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
     private String maximumLineCoverage;
     private String maximumMethodCoverage;
     private String maximumClassCoverage;
+    private String jacocoResourcePath;
     private boolean changeBuildStatus;
 
     /**
@@ -118,6 +119,7 @@ public class JacocoPublisher extends Recorder implements SimpleBuildStep {
         this.deltaLineCoverage = "0";
         this.deltaMethodCoverage = "0";
         this.deltaClassCoverage = "0";
+        this.jacocoResourcePath = null;
         this.buildOverBuild = false;
         this.createZipFiles = false;
     }

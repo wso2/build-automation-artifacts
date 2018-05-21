@@ -25,6 +25,9 @@ public class ResourceFilesCollector {
     private JacocoBuildAction action;
     private Run<?, ?> run;
 
+    /**
+     * ResourceFilesCollector class constructor
+     */
     ResourceFilesCollector(Run<?, ?> run, TaskListener taskListener, JacocoBuildAction action, boolean isCreateZipFiles) {
         this.isCreateZipFiles = isCreateZipFiles;
         this.taskListener = taskListener;
@@ -115,7 +118,7 @@ public class ResourceFilesCollector {
      * @param sourceFile      path of the file to zip
      * @param sourceFileName  name of the file to zip
      * @param zipOutputStream ZipOutputStream to store the zipped content
-     * @throws IOException If the the given file is not exist, the metod will throw an IOException
+     * @throws IOException If the the given file is not exist, the method will throw an IOException
      */
     private static void compressFolder(File sourceFile, String sourceFileName, ZipOutputStream zipOutputStream) throws
             IOException {
