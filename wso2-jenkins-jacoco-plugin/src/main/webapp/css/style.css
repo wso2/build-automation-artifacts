@@ -39,11 +39,14 @@ div.percentgraph div.greenbar {
   margin: 0px;
   padding: 0px;
 }
+
 div.percentgraph div.redbar {
   background-color: #ff9090;
   height: 1.3em;
   margin: 0px;
   padding: 0px;
+  right: 50px;
+  float: right;
 }
 
 div.percentgraph div.na {
