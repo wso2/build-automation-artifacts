@@ -58,12 +58,12 @@ import static org.junit.Assert.assertTrue;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(JacocoPublisher.class)
 public class JacocoPublisherTest extends AbstractJacocoTestBase {
-    private final TaskListener taskListener = niceMock(TaskListener.class);
-    private final Launcher launcher = niceMock(Launcher.class);
+	private final TaskListener taskListener = niceMock(TaskListener.class);
+	private final Launcher launcher = niceMock(Launcher.class);
 	private StringBuilder logContent;
 
-    @Before
-    public void setUp() {
+	@Before
+	public void setUp() {
 		logContent = new StringBuilder();
 		expect(taskListener.getLogger()).andReturn(new PrintStream(System.out) {
 													   @Override
@@ -75,14 +75,14 @@ public class JacocoPublisherTest extends AbstractJacocoTestBase {
 		).anyTimes();
 	}
 
-    @SuppressWarnings("deprecation")
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testConstruct() {
 		JacocoPublisher publisher = new JacocoPublisher(null, null, null, null, null, false,
 				null, null, null, null,
 				null, null, null, null,
 				null, null, null, null,
-				false, null, null, null, null, null, null, false);
+				false, null, null, null, null, null, null, false,false);
 		assertNotNull(publisher.toString());
 	}
 
@@ -290,14 +290,14 @@ public class JacocoPublisherTest extends AbstractJacocoTestBase {
 		assertTrue(f4.renameTo(f6));
 		f5.deleteOnExit();
 		f6.deleteOnExit();
-		
+
 		/*
-		// Look for files in the entire workspace recursively without providing 
+		// Look for files in the entire workspace recursively without providing
 		// the includes parameter
 		FilePath[] reports = JacocoPublisher.locateCoverageReports(workspace, "**e/jacoco*.xml");
 		assertEquals(2 , reports.length);
 
-		// Generate a includes string and look for files 
+		// Generate a includes string and look for files
 		String includes = f1.getName() + "; " + f2.getName() + "; " + d1.getName();
 		reports = JacocoPublisher.locateCoverageReports(workspace, includes);
 		assertEquals(3, reports.length);
@@ -306,7 +306,7 @@ public class JacocoPublisherTest extends AbstractJacocoTestBase {
 		FilePath local = workspace.child("coverage_localfolder");
 		JacocoPublisher.saveCoverageReports(local, reports);
 		assertEquals(3, local.list().size());
-		
+
 		local.deleteRecursive();
 		 */
 
@@ -332,13 +332,13 @@ public class JacocoPublisherTest extends AbstractJacocoTestBase {
 			}
 		});
 
-        File dir = File.createTempFile("JaCoCoPublisherTest", ".tst");
-        assertTrue(dir.delete());
-        assertTrue(dir.mkdirs());
-        assertTrue(new File(dir, "jacoco/classes").mkdirs());
-        FilePath filePath = new FilePath(dir);
+		File dir = File.createTempFile("JaCoCoPublisherTest", ".tst");
+		assertTrue(dir.delete());
+		assertTrue(dir.mkdirs());
+		assertTrue(new File(dir, "jacoco/classes").mkdirs());
+		FilePath filePath = new FilePath(dir);
 
-        expect(run.getRootDir()).andReturn(dir).anyTimes();
+		expect(run.getRootDir()).andReturn(dir).anyTimes();
 
 		replay(taskListener, run);
 
@@ -349,9 +349,9 @@ public class JacocoPublisherTest extends AbstractJacocoTestBase {
 		assertNotNull(buildAction.get());
 		assertEquals(Result.SUCCESS, JacocoPublisher.checkResult(buildAction.get()));
 
-        assertNotNull(run.toString());
+		assertNotNull(run.toString());
 
-        // verify
+		// verify
 		verify(taskListener, run);
 	}
 
@@ -496,7 +496,7 @@ public class JacocoPublisherTest extends AbstractJacocoTestBase {
 		JacocoPublisher publisher = new JacocoPublisher("**/**.exec", "**/classes", "**/src/main/java", "", "", false, "0", "0"
 				, "0", "0", "0", "0", "0", "0"
 				, "0", "0", "0", "0", false,
-				"10.564", "5.65", "9.995", "11.4529", "9.346", "5.237", true);
+				"10.564", "5.65", "9.995", "11.4529", "9.346", "5.237", true,true);
 		publisher.perform(run, filePath, launcher, taskListener);
 
 		assertNotNull(buildAction.get());

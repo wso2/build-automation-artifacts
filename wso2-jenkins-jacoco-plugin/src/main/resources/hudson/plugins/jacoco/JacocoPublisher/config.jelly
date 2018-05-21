@@ -1,7 +1,7 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
    <f:entry>
-   
+
    	 <table width="78%">
       <col width="26%"/>
       <col width="26%"/>
@@ -11,20 +11,20 @@
         <td>Path to class directories (e.g.: **/target/classDir, **/classes)</td>
         <td>Path to source directories (e.g.: **/mySourceFiles)</td>
       </tr>
-      
+
       <tr>
         <td>
           <f:textbox field="execPattern" default="**/**.exec" />
         </td>
-      
+
         <td>
           <f:textbox field="classPattern"  default="**/classes"/>
         </td>
-        
+
         <td>
           <f:textbox field="sourcePattern" default="**/src/main/java"/>
         </td>
-        
+
       </tr>
       </table>
       <table width="78%">
@@ -34,12 +34,12 @@
         <td>Inclusions (e.g.: **/*.class)</td>
         <td>Exclusions (e.g.: **/*Test*.class)</td>
       </tr>
-      
+
       <tr>
         <td>
           <f:textbox field="inclusionPattern" default=""/>
         </td>
-        
+
         <td>
           <f:textbox field="exclusionPattern" default=""/>
         </td>
@@ -181,5 +181,10 @@
     	</tbody>
     </table>
   </f:entry>
-
+  <f:entry field="createZipFiles">
+      <f:checkbox checked="${instance.selected}" title="Save coverage data"/>
+  </f:entry>
+  <f:entry>
+    <f:textbox field="jacocoResourcePath" width="78%" placeholder="Folder path to store jacoco resources" />
+  </f:entry>
 </j:jelly>
