@@ -22,6 +22,8 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import org.apache.commons.io.FileUtils;
 import org.jacoco.core.tools.ExecFileLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,8 +36,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Collect Jacoco resources files and create a zip file.
