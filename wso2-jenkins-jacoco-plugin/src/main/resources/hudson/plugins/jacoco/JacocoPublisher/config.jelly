@@ -185,6 +185,6 @@
       <f:checkbox checked="${instance.selected}" title="Save coverage data"/>
   </f:entry>
   <f:entry>
-    <f:textbox field="jacocoResourcePath" width="78%" placeholder="Folder path to store jacoco resources" />
+    <f:textbox field="jacocoResourcePath" width="78%" placeholder="Folder path to store jacoco resources." />
   </f:entry>
 </j:jelly>

@@ -1,3 +1,21 @@
+/*
+ *   Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *   WSO2 Inc. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied.  See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
+ */
+
 package hudson.plugins.jacoco;
 
 import hudson.model.Run;
@@ -14,9 +32,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * Collect Jacoco resources files and create a zip file
- *
- * @author Hasitha Jayasundara
+ * Collect Jacoco resources files and create a zip file.
  */
 public class ResourceFilesCollector {
 
@@ -43,7 +59,7 @@ public class ResourceFilesCollector {
     private static final int BYTE_BUFFER_LENGTH = 1024;
 
     /**
-     * This method collect jacoco source,class files and
+     * This method collect jacoco exec,source and class files.
      */
     public void collectResourceFiles() {
 
@@ -62,7 +78,7 @@ public class ResourceFilesCollector {
                 Path path = Paths.get(jacocoResourcesFolder);
                 try {
                     Files.createDirectories(path);
-                    logger.println("[JaCoCo plugin] File created successfully at " + jobInfoDirectory);
+                    logger.println("[JaCoCo plugin] File created successfully at " + jobInfoDirectory + ".");
                     FileUtils.copyDirectory(new File(jobInfoDirectory + File.separator + "jacoco" + File.
                             separator + CLASS_DIRECTORY), new File
                             (jacocoResourcesFolder + File.separator + "classes"));
@@ -78,7 +94,7 @@ public class ResourceFilesCollector {
                         for (File exec : jacocoExecFiles) {
                             loader.load(exec);
                         }
-                        logger.println("[JaCoCo plugin] Fuck Successfully merged jacoco.exec files");
+                        logger.println("[JaCoCo plugin] Successfully merged jacoco.exec files.");
                         loader.save(new File(jacocoResourcesFolder + File.separator + JACOCO_EXEC_FILE),
                                 false);
                     }
