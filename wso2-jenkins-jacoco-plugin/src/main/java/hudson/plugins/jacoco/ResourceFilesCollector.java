@@ -34,6 +34,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Collect Jacoco resources files and create a zip file.
@@ -62,6 +64,8 @@ public class ResourceFilesCollector {
     private static final String JACOCO_EXEC_FILE = "jacoco.exec";
     private static final int BYTE_BUFFER_LENGTH = 1024;
 
+    private final Logger log = LoggerFactory.getLogger(ResourceFilesCollector.class);
+
     /**
      * This method collect jacoco exec,source and class files.
      */
@@ -70,19 +74,20 @@ public class ResourceFilesCollector {
         final PrintStream logger = taskListener.getLogger();
 
         if (isCreateZipFiles) {
-            logger.println("[JaCoCo plugin] Collecting .java , .class and jacoco.exec files.");
+            log.debug("[JaCoCo plugin] Collecting .java , .class and jacoco.exec files.");
             final List<File> jacocoExecFiles = action.getJacocoReport().getExecFiles();
             int fileSize = jacocoExecFiles.size();
             if (fileSize == 0) {
-                logger.println("[JaCoCo plugin] No jacoco.exec file recorded");
+                logger.println("[JaCoCo plugin] Process cannot be continued since no jacoco.exec files are recorded. " +
+                        "Please check the jacoco plugin in the repository.");
             } else {
                 String jobInfoDirectory = run.getRootDir().getAbsolutePath();
-                logger.println("[JaCoCo plugin] Creating folder to store files.");
                 String jacocoResourcesFolder = jobInfoDirectory + File.separator + JACOCO_RESOURCES;
+                logger.println("[JaCoCo plugin] Creating folder " + jacocoResourcesFolder + " to store files.");
                 Path path = Paths.get(jacocoResourcesFolder);
                 try {
                     Files.createDirectories(path);
-                    logger.println("[JaCoCo plugin] File created successfully at " + jobInfoDirectory);
+                    logger.println("[JaCoCo plugin] File created successfully at " + jacocoResourcesFolder);
                     FileUtils.copyDirectory(new File(jobInfoDirectory + File.separator + "jacoco" + File.
                             separator + CLASS_DIRECTORY), new File
                             (jacocoResourcesFolder + File.separator + "classes"));
@@ -93,19 +98,18 @@ public class ResourceFilesCollector {
                         FileUtils.copyFile(jacocoExecFiles.get(0), new File(jacocoResourcesFolder +
                                 File.separator + JACOCO_EXEC_FILE));
                     } else {
-                        logger.println("[JaCoCo plugin] Found " + fileSize + " jacoco.exec files.Merging...");
+                        logger.println("[JaCoCo plugin] Found " + fileSize + " jacoco.exec files. Merging...");
                         ExecFileLoader loader = new ExecFileLoader();
                         for (File exec : jacocoExecFiles) {
                             loader.load(exec);
                         }
-                        logger.println("[JaCoCo plugin] Successfully merged jacoco.exec files.");
+                        log.debug("[JaCoCo plugin] Successfully merged jacoco.exec files.");
                         loader.save(new File(jacocoResourcesFolder + File.separator + JACOCO_EXEC_FILE),
                                 false);
                     }
-                    logger.println("[JaCoCo plugin] Compressing Jacoco resource folder...");
+                    log.debug("[JaCoCo plugin] Compressing Jacoco resource folder...");
                     compressAndCopy(jacocoResourcesFolder, jobInfoDirectory + File.separator +
                             RESOURCE_ZIP_FILE_NAME);
-                    logger.println("[JaCoCo plugin] Successfully compressed jacoco resource folder.");
                 } catch (IOException ex) {
                     logger.println("Error occured while creating Jacoco resource zip file." + ex.getMessage());
                 }

@@ -188,3 +188,4 @@
     <f:textbox field="jacocoResourcePath" width="78%" placeholder="Folder path to store jacoco resources." />
   </f:entry>
 </j:jelly>
+

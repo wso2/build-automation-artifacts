@@ -84,6 +84,11 @@ THE SOFTWARE.
          <name>Martin Heinzerling</name>
          <email>webmaster@mheinzerling.de</email>
       </developer>
+      <developer>
+         <id>hasithaj</id>
+         <name>Hasitha Jayasundara</name>
+         <email>hasithaj@wso2.com</email>
+      </developer>
    </developers>
 
    <scm>
@@ -202,6 +207,21 @@ THE SOFTWARE.
             <artifactId>plexus-utils</artifactId>
             <version>3.0.24</version>
         </dependency>
+      <dependency>
+         <groupId>org.apache.logging.log4j</groupId>
+         <artifactId>log4j-api</artifactId>
+         <version>2.7</version>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.logging.log4j</groupId>
+         <artifactId>log4j-core</artifactId>
+         <version>2.7</version>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.logging.log4j</groupId>
+         <artifactId>log4j-slf4j-impl</artifactId>
+         <version>2.7</version>
+      </dependency>
    </dependencies>
    
 	<distributionManagement>
