@@ -23,7 +23,11 @@ import hudson.model.TaskListener;
 import org.apache.commons.io.FileUtils;
 import org.jacoco.core.tools.ExecFileLoader;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -66,19 +70,19 @@ public class ResourceFilesCollector {
         final PrintStream logger = taskListener.getLogger();
 
         if (isCreateZipFiles) {
-            logger.println("[JaCoCo plugin] Collecting .java , .class and jacoco.exec files");
+            logger.println("[JaCoCo plugin] Collecting .java , .class and jacoco.exec files.");
             final List<File> jacocoExecFiles = action.getJacocoReport().getExecFiles();
             int fileSize = jacocoExecFiles.size();
             if (fileSize == 0) {
                 logger.println("[JaCoCo plugin] No jacoco.exec file recorded");
             } else {
                 String jobInfoDirectory = run.getRootDir().getAbsolutePath();
-                logger.println("[JaCoCo plugin] Creating folder to store files");
+                logger.println("[JaCoCo plugin] Creating folder to store files.");
                 String jacocoResourcesFolder = jobInfoDirectory + File.separator + JACOCO_RESOURCES;
                 Path path = Paths.get(jacocoResourcesFolder);
                 try {
                     Files.createDirectories(path);
-                    logger.println("[JaCoCo plugin] File created successfully at " + jobInfoDirectory + ".");
+                    logger.println("[JaCoCo plugin] File created successfully at " + jobInfoDirectory);
                     FileUtils.copyDirectory(new File(jobInfoDirectory + File.separator + "jacoco" + File.
                             separator + CLASS_DIRECTORY), new File
                             (jacocoResourcesFolder + File.separator + "classes"));
@@ -101,7 +105,7 @@ public class ResourceFilesCollector {
                     logger.println("[JaCoCo plugin] Compressing Jacoco resource folder...");
                     compressAndCopy(jacocoResourcesFolder, jobInfoDirectory + File.separator +
                             RESOURCE_ZIP_FILE_NAME);
-                    logger.println("[JaCoCo plugin] Successfully compressed jacoco resource folder");
+                    logger.println("[JaCoCo plugin] Successfully compressed jacoco resource folder.");
                 } catch (IOException ex) {
                     logger.println("Error occured while creating Jacoco resource zip file." + ex.getMessage());
                 }
