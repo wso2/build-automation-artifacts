@@ -1,3 +1,9 @@
+#Introduction
+<pre>
+This is Jenkins CI automation project for WSO2 support update testing process. Here, Jenkins CI is explained with how to run tests against WSO2 products.
+
+</pre>
+#Usage
 <pre>1. How to setup the project:
 	a. Pre-requisites:
 		1. Install Jenkins plugins: Amazon EC2 Container Service, database-mysql, Groovy, Parameterized Scheduler, Pipeline, Workspace Cleanup Plugin
