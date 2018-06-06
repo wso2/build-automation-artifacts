@@ -1,0 +1,149 @@
+import groovy.sql.Sql
+import java.io.File
+import java.nio.file.*
+import groovy.json.*
+
+def boolean runShellCommands(env, wumProdBaseLoc, cmd, wumUpdateFileNameList, wsUpdateFolderName) {
+    
+    cmd.tokenize('&&').every { command ->
+        try {
+            println "Running command: " + command
+            def proc = command.execute()
+            
+            proc.in.eachLine {line ->
+		println "Info: " + line
+                
+                // Moving WUM update zip files to this job's workspace in order to wget by ECS slaves.
+                if(line.startsWith(wumProdBaseLoc) && line.endsWith(".zip")) {
+                    def fileName = line.tokenize('/').last()
+                    def sourceFile = line
+                    def targetFile = env.WORKSPACE + "/" + wsUpdateFolderName + "/" + fileName
+    
+                    Files.copy(
+                        new File(sourceFile).toPath(),
+                        new File(targetFile).toPath(),
+                        StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.COPY_ATTRIBUTES );
+                    
+                    wumUpdateFileNameList.add(fileName)
+                }
+	    }
+            
+            // If you needed in detail stdout for terminal commands, uncomment this
+            /*proc.err.eachLine {line ->
+		        println "Stdout: " + line
+	        }*/
+            proc.waitFor()
+            
+            return proc.exitValue() == 0
+        } catch (e) {
+            println "ERROR in shell commands: " + e
+            return false
+        }
+    }
+}
+
+def void populateJsonData(row, updateListJson, addUpdateDBDetailsOnly, updateListItemNo, updateDBDetailsItemNo, wumUpdateFileNameList, wsUpdateFolderName, env) {
+    def jsonSlurper = new JsonSlurper() 
+    
+    if(!addUpdateDBDetailsOnly) {
+        updateListJson[updateListItemNo] = jsonSlurper.parseText("{}")
+        updateListJson[updateListItemNo].productName = row.product_name
+        updateListJson[updateListItemNo].productVersion = row.product_version
+        updateListJson[updateListItemNo].jobName = (row.product_name.replace("wso2", "WUM-")).toUpperCase() + "-" + row.product_version
+        
+        def updateFileName = wumUpdateFileNameList.find { item -> item.matches(row.product_name + "-" + (row.product_version).replace(".", "\\.") + "\\..*\\.zip") }
+        updateListJson[updateListItemNo].updateFileName = updateFileName
+        updateListJson[updateListItemNo].updateFileUrl = env.JOB_URL + "ws/" + wsUpdateFolderName + "/" + updateFileName
+        
+        updateListJson[updateListItemNo].updateDBDetails = jsonSlurper.parseText("[]")
+    }
+    
+    updateListJson[updateListItemNo].updateDBDetails[updateDBDetailsItemNo] = jsonSlurper.parseText("{}")
+    updateListJson[updateListItemNo].updateDBDetails[updateDBDetailsItemNo].id = row.id
+    updateListJson[updateListItemNo].updateDBDetails[updateDBDetailsItemNo].updateNo = row.update_no
+    updateListJson[updateListItemNo].updateDBDetails[updateDBDetailsItemNo].timestamp = row.timestamp
+}
+
+try{
+    
+    // Date manipulation for query string
+    def dateFromat = "YYYY-MM-dd"
+    def now = new Date()
+    def todayDate = now.format(dateFromat)
+    def yesterdayDate = now.minus(1).format(dateFromat)
+    
+    // Get environment variables
+    def build = this.getProperty('binding').getVariable('build')
+    def listener = this.getProperty('binding').getVariable('listener')
+    def env = build.getEnvironment(listener)
+    
+    def wsUpdateFolderName = "wumUpdates"
+    
+    println "=============Running Groovy shell commands start==============="
+    
+    // find . -name \wso2*-[0-9].[0-9].[0-9]?*.zip -type f -delete - find wso2 timestamp updates in products and delete recursively
+    def wumUpdateFileNameList = []
+    def wumProdBaseLoc = "/home/ubuntu/.wum-wso2/products/"
+    def wumPackLoc = "/build/jenkins-home/workspace/wumInstall/wum"
+    def shellRunStatus = runShellCommands(env, wumProdBaseLoc, 
+        "mkdir " + env.WORKSPACE + "/" + wsUpdateFolderName + "/ && " +
+        "find " + wumProdBaseLoc + " -name \\wso2*-[0-9].[0-9].[0-9]?*.zip -type f -delete && " +
+        wumPackLoc + "/bin/wum update", wumUpdateFileNameList, wsUpdateFolderName)
+    
+    if(shellRunStatus) {
+        println "WUM related shell commands ran successful"
+    } else {
+        println "WUM related shell commands failed, exit non 0"
+    }
+    
+    println "=============Running Groovy shell commands end==============="
+    
+    Class.forName("com.mysql.jdbc.Driver")
+    def conn = Sql.newInstance("jdbc:mysql://"+  env.UAT_DB_HOST +":" + env.UAT_DB_PORT + "/updatesdb_wso2umuat", env.UAT_DB_USER, env.UAT_DB_PASS, "com.mysql.jdbc.Driver")
+    
+    // SL MIDNIGHT BUILD - from yesterday 14:00 (2PM) to today 00:00 (12AM or midnight)
+    def sql = "SELECT id, update_no, timestamp, filename, product_name, product_version, lifecycle_state FROM updates WHERE timestamp BETWEEN ROUND(UNIX_TIMESTAMP(\"" + 
+                yesterdayDate + " 08:30:00.000\") * 1000) AND ROUND(UNIX_TIMESTAMP(\"" + yesterdayDate + " 18:30:00.000\") * 1000)"
+    
+    if(env.BUILD_TIME == "14:00") {
+        // SL 2PM BUILD - from today 00:00 (12AM or midnight) to today 14:00 (2PM)
+        sql = "SELECT id, update_no, timestamp, filename, product_name, product_version, lifecycle_state FROM updates WHERE timestamp BETWEEN ROUND(UNIX_TIMESTAMP(\"" + 
+                yesterdayDate + " 18:30:00.000\") * 1000) AND ROUND(UNIX_TIMESTAMP(\"" + todayDate + " 08:30:00.000\") * 1000)"
+    }
+    
+    // Formulate Json to be sent to run the update ECS nodes child jobs
+    def jsonSlurper = new JsonSlurper() 
+    def updateListJson = jsonSlurper.parseText("[]")
+    
+    conn.eachRow(sql){ row ->
+        
+        def updateListJsonInitialSize = updateListJson.size();
+        def updateListItemFound = false
+        
+        for(int updateListItemCounter = 0; updateListItemCounter < updateListJsonInitialSize; updateListItemCounter++) {
+            
+            if(updateListJson[updateListItemCounter].productName == row.product_name && 
+                                           updateListJson[updateListItemCounter].productVersion == row.product_version) {
+                
+                def updateDBDetailsSize = updateListJson[updateListItemCounter].updateDBDetails.size()
+                populateJsonData(row, updateListJson, true, updateListItemCounter, updateDBDetailsSize, wumUpdateFileNameList, wsUpdateFolderName, env);
+                
+                updateListItemFound = true
+                break;
+            }
+        }
+        
+        if(!updateListItemFound) {
+            populateJsonData(row, updateListJson, false, updateListJsonInitialSize, 0, wumUpdateFileNameList, wsUpdateFolderName, env);
+        }
+        
+    } // sql query eachRow ends
+    
+    System.properties['UPDATE_LIST_JSON'] = new JsonBuilder(updateListJson).toString()
+    
+} catch(Exception e) {
+    println "ERROR in DB querying, " + e;
+} finally {
+	conn.close()
+}
