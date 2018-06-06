@@ -147,5 +147,7 @@ try{
 } catch(Exception e) {
     println "ERROR in DB querying, " + e;
 } finally {
-	dbConnection.close()
+    if(dbConnection != null && !dbConnection.getConnection().isClosed()) {
+        dbConnection.close()
+    }
 }
