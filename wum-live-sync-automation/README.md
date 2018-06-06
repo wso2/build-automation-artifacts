@@ -30,9 +30,9 @@ Here, Jenkins CI is explained with how to run tests against WSO2 products.
 			H(0-0) 0 * * * % BUILD_TIME=00:00
 			# 2PM daily SL work hours build
 			H(0-0) 14 * * * % BUILD_TIME=14:00
-		6. Create uat_batch_job_parallel_trigger as pipeline job and get job's pipeline script from uatBatchJobParallelTrigger/Jenkinsfile from this location
-		7. Enable Jenkins configuration for "uat_batch_job_parallel_trigger" with "Build after other projects are built"
-			a. Give Build after other projects are built, Projects to watch: uat_batch_job, Enable Trigger only if build is stable as well.
+		6. Create parallel_trigger_job as pipeline job and get job's pipeline script from parallelTriggerJob/Jenkinsfile from this location
+		7. Enable Jenkins configuration for "parallel_trigger_job" with "Build after other projects are built"
+			a. Give Build after other projects are built, Projects to watch: uat_batch_job, Enable "Trigger only if build is stable" as well.
 	c. Post-reqisites:
 		N/A
 
@@ -43,5 +43,5 @@ Here, Jenkins CI is explained with how to run tests against WSO2 products.
 		1. This will start the "uat_batch_job" at 00:00 and 14:00 SL time every day and will pick up the batch of updates submitted between previous time period.
 		2. All the relevant WSO2 product - product version will be run in an AWS ECS slave server node separately and parallel.
 	c. Post-reqisites:
-		1. Each AWS ECS slave node with WSO2 product name - version will be printed on the "uat_batch_job_parallel_trigger" console. Please have a look on whether they have passed correctly on each child job status. And check with necessary artifacts are uploaded to Nexus UAT.
+		1. Each AWS ECS slave node with WSO2 product name - version will be printed on the "parallel_trigger_job" console. Please have a look on whether they have passed correctly on each child job status. And check with necessary artifacts are uploaded to Nexus UAT.
 </pre>
