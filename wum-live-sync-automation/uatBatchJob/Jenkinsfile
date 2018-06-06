@@ -65,7 +65,7 @@ def void populateJsonData(row, updateListJson, addUpdateDBDetailsOnly, updateLis
     updateListJson[updateListItemNo].updateDBDetails[updateDBDetailsItemNo].timestamp = row.timestamp
 }
 
-def dbConnection = null
+def dbConnection
 
 try{
     
