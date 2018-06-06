@@ -65,7 +65,7 @@ def void populateJsonData(row, updateListJson, addUpdateDBDetailsOnly, updateLis
     updateListJson[updateListItemNo].updateDBDetails[updateDBDetailsItemNo].timestamp = row.timestamp
 }
 
-def dbConnection
+def dbConnection = null
 
 try{
     
@@ -148,6 +148,7 @@ try{
     println "ERROR in DB querying, " + e;
 } finally {
     if(dbConnection != null && !dbConnection.getConnection().isClosed()) {
+        println "Closing DB connection"
         dbConnection.close()
     }
 }
