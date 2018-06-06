@@ -1,4 +1,4 @@
-1. How to setup the project:
+<pre>1. How to setup the project:
 	a. Pre-requisites:
 		1. Install Jenkins plugins: Amazon EC2 Container Service, database-mysql, Groovy, Parameterized Scheduler, Pipeline, Workspace Cleanup Plugin
 		2. Install Docker on your local
@@ -36,3 +36,4 @@
 		2. All the relevant WSO2 product - product version will be run in an AWS ECS slave server node separately and parallel.
 	c. Post-reqisites:
 		1. Each AWS ECS slave node with WSO2 product name - version will be printed on the "uat_batch_job_parallel_trigger" console. Please have a look on whether they have passed correctly on each child job status. And check with necessary artifacts are uploaded to Nexus UAT.
+</pre>
