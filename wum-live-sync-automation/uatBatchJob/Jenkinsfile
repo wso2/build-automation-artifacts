@@ -65,6 +65,8 @@ def void populateJsonData(row, updateListJson, addUpdateDBDetailsOnly, updateLis
     updateListJson[updateListItemNo].updateDBDetails[updateDBDetailsItemNo].timestamp = row.timestamp
 }
 
+def dbConnection = null
+
 try{
     
     // Date manipulation for query string
@@ -100,7 +102,7 @@ try{
     println "=============Running Groovy shell commands end==============="
     
     Class.forName("com.mysql.jdbc.Driver")
-    def conn = Sql.newInstance("jdbc:mysql://"+  env.UAT_DB_HOST +":" + env.UAT_DB_PORT + "/updatesdb_wso2umuat", env.UAT_DB_USER, env.UAT_DB_PASS, "com.mysql.jdbc.Driver")
+    dbConnection = Sql.newInstance("jdbc:mysql://"+  env.UAT_DB_HOST +":" + env.UAT_DB_PORT + "/updatesdb_wso2umuat", env.UAT_DB_USER, env.UAT_DB_PASS, "com.mysql.jdbc.Driver")
     
     // SL MIDNIGHT BUILD - from yesterday 14:00 (2PM) to today 00:00 (12AM or midnight)
     def sql = "SELECT id, update_no, timestamp, filename, product_name, product_version, lifecycle_state FROM updates WHERE timestamp BETWEEN ROUND(UNIX_TIMESTAMP(\"" + 
@@ -116,7 +118,7 @@ try{
     def jsonSlurper = new JsonSlurper() 
     def updateListJson = jsonSlurper.parseText("[]")
     
-    conn.eachRow(sql){ row ->
+    dbConnection.eachRow(sql){ row ->
         
         def updateListJsonInitialSize = updateListJson.size();
         def updateListItemFound = false
@@ -145,5 +147,5 @@ try{
 } catch(Exception e) {
     println "ERROR in DB querying, " + e;
 } finally {
-	conn.close()
+	dbConnection.close()
 }
