@@ -1,0 +1,86 @@
+package hudson.plugins.jacoco;
+
+import com.cloudbees.hudson.plugins.folder.*
+import hudson.plugins.jacoco.report.CoverageReport
+
+/*Loop through all items inside a folder*/
+void processFolder(Item folder) {
+    folder.getItems().each{
+        if (it instanceof Folder) {
+            processFolder(it)
+        } else {
+            configureJacoco(it)
+        }
+    }
+}
+
+/* Configure jacoco recording in a job... */
+void configureJacoco(Item job){
+    String execPattern="**/**.exec"
+    String classPattern="**/classes"
+    String sourcePattern="**/java"
+    String inclusionPattern="**/*.class"
+    String exclusionPattern=" "
+
+    String minimumInstructionCoverage="70"
+    String minimumBranchCoverage="70"
+    String minimumComplexityCoverage="70"
+    String minimumLineCoverage="70"
+    String minimumMethodCoverage="70"
+    String minimumClassCoverage="70"
+    String maximumInstructionCoverage="70"
+    String maximumBranchCoverage="70"
+    String maximumComplexityCoverage="70"
+    String maximumLineCoverage="70"
+    String maximumMethodCoverage="70"
+    String maximumClassCoverage="70"
+
+    String deltaInstructionCoverage="0"
+    String deltaBranchCoverage="0"
+    String deltaComplexityCoverage="0"
+    String deltaLineCoverage="0"
+    String deltaMethodCoverage="0"
+    String deltaClassCoverage="0"
+
+
+    boolean buildOverBuild=false
+    boolean changeBuildStatus=false
+    boolean skipCopyOfSrcFiles=false
+    boolean createZipFiles=true
+
+
+    final String DIR_SEP = "\\s*,\\s*"
+    final Integer THRESHOLD_DEFAULT = 0
+
+    try{
+        if((job.name ==~ /devstudio(.*)/)) {/*comment this line when required to apply jacoco configuration to all jobs*/
+            /*Get the exisitng Jacoco configuration*/
+            jacocoPublisherConf = job.getPublishersList().get(JacocoPublisher.class)
+            if (jacocoPublisherConf == null) {
+                /*Create jacoco instance with necessary configuration*/
+                JacocoPublisher jcp = new JacocoPublisher(execPattern, classPattern, sourcePattern, inclusionPattern, exclusionPattern, skipCopyOfSrcFiles, maximumInstructionCoverage, maximumBranchCoverage, maximumComplexityCoverage, maximumLineCoverage, maximumMethodCoverage, maximumClassCoverage, minimumInstructionCoverage, minimumBranchCoverage, minimumComplexityCoverage, minimumLineCoverage, minimumMethodCoverage, minimumClassCoverage, changeBuildStatus, deltaInstructionCoverage, deltaBranchCoverage, deltaComplexityCoverage, deltaLineCoverage, deltaMethodCoverage, deltaClassCoverage, buildOverBuild, createZipFiles)
+
+                /*Add the jacoco configuration to the job*/
+                jacocoPublisherConf = job.getPublishersList().add(jcp);
+                job.save()
+                println("Configured jacoco plugin for the job : $job.name")
+            } else {
+                println("Jacoco plugin is already configured for the job : $job.name")
+            }
+        }/*comment this when required to apply jacoco configuration to all*/
+
+    }catch (MissingMethodException e) {
+        /*If the execution reaches here, that means the job is a Pipeline job. We can't configure Jacoco for pipeline jobs.*/
+        println("Skipping Jacoco plugin configuration for the Pipeline job : $job.name")
+    }
+
+}
+
+/*Loop through all available jenkins jobs*/
+Jenkins.instance.getItems().each{
+    if (it instanceof Folder) {
+        processFolder(it)
+    } else {
+        configureJacoco(it)
+    }
+}
