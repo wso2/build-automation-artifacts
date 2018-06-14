@@ -34,10 +34,14 @@ apt-get update \
 && rm -rf /var/lib/apt/lists/*
 
 RUN \
-mkdir -p /build/software/maven \
-&& wget -P /build/software/maven https://archive.apache.org/dist/maven/maven-3/3.0.5/binaries/apache-maven-3.0.5-bin.tar.gz \
-&& tar -xvzf /build/software/maven/apache-maven-3.0.5-bin.tar.gz --directory /build/software/maven \
-&& rm /build/software/maven/apache-maven-3.0.5-bin.tar.gz
+wget -P /build/software/maven https://archive.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz \
+&& tar -xvzf /build/software/maven/apache-maven-3.3.9-bin.tar.gz --directory /build/software/maven \
+&& rm /build/software/maven/apache-maven-3.3.9-bin.tar.gz
+
+RUN \
+wget -P /build/software/maven https://archive.apache.org/dist/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.tar.gz \
+&& tar -xvzf /build/software/maven/apache-maven-3.3.3-bin.tar.gz --directory /build/software/maven \
+&& rm /build/software/maven/apache-maven-3.3.3-bin.tar.gz
 
 RUN \
 wget -P /build/software/maven https://archive.apache.org/dist/maven/maven-3/3.2.2/binaries/apache-maven-3.2.2-bin.tar.gz \
@@ -45,16 +49,43 @@ wget -P /build/software/maven https://archive.apache.org/dist/maven/maven-3/3.2.
 && rm /build/software/maven/apache-maven-3.2.2-bin.tar.gz
 
 RUN \
-wget -P /build/software/maven https://archive.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz \
-&& tar -xvzf /build/software/maven/apache-maven-3.3.9-bin.tar.gz --directory /build/software/maven \
-&& rm /build/software/maven/apache-maven-3.3.9-bin.tar.gz
+wget -P /build/software/maven https://archive.apache.org/dist/maven/maven-3/3.2.1/binaries/apache-maven-3.2.1-bin.tar.gz \
+&& tar -xvzf /build/software/maven/apache-maven-3.2.1-bin.tar.gz --directory /build/software/maven \
+&& rm /build/software/maven/apache-maven-3.2.1-bin.tar.gz
+
+RUN \
+mkdir -p /build/software/maven \
+&& wget -P /build/software/maven https://archive.apache.org/dist/maven/maven-3/3.0.5/binaries/apache-maven-3.0.5-bin.tar.gz \
+&& tar -xvzf /build/software/maven/apache-maven-3.0.5-bin.tar.gz --directory /build/software/maven \
+&& rm /build/software/maven/apache-maven-3.0.5-bin.tar.gz
 
 RUN \
 wget -P /build/software/maven https://archive.apache.org/dist/maven/maven-2/2.2.1/binaries/apache-maven-2.2.1-bin.tar.gz \
 && tar -xvzf /build/software/maven/apache-maven-2.2.1-bin.tar.gz --directory /build/software/maven \
 && rm /build/software/maven/apache-maven-2.2.1-bin.tar.gz
 
+RUN mkdir -p /build/software/ant
+
+COPY apache-ant-1.9.6-bin.tar.gz /build/software/ant/
+
+RUN tar -xzf /build/software/ant/apache-ant-1.9.6-bin.tar.gz --directory /build/software/ant && rm /build/software/ant/apache-ant-1.9.6-bin.tar.gz
+
 RUN mkdir -p /build/software/java
+
+COPY jdk-8u151-linux-x64.tar.gz /build/software/java
+
+RUN \
+tar -xvzf /build/software/java/jdk-8u151-linux-x64.tar.gz --directory /build/software/java \
+&& rm /build/software/java/jdk-8u151-linux-x64.tar.gz \
+&& mkdir -p /build/software/jce \
+&& wget -P /build/software/jce --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip \
+&& unzip -o /build/software/jce/jce_policy-8.zip -d /build/software/jce \
+&& mv /build/software/java/jdk1.8.0_151/jre/lib/security/policy/unlimited/local_policy.jar /build/software/java/jdk1.8.0_151/jre/lib/security/local_policy-original.jar \
+&& mv /build/software/java/jdk1.8.0_151/jre/lib/security/policy/unlimited/US_export_policy.jar /build/software/java/jdk1.8.0_151/jre/lib/security/US_export_policy-original.jar \
+&& cp /build/software/jce/UnlimitedJCEPolicyJDK8/local_policy.jar /build/software/java/jdk1.8.0_151/jre/lib/security/ \
+&& cp /build/software/jce/UnlimitedJCEPolicyJDK8/US_export_policy.jar /build/software/java/jdk1.8.0_151/jre/lib/security/ \
+&& rm  /build/software/jce/jce_policy-8.zip \
+&& rm -r /build/software/jce/UnlimitedJCEPolicyJDK8
 
 COPY jdk-8u144-linux-x64.tar.gz /build/software/java
 
@@ -68,6 +99,21 @@ tar -xvzf /build/software/java/jdk-8u144-linux-x64.tar.gz --directory /build/sof
 && mv /build/software/java/jdk1.8.0_144/jre/lib/security/US_export_policy.jar /build/software/java/jdk1.8.0_144/jre/lib/security/US_export_policy-original.jar \
 && cp /build/software/jce/UnlimitedJCEPolicyJDK8/local_policy.jar /build/software/java/jdk1.8.0_144/jre/lib/security/ \
 && cp /build/software/jce/UnlimitedJCEPolicyJDK8/US_export_policy.jar /build/software/java/jdk1.8.0_144/jre/lib/security/ \
+&& rm  /build/software/jce/jce_policy-8.zip \
+&& rm -r /build/software/jce/UnlimitedJCEPolicyJDK8
+
+COPY jdk-8u131-linux-x64.tar.gz /build/software/java
+
+RUN \
+tar -xvzf /build/software/java/jdk-8u131-linux-x64.tar.gz --directory /build/software/java \
+&& rm /build/software/java/jdk-8u131-linux-x64.tar.gz \
+&& mkdir -p /build/software/jce \
+&& wget -P /build/software/jce --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip \
+&& unzip -o /build/software/jce/jce_policy-8.zip -d /build/software/jce \
+&& mv /build/software/java/jdk1.8.0_131/jre/lib/security/local_policy.jar /build/software/java/jdk1.8.0_131/jre/lib/security/local_policy-original.jar \
+&& mv /build/software/java/jdk1.8.0_131/jre/lib/security/US_export_policy.jar /build/software/java/jdk1.8.0_131/jre/lib/security/US_export_policy-original.jar \
+&& cp /build/software/jce/UnlimitedJCEPolicyJDK8/local_policy.jar /build/software/java/jdk1.8.0_131/jre/lib/security/ \
+&& cp /build/software/jce/UnlimitedJCEPolicyJDK8/US_export_policy.jar /build/software/java/jdk1.8.0_131/jre/lib/security/ \
 && rm  /build/software/jce/jce_policy-8.zip \
 && rm -r /build/software/jce/UnlimitedJCEPolicyJDK8
 
@@ -86,6 +132,34 @@ tar -xvzf /build/software/java/jdk-8u45-linux-x64.tar.gz --directory /build/soft
 && rm  /build/software/jce/jce_policy-8.zip \
 && rm -r /build/software/jce/UnlimitedJCEPolicyJDK8
 
+COPY jdk-7u79-linux-x64.tar.gz /build/software/java
+
+RUN \
+tar -xvzf /build/software/java/jdk-7u79-linux-x64.tar.gz --directory /build/software/java \
+&& rm /build/software/java/jdk-7u79-linux-x64.tar.gz \
+&& wget -P /build/software/jce --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jce/7/UnlimitedJCEPolicyJDK7.zip \
+&& unzip -o /build/software/jce/UnlimitedJCEPolicyJDK7.zip -d /build/software/jce \
+&& mv /build/software/java/jdk1.7.0_79/jre/lib/security/local_policy.jar /build/software/java/jdk1.7.0_79/jre/lib/security/local_policy-original.jar \
+&& mv /build/software/java/jdk1.7.0_79/jre/lib/security/US_export_policy.jar /build/software/java/jdk1.7.0_79/jre/lib/security/US_export_policy-original.jar \
+&& cp /build/software/jce/UnlimitedJCEPolicy/local_policy.jar /build/software/java/jdk1.7.0_79/jre/lib/security/ \
+&& cp /build/software/jce/UnlimitedJCEPolicy/US_export_policy.jar /build/software/java/jdk1.7.0_79/jre/lib/security/ \
+&& rm /build/software/jce/UnlimitedJCEPolicyJDK7.zip \
+&& rm -r /build/software/jce/UnlimitedJCEPolicy
+
+COPY jdk-7u65-linux-x64.tar.gz /build/software/java
+
+RUN \
+tar -xvzf /build/software/java/jdk-7u65-linux-x64.tar.gz --directory /build/software/java \
+&& rm /build/software/java/jdk-7u65-linux-x64.tar.gz \
+&& wget -P /build/software/jce --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jce/7/UnlimitedJCEPolicyJDK7.zip \
+&& unzip -o /build/software/jce/UnlimitedJCEPolicyJDK7.zip -d /build/software/jce \
+&& mv /build/software/java/jdk1.7.0_65/jre/lib/security/local_policy.jar /build/software/java/jdk1.7.0_65/jre/lib/security/local_policy-original.jar \
+&& mv /build/software/java/jdk1.7.0_65/jre/lib/security/US_export_policy.jar /build/software/java/jdk1.7.0_65/jre/lib/security/US_export_policy-original.jar \
+&& cp /build/software/jce/UnlimitedJCEPolicy/local_policy.jar /build/software/java/jdk1.7.0_65/jre/lib/security/ \
+&& cp /build/software/jce/UnlimitedJCEPolicy/US_export_policy.jar /build/software/java/jdk1.7.0_65/jre/lib/security/ \
+&& rm /build/software/jce/UnlimitedJCEPolicyJDK7.zip \
+&& rm -r /build/software/jce/UnlimitedJCEPolicy
+
 COPY jdk-7u51-linux-x64.tar.gz /build/software/java
 
 RUN \
@@ -100,14 +174,6 @@ tar -xvzf /build/software/java/jdk-7u51-linux-x64.tar.gz --directory /build/soft
 && rm /build/software/jce/UnlimitedJCEPolicyJDK7.zip \
 && rm -r /build/software/jce/UnlimitedJCEPolicy
 
-RUN apt-get update && apt-get install -y openjdk-7-jdk && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-RUN \
-add-apt-repository ppa:openjdk-r/ppa -y \
-&& apt-get update && apt-get install -y openjdk-8-jdk \
-&& apt-get clean \
-&& rm -rf /var/lib/apt/lists/*
-
 COPY jdk-6u33-linux-x64.bin /build/software/java
 
 RUN \
@@ -115,6 +181,14 @@ chmod a+x /build/software/java/jdk-6u33-linux-x64.bin \
 && cd /build/software/java \
 && echo "\n" | sh /build/software/java/jdk-6u33-linux-x64.bin \
 && rm /build/software/java/jdk-6u33-linux-x64.bin
+
+RUN apt-get update && apt-get install -y openjdk-7-jdk && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN \
+add-apt-repository ppa:openjdk-r/ppa -y \
+&& apt-get update && apt-get install -y openjdk-8-jdk \
+&& apt-get clean \
+&& rm -rf /var/lib/apt/lists/*
 
 RUN \
 wget -P /build/software/nodejs https://nodejs.org/dist/v8.8.1/node-v8.8.1-linux-x64.tar.xz \
