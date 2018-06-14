@@ -89,7 +89,7 @@ try{
     def wumProdBaseLoc = "/home/ubuntu/.wum-wso2/products/"
     def wumPackLoc = "/build/jenkins-home/workspace/wumInstall/wum"
     def shellRunStatus = runShellCommands(env, wumProdBaseLoc, 
-        "mkdir " + env.WORKSPACE + "/" + wsUpdateFolderName + "/ && " +
+        "mkdir -p " + env.WORKSPACE + "/" + wsUpdateFolderName + "/ && " +
         "find " + wumProdBaseLoc + " -name \\wso2*-[0-9].[0-9].[0-9]?*.zip -type f -delete && " +
         wumPackLoc + "/bin/wum update", wumUpdateFileNameList, wsUpdateFolderName)
     
