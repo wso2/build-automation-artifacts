@@ -43,26 +43,42 @@ def boolean runShellCommands(env, wumProdBaseLoc, cmd, wumUpdateFileNameList, ws
     }
 }
 
-def void populateJsonData(row, updateListJson, addUpdateDBDetailsOnly, updateListItemNo, updateDBDetailsItemNo, wumUpdateFileNameList, wsUpdateFolderName, env) {
-    def jsonSlurper = new JsonSlurper() 
+def void populateJsonData(row, updateListJson, addUpdateDBDetailsOnly, updateListItemNo, updateDBDetailsItemNo, wumUpdateFileNameList, wumReleaseJobNamesList, wsUpdateFolderName, env) {
+    def jsonSlurper = new JsonSlurper()
     
-    if(!addUpdateDBDetailsOnly) {
-        updateListJson[updateListItemNo] = jsonSlurper.parseText("{}")
-        updateListJson[updateListItemNo].productName = row.product_name
-        updateListJson[updateListItemNo].productVersion = row.product_version
-        updateListJson[updateListItemNo].jobName = (row.product_name.replace("wso2", "WUM-")).toUpperCase() + "-" + row.product_version
+    def updateFileName = wumUpdateFileNameList.find { item -> item.matches(row.product_name + "-" + (row.product_version).replace(".", "\\.") + "\\..*\\.zip") }
+    def childJobNameFormat = (row.product_name.replace("wso2", "WUM-")).toUpperCase() + "-" + row.product_version
+    def childJobName =  wumReleaseJobNamesList.find { item -> item.matches(childJobNameFormat) }
+    
+    if(updateFileName != null) {
         
-        def updateFileName = wumUpdateFileNameList.find { item -> item.matches(row.product_name + "-" + (row.product_version).replace(".", "\\.") + "\\..*\\.zip") }
-        updateListJson[updateListItemNo].updateFileName = updateFileName
-        updateListJson[updateListItemNo].updateFileUrl = env.JOB_URL + "ws/" + wsUpdateFolderName + "/" + updateFileName
+        if(childJobName != null) {
+            
+            if(!addUpdateDBDetailsOnly) {
+                updateListJson[updateListItemNo] = jsonSlurper.parseText("{}")
+                updateListJson[updateListItemNo].productName = row.product_name
+                updateListJson[updateListItemNo].productVersion = row.product_version
+                updateListJson[updateListItemNo].jobName = childJobName
+                
+                updateListJson[updateListItemNo].updateFileName = updateFileName
+                updateListJson[updateListItemNo].updateFileUrl = env.JOB_URL + "ws/" + wsUpdateFolderName + "/" + updateFileName
+                
+                updateListJson[updateListItemNo].updateDBDetails = jsonSlurper.parseText("[]")
+            }
+            
+            updateListJson[updateListItemNo].updateDBDetails[updateDBDetailsItemNo] = jsonSlurper.parseText("{}")
+            updateListJson[updateListItemNo].updateDBDetails[updateDBDetailsItemNo].id = row.id
+            updateListJson[updateListItemNo].updateDBDetails[updateDBDetailsItemNo].updateNo = row.update_no
+            updateListJson[updateListItemNo].updateDBDetails[updateDBDetailsItemNo].timestamp = row.timestamp
+        } else {
+            
+            println "WARN: There is no " + childJobNameFormat + " exist. Please create a WUM child job for this."
+        }
         
-        updateListJson[updateListItemNo].updateDBDetails = jsonSlurper.parseText("[]")
+    } else {
+        
+        println "WARN: For " + row.product_name + "-" + row.product_version + "no WUM updated pack exist, thus removing rowId: [" +  row.id + "], updateNo: [" + row.update_no + "] from UAT testing."
     }
-    
-    updateListJson[updateListItemNo].updateDBDetails[updateDBDetailsItemNo] = jsonSlurper.parseText("{}")
-    updateListJson[updateListItemNo].updateDBDetails[updateDBDetailsItemNo].id = row.id
-    updateListJson[updateListItemNo].updateDBDetails[updateDBDetailsItemNo].updateNo = row.update_no
-    updateListJson[updateListItemNo].updateDBDetails[updateDBDetailsItemNo].timestamp = row.timestamp
 }
 
 def dbConnection = null
@@ -81,6 +97,12 @@ try{
     def env = build.getEnvironment(listener)
     
     def wsUpdateFolderName = "wumUpdates"
+    
+    // Creating WUM_release view job names list
+    def wumReleaseJobNamesList = []
+    hudson.model.Hudson.instance.getView('WUM_Release').items.each() {
+        wumReleaseJobNamesList.add(it.fullDisplayName)
+    }
     
     println "=============Running Groovy shell commands start==============="
     
@@ -129,7 +151,7 @@ try{
                                            updateListJson[updateListItemCounter].productVersion == row.product_version) {
                 
                 def updateDBDetailsSize = updateListJson[updateListItemCounter].updateDBDetails.size()
-                populateJsonData(row, updateListJson, true, updateListItemCounter, updateDBDetailsSize, wumUpdateFileNameList, wsUpdateFolderName, env);
+                populateJsonData(row, updateListJson, true, updateListItemCounter, updateDBDetailsSize, wumUpdateFileNameList, wumReleaseJobNamesList, wsUpdateFolderName, env);
                 
                 updateListItemFound = true
                 break;
@@ -137,7 +159,7 @@ try{
         }
         
         if(!updateListItemFound) {
-            populateJsonData(row, updateListJson, false, updateListJsonInitialSize, 0, wumUpdateFileNameList, wsUpdateFolderName, env);
+            populateJsonData(row, updateListJson, false, updateListJsonInitialSize, 0, wumUpdateFileNameList, wumReleaseJobNamesList, wsUpdateFolderName, env);
         }
         
     } // sql query eachRow ends
