@@ -47,7 +47,7 @@ def void populateJsonData(row, updateListJson, addUpdateDBDetailsOnly, updateLis
     def jsonSlurper = new JsonSlurper()
     
     def updateFileName = wumUpdateFileNameList.find { item -> item.matches(row.product_name + "-" + (row.product_version).replace(".", "\\.") + "\\..*\\.zip") }
-    def childJobNameFormat = (row.product_name.replace("wso2", "WUM-")).toUpperCase() + "-" + row.product_version
+    def childJobNameFormat = (row.product_name.replace("wso2", "WUM-")).toUpperCase() + "-" + row.product_version + "_new"
     def childJobName =  wumReleaseJobNamesList.find { item -> item.matches(childJobNameFormat) }
     
     if(updateFileName != null) {
@@ -123,8 +123,7 @@ try{
     
     println "=============Running Groovy shell commands end==============="
     
-    Class.forName("com.mysql.jdbc.Driver")
-    dbConnection = Sql.newInstance("jdbc:mysql://"+  env.UAT_DB_HOST +":" + env.UAT_DB_PORT + "/updatesdb_wso2umuat", env.UAT_DB_USER, env.UAT_DB_PASS, "com.mysql.jdbc.Driver")
+    dbConnection = Sql.newInstance("jdbc:mysql://"+  env.UAT_DB_HOST +":" + env.UAT_DB_PORT + "/updatesdb_wso2umuat", env.UAT_DB_USER, env.UAT_DB_PASS, "com.mysql.cj.jdbc.Driver")
     
     // SL MIDNIGHT BUILD - from yesterday 14:00 (2PM) to today 00:00 (12AM or midnight)
     def sql = "SELECT id, update_no, timestamp, filename, product_name, product_version, lifecycle_state FROM updates WHERE timestamp BETWEEN ROUND(UNIX_TIMESTAMP(\"" + 
