@@ -1,5 +1,13 @@
 import groovy.json.JsonSlurper
 
+// This prints stack trace to the Jenkins job console log but not to the Jenkins server logs
+def void printStackTrace(e) {
+    def sw = new StringWriter()
+    def pw = new PrintWriter(sw)
+    e.printStackTrace(pw)
+    print sw.toString()
+}
+
 /**
  * 
  * This Pipeline node will run the stage to trigger parallel child jobs using the given Json product data and WUM update data.
@@ -31,7 +39,7 @@ node {
             parallel branches
         } catch(Exception e) {
             println "ERROR: " + e
-            e.printStackTrace();
+            printStackTrace(e)
         }
     }
 

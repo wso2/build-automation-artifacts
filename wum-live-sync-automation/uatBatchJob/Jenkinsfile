@@ -49,7 +49,7 @@ def boolean runShellCommands(env, wumProdBaseLoc, cmd, wumUpdateFileNameList, ws
             return proc.exitValue() == 0
         } catch (e) {
             println "ERROR in shell commands: " + e
-            e.printStackTrace();
+            printStackTrace(e)
             return false
         }
     }
@@ -74,7 +74,7 @@ def void populateJsonData(row, updateListJson, addUpdateDBDetailsOnly, updateLis
     def jsonSlurper = new JsonSlurper()
     
     def updateFileName = wumUpdateFileNameList.find { item -> item.matches(row.product_name + "-" + (row.product_version).replace(".", "\\.") + "\\..*\\.zip") }
-    def childJobNameFormat = (row.product_name.replace("wso2", "WUM-")).toUpperCase() + "-" + row.product_version
+    def childJobNameFormat = (row.product_name.replace("wso2", "WUM-")).toUpperCase() + "-" + row.product_version + "_new"
     def childJobName =  wumReleaseJobNamesList.find { item -> item.matches(childJobNameFormat) }
     
     if(updateFileName != null) {
@@ -108,6 +108,14 @@ def void populateJsonData(row, updateListJson, addUpdateDBDetailsOnly, updateLis
     }
 }
 
+// This prints stack trace to the Jenkins job console log but not to the Jenkins server logs
+def void printStackTrace(e) {
+    def sw = new StringWriter()
+    def pw = new PrintWriter(sw)
+    e.printStackTrace(pw)
+    print sw.toString()
+}
+
 // Script run starts from here
 def dbConnection = null
 
@@ -134,14 +142,14 @@ try{
     
     println "=============Running Groovy shell commands start==============="
     
-    // find . -name \wso2*-[0-9]*\.[0-9]*\.[0-9]*\.?*\.zip -type f -delete - find wso2 timestamp updates in products and delete recursively
+    // find . -name \\wso2*-[0-9]*\\.[0-9]*\\.[0-9]*\\.?*\\.zip -type f -delete - find wso2 timestamp updates in products and delete recursively
     def wumUpdateFileNameList = []
     def wumProdBaseLoc = "/home/ubuntu/.wum-wso2/products/"
     def wumPackLoc = "/build/jenkins-home/workspace/wumInstall/wum"
     def shellRunStatus = runShellCommands(env, wumProdBaseLoc, 
-        "mkdir -p " + env.WORKSPACE + "/" + wsUpdateFolderName + "/ && " +
-        "find " + wumProdBaseLoc + " -name \\wso2*-[0-9]*\.[0-9]*\.[0-9]*\.?*\.zip -type f -delete && " +
-        wumPackLoc + "/bin/wum update", wumUpdateFileNameList, wsUpdateFolderName)
+        "mkdir -p " + env.WORKSPACE + "/" + wsUpdateFolderName + "/" +
+        " && find " + wumProdBaseLoc + " -name \\wso2*-[0-9]*\\.[0-9]*\\.[0-9]*\\.?*\\.zip -type f -delete" +
+        " && " + wumPackLoc + "/bin/wum update", wumUpdateFileNameList, wsUpdateFolderName)
     
     if(shellRunStatus) {
         println "WUM related shell commands ran successful"
@@ -195,7 +203,7 @@ try{
     
 } catch(Exception e) {
     println "ERROR in DB querying, " + e;
-    e.printStackTrace();
+    printStackTrace(e)
 } finally {
     if(dbConnection != null && !dbConnection.getConnection().isClosed()) {
         println "Closing DB connection"
