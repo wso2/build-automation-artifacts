@@ -1,5 +1,11 @@
 import groovy.json.JsonSlurper
 
+/**
+ * 
+ * This Pipeline node will run the stage to trigger parallel child jobs using the given Json product data and WUM update data.
+ * All the product child jobs are needed the WUM updated pack file name and its URL to run them in parallel ECS nodes. 
+ * 
+ */
 node {
     
     stage('runParallelProductJobs') {
@@ -25,6 +31,7 @@ node {
             parallel branches
         } catch(Exception e) {
             println "ERROR: " + e
+            e.printStackTrace();
         }
     }
 
