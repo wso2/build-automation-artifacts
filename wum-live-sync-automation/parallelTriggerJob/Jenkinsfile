@@ -1,0 +1,46 @@
+import groovy.json.JsonSlurper
+
+// This prints stack trace to the Jenkins job console log but not to the Jenkins server logs
+def void printStackTrace(e) {
+    def sw = new StringWriter()
+    def pw = new PrintWriter(sw)
+    e.printStackTrace(pw)
+    print sw.toString()
+}
+
+/**
+ * 
+ * This Pipeline node will run the stage to trigger parallel child jobs using the given Json product data and WUM update data.
+ * All the product child jobs are needed the WUM updated pack file name and its URL to run them in parallel ECS nodes. 
+ * 
+ */
+node {
+    
+    stage('runParallelProductJobs') {
+        
+        try {
+            def receivedJson = System.properties['UPDATE_LIST_JSON']
+            println "Received Json: " + receivedJson
+            def jsonSlurper = new JsonSlurper()
+            def resultJson = jsonSlurper.parseText(receivedJson)
+            jsonSlurper = null
+            
+            def branches = [:]
+            
+            for (int index = 0; index < resultJson.size(); index++) {
+                String jobName = resultJson[index].jobName;
+                String fileUrl = resultJson[index].updateFileUrl;
+                String fileName = resultJson[index].updateFileName;
+                branches["branch:"+ jobName] = {build job: jobName, parameters: [[$class: 'StringParameterValue', name: 'UPDATE_FILE_URL', value: fileUrl], [$class: 'StringParameterValue', name: 'UPDATE_FILE_NAME', value: fileName]]};
+                println "Added parallel ECS slave to run, jobName: " + jobName + ", updateFileUrl: " + fileUrl + ", updateFileName: " + fileName
+            }
+            resultJson = null
+            
+            parallel branches
+        } catch(Exception e) {
+            println "ERROR: " + e
+            printStackTrace(e)
+        }
+    }
+
+}
