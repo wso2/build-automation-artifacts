@@ -236,14 +236,12 @@ try{
         // SL 2PM BUILD - from today 00:00 (12AM or midnight) to today 14:00 (2PM)
         sql = "SELECT id, update_no, timestamp, filename, product_name, product_version, lifecycle_state FROM updates WHERE timestamp BETWEEN ROUND(UNIX_TIMESTAMP(\"" + 
                 buildTimeMidNightDate.format(dateFromat, , TimeZone.getTimeZone('UTC')) + "\") * 1000) AND ROUND(UNIX_TIMESTAMP(\"" + buildTime2PMDate.format(dateFromat, , TimeZone.getTimeZone('UTC')) + "\") * 1000)"
-        println "2PM sql: " + sql
     
     } else if(env.BUILD_TIME.equals("00:00")) {
         
         // SL MIDNIGHT BUILD - from yesterday 14:00 (2PM) to today 00:00 (12AM or midnight)
         sql = "SELECT id, update_no, timestamp, filename, product_name, product_version, lifecycle_state FROM updates WHERE timestamp BETWEEN ROUND(UNIX_TIMESTAMP(\"" + 
                 buildTime2PMYesterdayDate.format(dateFromat, , TimeZone.getTimeZone('UTC')) + "\") * 1000) AND ROUND(UNIX_TIMESTAMP(\"" + buildTimeMidNightDate.format(dateFromat, TimeZone.getTimeZone('UTC')) + "\") * 1000)"
-        println "MIDNIGHT sql: " + sql
         
     } else if(env.BUILD_TIME.equals("*")) {
         
@@ -254,14 +252,12 @@ try{
                 // SL TIME MANUAL BUILD - from today 00:00 (12AM or midnight) to now
                 sql = "SELECT id, update_no, timestamp, filename, product_name, product_version, lifecycle_state FROM updates WHERE timestamp BETWEEN ROUND(UNIX_TIMESTAMP(\"" + 
                 buildTimeMidNightDate.format(dateFromat, , TimeZone.getTimeZone('UTC')) + "\") * 1000) AND ROUND(UNIX_TIMESTAMP(\"" + now.format(dateFromat, TimeZone.getTimeZone('UTC')) + "\") * 1000)"
-        println "BEFORE 2PM MANUAL sql: " + sql
                 
             } else if(now.after(buildTime2PMDate) && now.before(buildTimeEODDate)) {
                 
                 // SL TIME MANUAL BUILD - from today 14:00 (2PM) to now
                 sql = "SELECT id, update_no, timestamp, filename, product_name, product_version, lifecycle_state FROM updates WHERE timestamp BETWEEN ROUND(UNIX_TIMESTAMP(\"" + 
                 buildTime2PMDate.format(dateFromat, , TimeZone.getTimeZone('UTC')) + "\") * 1000) AND ROUND(UNIX_TIMESTAMP(\"" + now.format(dateFromat, TimeZone.getTimeZone('UTC')) + "\") * 1000)"
-        println "AFTER 2PM MANUAL sql: " + sql
                 
             }
         }
