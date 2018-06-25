@@ -151,9 +151,6 @@ try{
     def dateFromat = "YYYY-MM-dd HH:mm:ss.SSS"
     def now = new Date()
     
-    Calendar buildTimeCalendar = Calendar.getInstance(TimeZone.getTimeZone("IST"));
-    buildTimeCalendar.setTime(now);
-    
     Calendar buildTime2PMYesterdayCalendar = Calendar.getInstance(TimeZone.getTimeZone("IST"));
     def yesterdayDate = now.minus(1)
     buildTime2PMYesterdayCalendar.setTime(yesterdayDate);
