@@ -50,11 +50,31 @@ wget -P /build/software/maven https://archive.apache.org/dist/maven/maven-3/3.3.
 && rm /build/software/maven/apache-maven-3.3.9-bin.tar.gz
 
 RUN \
+wget -P /build/software/maven https://archive.apache.org/dist/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz \
+&& tar -xvzf /build/software/maven/apache-maven-3.5.4-bin.tar.gz --directory /build/software/maven \
+&& rm /build/software/maven/apache-maven-3.5.4-bin.tar.gz
+
+RUN \
 wget -P /build/software/maven https://archive.apache.org/dist/maven/maven-2/2.2.1/binaries/apache-maven-2.2.1-bin.tar.gz \
 && tar -xvzf /build/software/maven/apache-maven-2.2.1-bin.tar.gz --directory /build/software/maven \
 && rm /build/software/maven/apache-maven-2.2.1-bin.tar.gz
 
 RUN mkdir -p /build/software/java
+
+COPY jdk-8u171-linux-x64.tar.gz /build/software/java
+
+RUN \
+tar -xvzf /build/software/java/jdk-8u171-linux-x64.tar.gz --directory /build/software/java \
+&& rm /build/software/java/jdk-8u171-linux-x64.tar.gz \
+&& mkdir -p /build/software/jce \
+&& wget -P /build/software/jce --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip \
+&& unzip -o /build/software/jce/jce_policy-8.zip -d /build/software/jce \
+&& mv /build/software/java/jdk1.8.0_171/jre/lib/security/policy/unlimited/local_policy.jar /build/software/java/jdk1.8.0_171/jre/lib/security/policy/unlimited/local_policy-original.jar \
+&& mv /build/software/java/jdk1.8.0_171/jre/lib/security/policy/unlimited/US_export_policy.jar /build/software/java/jdk1.8.0_171/jre/lib/security/policy/unlimited/US_export_policy-original.jar \
+&& cp /build/software/jce/UnlimitedJCEPolicyJDK8/local_policy.jar /build/software/java/jdk1.8.0_171/jre/lib/security/policy/unlimited/ \
+&& cp /build/software/jce/UnlimitedJCEPolicyJDK8/US_export_policy.jar /build/software/java/jdk1.8.0_171/jre/lib/security/policy/unlimited/ \
+&& rm  /build/software/jce/jce_policy-8.zip \
+&& rm -r /build/software/jce/UnlimitedJCEPolicyJDK8
 
 COPY jdk-8u144-linux-x64.tar.gz /build/software/java
 
