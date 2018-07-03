@@ -3,18 +3,25 @@ import java.io.File
 import java.nio.file.*
 import groovy.json.*
 
+// This prints stack trace to the Jenkins job console log but not to the Jenkins server logs
+def void printStackTrace(e) {
+    def sw = new StringWriter()
+    def pw = new PrintWriter(sw)
+    e.printStackTrace(pw)
+    print sw.toString()
+}
+
 /**
  * This will run a batch of Shell commands by Grrovy. A batch of Shell commands will be given as a single text delimeted with && sign.
  * 
  * param env Jenkins systen environment vairable
  * param wumProdBaseLoc WUM pack installtion's product base location directory where updated WUM packs will be stored with WUM update
  * param cmd Shell commands for Groovy to run. Delimited with && sign
- * param wumUpdateFileNameList List to store WUM updated pack names for every product-verison
  * param wsUpdateFolderName Jenkins job's workspace custom folder name to store WUM updated pack files
  * return boolean whether each Shell command ran successfully.
  * 
  */
-def boolean runShellCommands(env, wumProdBaseLoc, cmd, wumUpdateFileNameList, wsUpdateFolderName) {
+def boolean runShellCommands(env, wumProdBaseLoc, cmd, wsUpdateFolderName) {
     
     cmd.tokenize('&&').every { command ->
         try {
@@ -28,15 +35,25 @@ def boolean runShellCommands(env, wumProdBaseLoc, cmd, wumUpdateFileNameList, ws
                 if(line.startsWith(wumProdBaseLoc) && line.endsWith(".zip")) {
                     def fileName = line.tokenize('/').last()
                     def sourceFile = line
-                    def targetFile = env.WORKSPACE + "/" + wsUpdateFolderName + "/" + fileName
-    
+                    
+                    // Removing WUM updated pack filename's timestamp
+                    def dashLastIndex = fileName.lastIndexOf("-")
+                    def productName = fileName.substring(0, dashLastIndex)
+                    
+                    def versionNumberPart = fileName.substring(dashLastIndex + 1, fileName.length())
+                    def versionNumberPartDotLastIndex = versionNumberPart.lastIndexOf(".")
+                    def versionNoPartWithoutFileExt = versionNumberPart.substring(0, versionNumberPartDotLastIndex - 1)
+                    
+                    def fileExtWithDot = versionNumberPart.substring(versionNumberPartDotLastIndex, versionNumberPart.length())
+                    def versionNo = versionNoPartWithoutFileExt.substring(0, versionNoPartWithoutFileExt.lastIndexOf("."))
+                    
+                    def targetFile = env.WORKSPACE + "/" + wsUpdateFolderName + "/" +  productName + "-" +versionNo + fileExtWithDot
+                    
                     Files.copy(
                         new File(sourceFile).toPath(),
                         new File(targetFile).toPath(),
                         StandardCopyOption.REPLACE_EXISTING,
                         StandardCopyOption.COPY_ATTRIBUTES );
-                    
-                    wumUpdateFileNameList.add(fileName)
                 }
 	    }
             
@@ -64,17 +81,34 @@ def boolean runShellCommands(env, wumProdBaseLoc, cmd, wumUpdateFileNameList, ws
  * param addUpdateDBDetailsOnly Whether to add DB details or to add product details and DB details to the Json
  * param updateListItemNo index number for the Json array to add the next product details
  * param updateDBDetailsItemNo index number for the Json array to add the next DB details
- * param wumUpdateFileNameList List of WUM updated pack names for every product-verison
  * param wumReleaseJobNamesList WUM_Release Jenkins view's list of job names
  * param wsUpdateFolderName Jenkins job's workspace custom folder name to store WUM updated pack files
  * param env Jenkins systen environment vairable
  * 
  */
-def void populateJsonData(row, updateListJson, addUpdateDBDetailsOnly, updateListItemNo, updateDBDetailsItemNo, wumUpdateFileNameList, wumReleaseJobNamesList, wsUpdateFolderName, env) {
+def void populateJsonData(row, updateListJson, addUpdateDBDetailsOnly, updateListItemNo, updateDBDetailsItemNo, wumReleaseJobNamesList, wsUpdateFolderName, env) {
+    
+    // Restricting for the given product-version list
+    if(!(env.PRODUCTS.equals("*"))) {
+        def givenProductList = env.PRODUCTS.tokenize(',')
+        def givenProduct =  givenProductList.find { item -> item.matches(row.product_name + "-" + row.product_version) }
+        if(givenProduct != null) {
+            addJsonItem(row, updateListJson, addUpdateDBDetailsOnly, updateListItemNo, updateDBDetailsItemNo, wumReleaseJobNamesList, wsUpdateFolderName, env)
+        } else {
+            println "There is no update for the " + row.product_name + "-" + row.product_version + ", thus this job will not be run."
+        }
+    } else {
+        addJsonItem(row, updateListJson, addUpdateDBDetailsOnly, updateListItemNo, updateDBDetailsItemNo, wumReleaseJobNamesList, wsUpdateFolderName, env)
+    }
+    
+}
+
+//Internal methods which will be called from inside populateJsonData() method.
+def void addJsonItem(row, updateListJson, addUpdateDBDetailsOnly, updateListItemNo, updateDBDetailsItemNo, wumReleaseJobNamesList, wsUpdateFolderName, env) {
     def jsonSlurper = new JsonSlurper()
     
-    def updateFileName = wumUpdateFileNameList.find { item -> item.matches(row.product_name + "-" + (row.product_version).replace(".", "\\.") + "\\..*\\.zip") }
-    def childJobNameFormat = (row.product_name.replace("wso2", "WUM-")).toUpperCase() + "-" + row.product_version + "_new"
+    def updateFileName = row.product_name + "-" + row.product_version + ".zip"
+    def childJobNameFormat = (row.product_name.replace("wso2", "WUM-")).toUpperCase() + "-" + row.product_version
     def childJobName =  wumReleaseJobNamesList.find { item -> item.matches(childJobNameFormat) }
     
     if(updateFileName != null) {
@@ -108,24 +142,48 @@ def void populateJsonData(row, updateListJson, addUpdateDBDetailsOnly, updateLis
     }
 }
 
-// This prints stack trace to the Jenkins job console log but not to the Jenkins server logs
-def void printStackTrace(e) {
-    def sw = new StringWriter()
-    def pw = new PrintWriter(sw)
-    e.printStackTrace(pw)
-    print sw.toString()
-}
-
 // Script run starts from here
 def dbConnection = null
 
 try{
     
     // Date manipulation for query string
-    def dateFromat = "YYYY-MM-dd"
+    def dateFromat = "YYYY-MM-dd HH:mm:ss.SSS"
     def now = new Date()
-    def todayDate = now.format(dateFromat)
-    def yesterdayDate = now.minus(1).format(dateFromat)
+    
+    Calendar buildTime2PMYesterdayCalendar = Calendar.getInstance(TimeZone.getTimeZone("IST"));
+    def yesterdayDate = now.minus(1)
+    buildTime2PMYesterdayCalendar.setTime(yesterdayDate);
+    buildTime2PMYesterdayCalendar.set(Calendar.HOUR_OF_DAY, 14);
+    buildTime2PMYesterdayCalendar.set(Calendar.MINUTE, 0);
+    buildTime2PMYesterdayCalendar.set(Calendar.SECOND, 0);
+    buildTime2PMYesterdayCalendar.set(Calendar.MILLISECOND, 0);
+    def buildTime2PMYesterdayDate = buildTime2PMYesterdayCalendar.getTime()
+    
+    Calendar buildTimeMidNightCalendar = Calendar.getInstance(TimeZone.getTimeZone("IST"));
+    buildTimeMidNightCalendar.setTime(now);
+    buildTimeMidNightCalendar.set(Calendar.HOUR_OF_DAY, 0);
+    buildTimeMidNightCalendar.set(Calendar.MINUTE, 0);
+    buildTimeMidNightCalendar.set(Calendar.SECOND, 0);
+    buildTimeMidNightCalendar.set(Calendar.MILLISECOND, 0);
+    def buildTimeMidNightDate = buildTimeMidNightCalendar.getTime()
+    
+    Calendar buildTime2PMCalendar = Calendar.getInstance(TimeZone.getTimeZone("IST"));
+    buildTime2PMCalendar.setTime(now);
+    buildTime2PMCalendar.set(Calendar.HOUR_OF_DAY, 14);
+    buildTime2PMCalendar.set(Calendar.MINUTE, 0);
+    buildTime2PMCalendar.set(Calendar.SECOND, 0);
+    buildTime2PMCalendar.set(Calendar.MILLISECOND, 0);
+    def buildTime2PMDate = buildTime2PMCalendar.getTime()
+
+    Calendar buildTimeEODCalendar = Calendar.getInstance(TimeZone.getTimeZone("IST"));
+    def tomorrowDate = now.plus(1)
+    buildTimeEODCalendar.setTime(tomorrowDate);
+    buildTimeEODCalendar.set(Calendar.HOUR_OF_DAY, 0);
+    buildTimeEODCalendar.set(Calendar.MINUTE, 0);
+    buildTimeEODCalendar.set(Calendar.SECOND, 0);
+    buildTimeEODCalendar.set(Calendar.MILLISECOND, 0);
+    def buildTimeEODDate = buildTimeEODCalendar.getTime()
     
     // Get environment variables
     def build = this.getProperty('binding').getVariable('build')
@@ -143,13 +201,23 @@ try{
     println "=============Running Groovy shell commands start==============="
     
     // find . -name \\wso2*-[0-9]*\\.[0-9]*\\.[0-9]*\\.?*\\.zip -type f -delete - find wso2 timestamp updates in products and delete recursively
-    def wumUpdateFileNameList = []
     def wumProdBaseLoc = "/home/ubuntu/.wum-wso2/products/"
     def wumPackLoc = "/build/jenkins-home/workspace/wumInstall/wum"
-    def shellRunStatus = runShellCommands(env, wumProdBaseLoc, 
-        "mkdir -p " + env.WORKSPACE + "/" + wsUpdateFolderName + "/" +
-        " && find " + wumProdBaseLoc + " -name \\wso2*-[0-9]*\\.[0-9]*\\.[0-9]*\\.?*\\.zip -type f -delete" +
-        " && " + wumPackLoc + "/bin/wum update", wumUpdateFileNameList, wsUpdateFolderName)
+    
+    def shellCommand = "mkdir -p " + env.WORKSPACE + "/" + wsUpdateFolderName + "/" +
+                                          " && find " + wumProdBaseLoc + " -name \\wso2*-[0-9]*\\.[0-9]*\\.[0-9]*\\.?*\\.zip -type f -delete"
+    
+    // Restricting for the given product-version list
+    if(!(env.PRODUCTS.equals("*"))) {
+        def givenProductList = env.PRODUCTS.tokenize(',')
+        for(def givenProduct in givenProductList) {
+            shellCommand +=  " && " + wumPackLoc + "/bin/wum update " + givenProduct
+        }
+    } else {
+        shellCommand +=  " && " + wumPackLoc + "/bin/wum update"
+    }
+    
+    def shellRunStatus = runShellCommands(env, wumProdBaseLoc, shellCommand, wsUpdateFolderName)
     
     if(shellRunStatus) {
         println "WUM related shell commands ran successful"
@@ -161,15 +229,39 @@ try{
     
     dbConnection = Sql.newInstance("jdbc:mysql://"+  env.UAT_DB_HOST +":" + env.UAT_DB_PORT + "/updatesdb_wso2umuat", env.UAT_DB_USER, env.UAT_DB_PASS, "com.mysql.cj.jdbc.Driver")
     
-    // SL MIDNIGHT BUILD - from yesterday 14:00 (2PM) to today 00:00 (12AM or midnight)
-    def sql = "SELECT id, update_no, timestamp, filename, product_name, product_version, lifecycle_state FROM updates WHERE timestamp BETWEEN ROUND(UNIX_TIMESTAMP(\"" + 
-                yesterdayDate + " 08:30:00.000\") * 1000) AND ROUND(UNIX_TIMESTAMP(\"" + yesterdayDate + " 18:30:00.000\") * 1000)"
+    def sql = ""
     
-    if(env.BUILD_TIME == "14:00") {
+    if(env.BUILD_TIME.equals("14:00")) {
+        
         // SL 2PM BUILD - from today 00:00 (12AM or midnight) to today 14:00 (2PM)
         sql = "SELECT id, update_no, timestamp, filename, product_name, product_version, lifecycle_state FROM updates WHERE timestamp BETWEEN ROUND(UNIX_TIMESTAMP(\"" + 
-                yesterdayDate + " 18:30:00.000\") * 1000) AND ROUND(UNIX_TIMESTAMP(\"" + todayDate + " 08:30:00.000\") * 1000)"
-    }
+                buildTimeMidNightDate.format(dateFromat, , TimeZone.getTimeZone('UTC')) + "\") * 1000) AND ROUND(UNIX_TIMESTAMP(\"" + buildTime2PMDate.format(dateFromat, , TimeZone.getTimeZone('UTC')) + "\") * 1000)"
+    
+    } else if(env.BUILD_TIME.equals("00:00")) {
+        
+        // SL MIDNIGHT BUILD - from yesterday 14:00 (2PM) to today 00:00 (12AM or midnight)
+        sql = "SELECT id, update_no, timestamp, filename, product_name, product_version, lifecycle_state FROM updates WHERE timestamp BETWEEN ROUND(UNIX_TIMESTAMP(\"" + 
+                buildTime2PMYesterdayDate.format(dateFromat, , TimeZone.getTimeZone('UTC')) + "\") * 1000) AND ROUND(UNIX_TIMESTAMP(\"" + buildTimeMidNightDate.format(dateFromat, TimeZone.getTimeZone('UTC')) + "\") * 1000)"
+        
+    } else if(env.BUILD_TIME.equals("*")) {
+        
+        if(now.after(buildTimeMidNightDate)) {
+            
+            if(now.before(buildTime2PMDate)) {
+                
+                // SL TIME MANUAL BUILD - from today 00:00 (12AM or midnight) to now
+                sql = "SELECT id, update_no, timestamp, filename, product_name, product_version, lifecycle_state FROM updates WHERE timestamp BETWEEN ROUND(UNIX_TIMESTAMP(\"" + 
+                buildTimeMidNightDate.format(dateFromat, , TimeZone.getTimeZone('UTC')) + "\") * 1000) AND ROUND(UNIX_TIMESTAMP(\"" + now.format(dateFromat, TimeZone.getTimeZone('UTC')) + "\") * 1000)"
+                
+            } else if(now.after(buildTime2PMDate) && now.before(buildTimeEODDate)) {
+                
+                // SL TIME MANUAL BUILD - from today 14:00 (2PM) to now
+                sql = "SELECT id, update_no, timestamp, filename, product_name, product_version, lifecycle_state FROM updates WHERE timestamp BETWEEN ROUND(UNIX_TIMESTAMP(\"" + 
+                buildTime2PMDate.format(dateFromat, , TimeZone.getTimeZone('UTC')) + "\") * 1000) AND ROUND(UNIX_TIMESTAMP(\"" + now.format(dateFromat, TimeZone.getTimeZone('UTC')) + "\") * 1000)"
+                
+            }
+        }
+    } // manual build with * ends
     
     // Formulate Json to be sent to run the update ECS nodes child jobs
     def jsonSlurper = new JsonSlurper() 
@@ -186,7 +278,7 @@ try{
                                            updateListJson[updateListItemCounter].productVersion == row.product_version) {
                 
                 def updateDBDetailsSize = updateListJson[updateListItemCounter].updateDBDetails.size()
-                populateJsonData(row, updateListJson, true, updateListItemCounter, updateDBDetailsSize, wumUpdateFileNameList, wumReleaseJobNamesList, wsUpdateFolderName, env);
+                populateJsonData(row, updateListJson, true, updateListItemCounter, updateDBDetailsSize, wumReleaseJobNamesList, wsUpdateFolderName, env);
                 
                 updateListItemFound = true
                 break;
@@ -194,7 +286,7 @@ try{
         }
         
         if(!updateListItemFound) {
-            populateJsonData(row, updateListJson, false, updateListJsonInitialSize, 0, wumUpdateFileNameList, wumReleaseJobNamesList, wsUpdateFolderName, env);
+            populateJsonData(row, updateListJson, false, updateListJsonInitialSize, 0, wumReleaseJobNamesList, wsUpdateFolderName, env);
         }
         
     } // sql query eachRow ends

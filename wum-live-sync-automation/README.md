@@ -24,12 +24,13 @@ Here, Jenkins CI is explained with how to run tests against WSO2 products.
 			a. You must have all the JDKs and other installs which are done on docker image as well as on the Jenkins server node itself in the same paths.
 		3. Create uat_batch_job and get job build stage run uatBatchJob/Jenkinsfile from this location as Excute System Groovy Script
 		4. Enable Jenkins configuration for "uat_batch_job" with "Delete workspace before build starts", "This project is parameterised" and "Build periodically with parameters"
-			a. Give this project is parameterized, Name: BUILD_TIME, Default value: 00:00, Description: "Build periodically with parameters" cron build field name. Valid values 00:00 and 14:00.
+			a. Give this project is parameterized, Name: BUILD_TIME, Default value: 00:00, Description: "Build periodically with parameters" cron build field name. Valid values 00:00 and 14:00."
+			b. Give this project is parameterized, Name: PRODUCTS, Default value: *, Description: "To specify product-version list separated by commas. Default is * for all. E.g.: wso2am-2.2.0,wso2ei-6.2.0,wso2am-analytics-2.2.0"
 		5. Build periodically with parameters configuration of "uat_batch_job":
 			# 12AM daily midnight build
-			H(0-0) 0 * * * % BUILD_TIME=00:00
+			H(0-0) 0 * * * % BUILD_TIME=00:00;PRODUCTS=*
 			# 2PM daily SL work hours build
-			H(0-0) 14 * * * % BUILD_TIME=14:00
+			H(0-0) 14 * * * % BUILD_TIME=14:00;PRODUCTS=*
 		6. Create parallel_trigger_job as pipeline job and get job's pipeline script from parallelTriggerJob/Jenkinsfile from this location
 		7. Enable Jenkins configuration for "parallel_trigger_job" with "Build after other projects are built"
 			a. Give Build after other projects are built, Projects to watch: uat_batch_job, Enable "Trigger only if build is stable" as well.
@@ -42,6 +43,8 @@ Here, Jenkins CI is explained with how to run tests against WSO2 products.
 	b. Setup steps:
 		1. This will start the "uat_batch_job" at 00:00 and 14:00 SL time every day and will pick up the batch of updates submitted between previous time period.
 		2. All the relevant WSO2 product - product version will be run in an AWS ECS slave server node separately and parallel.
+		3. For manual triggering the jobs you want:
+			a. Go to uat_batch_job and specify PRODUCTS with comma separated product-version list and BUILD_TIME with *.
 	c. Post-reqisites:
 		1. Each AWS ECS slave node with WSO2 product name - version will be printed on the "parallel_trigger_job" console. Please have a look on whether they have passed correctly on each child job status. And check with necessary artifacts are uploaded to Nexus UAT.
 </pre>
