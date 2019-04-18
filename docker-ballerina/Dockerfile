@@ -117,9 +117,9 @@ chmod a+x /build/software/java/jdk-6u33-linux-x64.bin \
 && rm /build/software/java/jdk-6u33-linux-x64.bin
 
 RUN \
-wget -P /build/software/nodejs https://nodejs.org/dist/v8.8.1/node-v8.8.1-linux-x64.tar.xz \
-&& tar -xvf /build/software/nodejs/node-v8.8.1-linux-x64.tar.xz --directory /build/software/nodejs \
-&& rm /build/software/nodejs/node-v8.8.1-linux-x64.tar.xz
+wget -P /build/software/nodejs https://nodejs.org/dist/v10.15.3/node-v10.15.3-linux-x64.tar.xz \
+&& tar -xvf /build/software/nodejs/node-v10.15.3-linux-x64.tar.xz --directory /build/software/nodejs \
+&& rm /build/software/nodejs/node-v10.15.3-linux-x64.tar.xz
 
 RUN \
 export npm_config_prefix=/home/node/.npm-global
