@@ -29,6 +29,8 @@ RUN \
 apt-get update \
 && apt-get --yes --force-yes install firefox \
 && apt-get --yes --force-yes install firefox=28.0+build2-0ubuntu2 \
+# install dependency for vscode
+&& apt-get --yes --force-yes install libxss1 \
 && apt-mark hold firefox \
 && apt-get clean \
 && rm -rf /var/lib/apt/lists/*
@@ -118,8 +120,8 @@ chmod a+x /build/software/java/jdk-6u33-linux-x64.bin \
 
 RUN \
 wget -P /build/software/nodejs https://nodejs.org/dist/v10.15.3/node-v10.15.3-linux-x64.tar.xz \
-&& tar -xvf /build/software/nodejs/node-v10.15.3-linux-x64.tar.xz --directory /build/software/nodejs \
-&& rm /build/software/nodejs/node-v10.15.3-linux-x64.tar.xz
+&& tar -xvf /build/software/nodejs/node-v8.8.1-linux-x64.tar.xz --directory /build/software/nodejs \
+&& rm /build/software/nodejs/node-v8.8.1-linux-x64.tar.xz
 
 RUN \
 export npm_config_prefix=/home/node/.npm-global
