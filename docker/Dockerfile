@@ -144,6 +144,9 @@ wget -P /build/software/nodejs https://nodejs.org/dist/v8.8.1/node-v8.8.1-linux-
 RUN wget -P /build/software/go https://dl.google.com/go/go1.10.linux-amd64.tar.gz \
     && tar -xzf /build/software/go/go1.10.linux-amd64.tar.gz --directory /build/software/go && mv /build/software/go/go /build/software/go/go-1.10 && rm /build/software/go/go1.10.linux-amd64.tar.gz
 
+RUN wget -P /build/software/go https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz \
+    && tar -xzf /build/software/go/go1.12.5.linux-amd64.tar.gz --directory /build/software/go && mv /build/software/go/go /build/software/go/go-1.12.5 && rm /build/software/go/go1.12.5.linux-amd64.tar.gz
+
 RUN \
 apt-get update && apt-get -y install python-pip \
 && pip --version \
