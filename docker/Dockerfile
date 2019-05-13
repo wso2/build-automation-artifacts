@@ -159,7 +159,7 @@ apt-get install -y libxml2-dev libxslt-dev \
 && pip install beautifulsoup4 \
 && apt-get install python-lxml
 
-ENV PATH=$PATH:/build/software/nodejs/node-v8.8.1-linux-x64/bin
+ENV PATH=$PATH:/build/software/nodejs/node-v8.8.1-linux-x64/bin:/build/software/go/go-1.12.5/bin
 
 RUN \
 echo "net.ipv4.ip_local_port_range=15000 61000" >> /etc/sysctl.conf \
