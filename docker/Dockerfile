@@ -19,7 +19,7 @@
 FROM ubuntu:trusty
 
 RUN \ 
-apt-get -q update && apt-get install -y openssh-server software-properties-common git ant curl unzip xvfb dbus-x11 ttf-ancient-fonts \
+apt-get -q update && apt-get install -y openssh-server software-properties-common git ant curl zip unzip xvfb dbus-x11 ttf-ancient-fonts \
 && apt-get clean \
 && rm -rf /var/lib/apt/lists/* \
 && mkdir /var/run/sshd
