@@ -82,7 +82,8 @@ public class SQLServer {
     public String getNextRepositoryURL() throws SQLException {
 
         if (this.repositoryTableData.next()) {
-            return this.repositoryTableData.getString(sqlRepositoryColumn).replace(Constants.Git.GITHUB_URL, Constants.EMPTY_STRING);
+            return this.repositoryTableData.getString(sqlRepositoryColumn).replace(Constants.Git.GITHUB_URL,
+                    Constants.EMPTY_STRING);
         } else {
             return null;
         }

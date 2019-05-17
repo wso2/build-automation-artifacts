@@ -27,4 +27,9 @@ public class PomFileReadException extends Exception {
 
         super(message);
     }
+
+    public PomFileReadException(String message, Throwable cause) {
+
+        super(message, cause);
+    }
 }

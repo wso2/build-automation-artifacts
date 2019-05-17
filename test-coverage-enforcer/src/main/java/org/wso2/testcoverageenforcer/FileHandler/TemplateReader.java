@@ -61,7 +61,7 @@ public class TemplateReader {
                 return xmlFile.getDocumentElement();
             }
         } catch (ParserConfigurationException | IOException | SAXException e) {
-            throw new PomFileReadException(e.getMessage());
+            throw new PomFileReadException(e.getMessage(), e);
         }
     }
 }

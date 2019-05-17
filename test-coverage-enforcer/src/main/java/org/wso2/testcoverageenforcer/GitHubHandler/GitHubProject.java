@@ -116,7 +116,8 @@ public class GitHubProject {
      */
     public void gitClone() throws GitAPIException, IOException {
 
-        this.cloneFolder = new File(this.workspacePath + File.separator + this.forkedRepository.getFullName());
+        this.cloneFolder = new File(this.workspacePath + File.separator +
+                this.forkedRepository.getFullName());
         if (!cloneFolder.exists()) {
             boolean mkdirStatus = cloneFolder.mkdir();
             if (!mkdirStatus) throw new IOException();
@@ -155,7 +156,8 @@ public class GitHubProject {
     public void gitPush() throws GitAPIException, IOException {
 
         this.clonedRepository.push()
-                .setCredentialsProvider(new UsernamePasswordCredentialsProvider(this.OAuthToken, Constants.Git.OAUTH_PASSWORD))
+                .setCredentialsProvider(new UsernamePasswordCredentialsProvider(
+                        this.OAuthToken, Constants.Git.OAUTH_PASSWORD))
                 .call();
         FileUtils.deleteDirectory(cloneFolder);
     }
@@ -168,7 +170,8 @@ public class GitHubProject {
     public void gitPullRequest() throws IOException {
 
         Path tempFile = Files.createTempFile("pr_message_temp", ".txt");
-        try (InputStream stream = TemplateReader.class.getClassLoader().getResourceAsStream(Constants.Git.GIT_PR_BODY)) {
+        try (InputStream stream = TemplateReader.class.getClassLoader().getResourceAsStream(
+                Constants.Git.GIT_PR_BODY)) {
             Files.copy(stream, tempFile, StandardCopyOption.REPLACE_EXISTING);
         }
         byte[] encoded = Files.readAllBytes(tempFile);
@@ -219,7 +222,8 @@ public class GitHubProject {
             Calendar commitTime = Calendar.getInstance();
             commitTime.setTime(commit.getCommitDate());
             int yearDifference = currentTime.get(Calendar.YEAR) - commitTime.get(Calendar.YEAR);
-            int monthsDifference = yearDifference * 12 + currentTime.get(Calendar.MONTH) - commitTime.get(Calendar.MONTH);
+            int monthsDifference =
+                    yearDifference * 12 + currentTime.get(Calendar.MONTH) - commitTime.get(Calendar.MONTH);
             if (monthsDifference < timePeriodOfInterest) {
                 recentCommitCount++;
             }
@@ -248,7 +252,8 @@ public class GitHubProject {
             Calendar commitTime = Calendar.getInstance();
             commitTime.setTime(commit.getCommitDate());
             int yearDifference = currentTime.get(Calendar.YEAR) - commitTime.get(Calendar.YEAR);
-            int monthsDifference = yearDifference * 12 + currentTime.get(Calendar.MONTH) - commitTime.get(Calendar.MONTH);
+            int monthsDifference =
+                    yearDifference * 12 + currentTime.get(Calendar.MONTH) - commitTime.get(Calendar.MONTH);
             return monthsDifference < timePeriodOfInterest;
         }
         return false;

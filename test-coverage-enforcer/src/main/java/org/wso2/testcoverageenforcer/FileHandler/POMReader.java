@@ -52,7 +52,7 @@ public class POMReader {
             model.setPomFile(pomFile);
             return model;
         } catch (IOException | XmlPullParserException e) {
-            throw new PomFileReadException(e.getMessage());
+            throw new PomFileReadException(e.getMessage(), e);
         }
     }
 }
