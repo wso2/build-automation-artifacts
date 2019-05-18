@@ -52,16 +52,17 @@ public class Application {
 
         Option cliHelp = new Option("h", "help", false, "Get help with usage");
         Option repositoryName = new Option("r", "repository", true,
-                "GitHub repository name to add coverage check(Format: 'username/repositoryName'). If urls are" +
-                        " received from an external server, this option is ignored");
+                "GitHub repository name to add coverage check(Format: 'username/repositoryName'). " +
+                        "If urls are received from an external server, this option is ignored");
         Option workspacePath = new Option("w", "workspacePath", true,
                 "Folder to temporally clone the repository during the procedure");
         Option thresholdValue = new Option("t", "threshold", true,
-                "Line coverage threshold to break the build(float value between 0 and 1). If this parameter" +
-                        " is not available then the tool will build the project to calculate line coverage and " +
-                        "existing line coverage percentage will be used as the coverage threshold");
+                "Line coverage threshold to break the build(float value between 0 and 1). " +
+                        "If this parameter is not available then the tool will build the project to calculate line " +
+                        "coverage and existing line coverage percentage will be used as the coverage threshold");
         Option element = new Option("e", "element", true,
-                "Per which element this coverage check should be performed(BUNDLE, PACKAGE, CLASS, SOURCEFILE or METHOD)");
+                "Per which element this coverage check should be performed(BUNDLE, PACKAGE, CLASS, " +
+                        "SOURCEFILE or METHOD)");
         Option pullRequest = new Option("p", "pullRequest", true,
                 "Make a pull request once changes are done(boolean value: true or false)");
         Option propertiesFile = new Option("prop", "properties", true,
@@ -86,12 +87,13 @@ public class Application {
             boolean pullRequestStatus = true;
 
             if (cmd.hasOption("h")) {
-                help.printHelp("java -jar test-coverage-enforcer-1.0-SNAPSHOT.jar", options, true);
+                help.printHelp("java -jar test-coverage-enforcer-1.0-SNAPSHOT.jar", options,
+                        true);
                 System.exit(0);
             }
             /*
-            If the threshold value and coverage per element value is not present, automatic calculation of threshold value will take place.
-            In this case coverage per element would be set to BUNDLE.
+            If the threshold value and coverage per element value is not present, automatic calculation of threshold
+            value will take place. In this case coverage per element would be set to BUNDLE.
              */
             if (!(cmd.hasOption("t"))) {
                 automaticCoverageThresholdStatus = true;
@@ -107,8 +109,8 @@ public class Application {
                 pullRequestStatus = Boolean.parseBoolean(cmd.getOptionValue("p"));
             }
             /*
-            If a repository url is given, apply coverage check for that repository. Otherwise request to an external mysql server
-            to read repositories from a sql table and apply coverage check in each of them
+            If a repository url is given, apply coverage check for that repository. Otherwise request to an external
+            mysql server to read repositories from a sql table and apply coverage check in each of them
              */
             if (!cmd.hasOption("r")) {
                 log.info("---Read repositories from an external mysql server---");
@@ -123,10 +125,13 @@ public class Application {
                         try {
                             log.info("Enforcing coverage on " + gitHubRepository);
                             CoverageCheckEnforcer checkEnforcer = new CoverageCheckEnforcer
-                                    .CoverageCheckEnforcerBuilder(gitHubRepository, cmd.getOptionValue("properties"), cmd.getOptionValue("workspacePath"))
+                                    .CoverageCheckEnforcerBuilder(gitHubRepository, cmd.getOptionValue("properties"),
+                                    cmd.getOptionValue("workspacePath"))
                                     .withPullRequest(pullRequestStatus)
-                                    .withCoveragePerElement(automaticCoverageThresholdStatus ? null : cmd.getOptionValue("element"))
-                                    .withCoverageThreshold(automaticCoverageThresholdStatus ? null : cmd.getOptionValue("threshold"))
+                                    .withCoveragePerElement(
+                                            automaticCoverageThresholdStatus ? null : cmd.getOptionValue("element"))
+                                    .withCoverageThreshold(
+                                            automaticCoverageThresholdStatus ? null : cmd.getOptionValue("threshold"))
                                     .withAutomaticCoverageThreshold(automaticCoverageThresholdStatus)
                                     .build();
                             checkEnforcer.createPullRequestWithCoverageCheck();
@@ -134,7 +139,8 @@ public class Application {
                         } catch (GitAPIException e) {
                             log.warn("Error while performing git operations. Skipping job", e);
                         } catch (IOException e) {
-                            log.warn("Error occurred possibly due to a GitHub operation or local file IO. Skipping Job", e);
+                            log.warn("Error occurred possibly due to a GitHub operation or local file IO. " +
+                                    "Skipping Job", e);
                         }
                     }
                 } finally {
@@ -144,17 +150,21 @@ public class Application {
             } else {
                 log.info("---Enforcing coverage on " + cmd.getOptionValue("repository") + "---");
                 CoverageCheckEnforcer checkEnforcer = new CoverageCheckEnforcer
-                        .CoverageCheckEnforcerBuilder(cmd.getOptionValue("repository"), cmd.getOptionValue("properties"), cmd.getOptionValue("workspacePath"))
+                        .CoverageCheckEnforcerBuilder(cmd.getOptionValue("repository"),
+                        cmd.getOptionValue("properties"), cmd.getOptionValue("workspacePath"))
                         .withPullRequest(pullRequestStatus)
-                        .withCoveragePerElement(automaticCoverageThresholdStatus ? null : cmd.getOptionValue("element"))
-                        .withCoverageThreshold(automaticCoverageThresholdStatus ? null : cmd.getOptionValue("threshold"))
+                        .withCoveragePerElement(
+                                automaticCoverageThresholdStatus ? null : cmd.getOptionValue("element"))
+                        .withCoverageThreshold(
+                                automaticCoverageThresholdStatus ? null : cmd.getOptionValue("threshold"))
                         .withAutomaticCoverageThreshold(automaticCoverageThresholdStatus)
                         .build();
                 checkEnforcer.createPullRequestWithCoverageCheck();
             }
         } catch (MissingOptionException e) {
             log.error(e);
-            help.printHelp("java -jar test-coverage-enforcer-1.0-SNAPSHOT.jar", options, true);
+            help.printHelp("java -jar test-coverage-enforcer-1.0-SNAPSHOT.jar", options,
+                    true);
         } catch (ParseException e) {
             log.error("Arguments parsing error: " + e.getMessage(), e);
         } catch (IOException e) {

@@ -94,19 +94,22 @@ public class ParentPom extends MavenPom {
      * @throws PomFileReadException  Error while reading the pom
      * @throws PomFileWriteException Error while writing the pom file
      */
-    public boolean inheritCoverageCheckInChildren(List<ChildPom> children, String coveragePerElement, String coverageThreshold,
-                                                  String surefireArgumentLine, String jacocoReportPath)
+    public boolean inheritCoverageCheckInChildren(List<ChildPom> children, String coveragePerElement,
+                                                  String coverageThreshold,String surefireArgumentLine,
+                                                  String jacocoReportPath)
             throws PomFileReadException, PomFileWriteException {
 
         boolean checkRuleAddition = false; // Jacoco coverage check rule added at least in any child
         for (ChildPom child : children) {
             if (child.hasChildren()) {
-                boolean ruleAdded = inheritCoverageCheckInChildren(child.getChildren(), coveragePerElement, coverageThreshold, surefireArgumentLine, jacocoReportPath);
+                boolean ruleAdded = inheritCoverageCheckInChildren(child.getChildren(), coveragePerElement,
+                        coverageThreshold, surefireArgumentLine, jacocoReportPath);
                 checkRuleAddition = checkRuleAddition || ruleAdded;
             } else if (child.hasTests()) {
-                child.inheritCoverageCheckFromParent(coveragePerElement, coverageThreshold, surefireArgumentLine, jacocoReportPath);
+                child.inheritCoverageCheckFromParent(coveragePerElement, coverageThreshold, surefireArgumentLine,
+                        jacocoReportPath);
                 checkRuleAddition = true;
-            } else if (!child.hasTests()) {
+            } else if (log.isDebugEnabled() && !child.hasTests()) {
                 log.debug("Ignoring child module due to missing tests in " + child.getPomFilePath());
             }
 
@@ -121,8 +124,7 @@ public class ParentPom extends MavenPom {
      * @throws IOException          Error in opening files
      * @throws PomFileReadException Error while reading the pom
      */
-    public double getMinimumBundleCoverage(List<ChildPom> children)
-            throws PomFileReadException, IOException {
+    public double getMinimumBundleCoverage(List<ChildPom> children) throws PomFileReadException, IOException {
 
         double minimumCoverage = 1;
         for (ChildPom child : children) {
@@ -130,7 +132,8 @@ public class ParentPom extends MavenPom {
                 getMinimumBundleCoverage(child.getChildren());
             } else if (child.hasTests()) {
                 double bundleCoverage = child.getBundleCoverage();
-                log.info("Line coverage per bundle is " + Double.toString(bundleCoverage) + " for " + child.getPomFilePath());
+                log.info("Line coverage per bundle is " + Double.toString(bundleCoverage) + " for "
+                        + child.getPomFilePath());
                 //add log for calculated coverages
                 if (bundleCoverage < minimumCoverage) {
                     minimumCoverage = bundleCoverage;

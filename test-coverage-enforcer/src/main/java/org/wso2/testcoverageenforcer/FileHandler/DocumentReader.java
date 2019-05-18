@@ -50,7 +50,7 @@ public class DocumentReader {
                 return db.parse(documentStream);
             }
         } catch (ParserConfigurationException | IOException | SAXException e) {
-            throw new PomFileReadException(e.getMessage());
+            throw new PomFileReadException(e.getMessage(), e);
         }
     }
 }

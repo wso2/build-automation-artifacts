@@ -27,4 +27,9 @@ public class PomFileWriteException extends Exception {
 
         super(message);
     }
+
+    public PomFileWriteException(String message, Throwable cause) {
+
+        super(message, cause);
+    }
 }

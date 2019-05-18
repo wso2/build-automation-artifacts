@@ -54,8 +54,10 @@ public class CoverageReportReader {
      */
     public CoverageReportReader(final File projectBuildDirectory) throws IOException {
 
-        this.title = new File(projectBuildDirectory.getPath().replace(Constants.Build.BUILD_TARGET_FOLDER, Constants.EMPTY_STRING)).getName();
-        Iterator<File> executionFiles = FileUtils.iterateFiles(projectBuildDirectory, new String[]{Constants.Build.BUILD_EXECUTION_FILE}, true);
+        this.title = new File(projectBuildDirectory.getPath().replace(Constants.Build.BUILD_TARGET_FOLDER,
+                Constants.EMPTY_STRING)).getName();
+        Iterator<File> executionFiles = FileUtils.iterateFiles(projectBuildDirectory,
+                new String[]{Constants.Build.BUILD_EXECUTION_FILE}, true);
         if (!(executionFiles.hasNext())) {
             log.error("Jacoco execution file missing in " + projectBuildDirectory);
             throw new FileNotFoundException();
@@ -67,7 +69,8 @@ public class CoverageReportReader {
 
     public static void main(String[] args) throws Exception {
 
-        CoverageReportReader reader = new CoverageReportReader(new File("/home/tharindu/Jenkins_Test/Wso2_repos/siddhi-store-hazelcast/component/target"));
+        CoverageReportReader reader = new CoverageReportReader(
+                new File("/home/tharindu/Jenkins_Test/Wso2_repos/siddhi-store-hazelcast/component/target"));
         System.out.println(reader.getCoverageThresholdForBundle());
     }
 

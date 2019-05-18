@@ -125,11 +125,15 @@ public class CoverageCheckEnforcer {
         if (buildAnalysisWithCoverageCheck.get(Constants.UNIT_TESTS_AVAILABLE) == (Constants.Status.STATUS_FALSE)) {
             log.warn("Skipping project due to unavailability of unit tests");
             return false;
-        } else if (buildAnalysisWithCoverageCheck.get(Constants.Build.BUILD_LOG_BUILD_SUCCESS) == (Constants.Status.STATUS_FALSE)) {
-            log.error("Build failed with coverage check. Possibly an already failing build or coverage check configuration error");
+        } else if (buildAnalysisWithCoverageCheck.get(
+                Constants.Build.BUILD_LOG_BUILD_SUCCESS) == (Constants.Status.STATUS_FALSE)) {
+            log.error("Build failed with coverage check. Possibly an already failing build or coverage check " +
+                    "configuration error");
             return false;
-        } else if (buildAnalysisWithCoverageCheck.get(Constants.Build.BUILD_LOG_COVERAGE_CHECK_SUCCESS) == (Constants.Status.STATUS_FALSE)) {
-            log.warn("Coverage check integration failed in the build even though the build succeeded. Maybe this project does not have any unit tests");
+        } else if (buildAnalysisWithCoverageCheck.get(
+                Constants.Build.BUILD_LOG_COVERAGE_CHECK_SUCCESS) == (Constants.Status.STATUS_FALSE)) {
+            log.warn("Coverage check integration failed in the build even though the build succeeded. Maybe this " +
+                    "project does not have any unit tests");
             return false;
         }
 
@@ -141,11 +145,14 @@ public class CoverageCheckEnforcer {
         String coverageThreshold = this.coverageThreshold;
         if (automaticCoverageThreshold) {
             coveragePerElement = Constants.COVERAGE_PER_ELEMENT;
-            float coverageThresholdValue = buildAnalysisWithCoverageCheck.get(Constants.Build.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE).floatValue();
-            coverageThreshold = String.format(Locale.US, "%.2f", (Math.floor(coverageThresholdValue * 100) / 100));
+            float coverageThresholdValue = buildAnalysisWithCoverageCheck.get(
+                    Constants.Build.BUILD_OUTPUT_MINIMUM_AVAILABLE_COVERAGE).floatValue();
+            coverageThreshold = String.format(Locale.US, "%.2f",
+                    (Math.floor(coverageThresholdValue * 100) / 100));
         }
 
-        log.info("-Applying coverage rule with " + coverageThreshold + " threshold " + "per " + coveragePerElement + "..");
+        log.info("-Applying coverage rule with " + coverageThreshold + " threshold per " +
+                coveragePerElement + "..");
         FeatureAdder.integrateJacocoCoverageCheck(
                 repo.getClonedPath(),
                 coveragePerElement,

@@ -123,10 +123,12 @@ abstract class MavenPom {
         }
         for (String eachChildPomPath : modules) {
             if (eachChildPomPath.contains(Constants.Child.CHILD_NAME_TESTS_INTEGRATION)) {
-                log.info("Skipping " + this.pomFilePath.replace(Constants.POM_NAME, "") + eachChildPomPath + ". Integration test module");
+                log.info("Skipping " + this.pomFilePath.replace(Constants.POM_NAME, "") + eachChildPomPath
+                        + ". Integration test module");
                 continue;    //Neglect the module 'tests-integration'
             } else if (eachChildPomPath.contains(Constants.Child.CHILD_NAME_OSGI)) {
-                log.info("Skipping " + this.pomFilePath.replace(Constants.POM_NAME, "") + eachChildPomPath + ". OSGI test module");
+                log.info("Skipping " + this.pomFilePath.replace(Constants.POM_NAME, "") + eachChildPomPath
+                        + ". OSGI test module");
                 continue;
             }
             childPomList.add(new ChildPom(this.pomFilePath.replace(Constants.POM_NAME,
@@ -142,8 +144,8 @@ abstract class MavenPom {
      */
     public Boolean hasTests() {
 
-        File testFolder = new File(this.pomFilePath.replace(Constants.POM_NAME,
-                "") + Constants.TEST_FOLDER);
+        File testFolder = new File(this.pomFilePath.replace(Constants.POM_NAME, "")
+                + Constants.TEST_FOLDER);
         return testFolder.exists();
     }
 
@@ -161,7 +163,8 @@ abstract class MavenPom {
      * @throws PomFileReadException  Error while reading the pom
      * @throws PomFileWriteException Error while writing the pom file
      */
-    public HashMap<String, Object> enforceCoverageCheckUnderBuildPlugins(String coveragePerElement, String coverageThreshold)
+    public HashMap<String, Object> enforceCoverageCheckUnderBuildPlugins(String coveragePerElement,
+                                                                         String coverageThreshold)
             throws PomFileReadException, PomFileWriteException {
 
         Document pomFile = DocumentReader.readDocument(pomFilePath);

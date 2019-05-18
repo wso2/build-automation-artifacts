@@ -64,7 +64,8 @@ public class Constants {
 
     public static class Build {
 
-        public static final String BUILD_LOG_JACOCO_COVERAGE_CHECK_SUCCESS_MESSAGE = "All coverage checks have been met";
+        public static final String BUILD_LOG_JACOCO_COVERAGE_CHECK_SUCCESS_MESSAGE =
+                "All coverage checks have been met";
         public static final String BUILD_TARGET_FOLDER = File.separator + "target";
         public static final String BUILD_CLASSES_FOLDER = "classes";
         public static final String BUILD_EXECUTION_FILE = "exec";
@@ -124,7 +125,8 @@ public class Constants {
         public static final String JACOCO_GOAL_REPORT = "report";
         public static final String JACOCO_TAG_COVERAGE_CHECK_VALUE = "minimum";
         public static final String JACOCO_TAG_COVERAGE_PER_ELEMENT = "element";
-        public static final String[] JACOCO_POM_PATH_MINIMUM = {"configuration", "rules", "rule", "limits", "limit", "minimum"};
+        public static final String[] JACOCO_POM_PATH_MINIMUM =
+                {"configuration", "rules", "rule", "limits", "limit", "minimum"};
         public static final String[] JACOCO_POM_PATH_ELEMENT = {"configuration", "rules", "rule", "element"};
         public static final String[] JACOCO_POM_PATH_DATA_FILE = {"configuration", "dataFile"};
         public static final String JACOCO_TAG_REPORT_READ = "dataFile";

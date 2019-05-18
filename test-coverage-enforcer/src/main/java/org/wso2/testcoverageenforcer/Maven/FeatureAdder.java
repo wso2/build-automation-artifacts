@@ -67,8 +67,11 @@ public class FeatureAdder {
 
         boolean checkRuleAddition = false;      // Coverage check rule added somewhere in the project
         if (parent.hasChildren()) {
-            log.debug("Child modules are available. Analysing <PluginManagement> node");
-            HashMap<String, Object> results = parent.enforceCoverageCheckUnderPluginManagement(coveragePerElement, coverageThreshold);
+            if (log.isDebugEnabled()) {
+                log.debug("Child modules are available. Analysing <PluginManagement> node");
+            }
+            HashMap<String, Object> results = parent.enforceCoverageCheckUnderPluginManagement(coveragePerElement,
+                    coverageThreshold);
             String surefireArgumentLine = (String) results.get(Constants.Surefire.SUREFIRE_ARGLINE_IN_THE_POM);
             String jacocoReportPath = (String) results.get(Constants.Jacoco.JACOCO_REPORT_PATH_IN_THE_POM);
             checkRuleAddition = parent.inheritCoverageCheckInChildren(
@@ -78,10 +81,12 @@ public class FeatureAdder {
                     surefireArgumentLine,
                     jacocoReportPath);
         } else if (parent.hasTests()) {
-            log.debug("Tests are available in parent. Analysing <buildPlugin> node");
+            if (log.isDebugEnabled()) {
+                log.debug("Tests are available in parent. Analysing <buildPlugin> node");
+            }
             parent.enforceCoverageCheckUnderBuildPlugins(coveragePerElement, coverageThreshold);
             checkRuleAddition = true;
-        } else if (!parent.hasTests()) {
+        } else if (log.isDebugEnabled() && !parent.hasTests()) {
             log.debug("Tests are not available in parent. Skipping coverage addition ");
         }
         return checkRuleAddition;
@@ -97,7 +102,8 @@ public class FeatureAdder {
             throws InterruptedException, PomFileReadException, PomFileWriteException, IOException {
 
         // Apply Jacoco check rule with zero threshold
-        boolean unitTestsAvailable = integrateJacocoCoverageCheck(projectPath, Constants.COVERAGE_PER_ELEMENT, Constants.ZERO);
+        boolean unitTestsAvailable = integrateJacocoCoverageCheck(projectPath, Constants.COVERAGE_PER_ELEMENT,
+                Constants.ZERO);
         HashMap<String, Float> output = new HashMap<>();
         if (!unitTestsAvailable) {
             output.put(Constants.UNIT_TESTS_AVAILABLE, Constants.Status.STATUS_FALSE);
@@ -115,7 +121,8 @@ public class FeatureAdder {
      * @throws IOException          IO errors occurring during the build
      * @throws InterruptedException Current thread interrupted by another thread while waiting
      */
-    public static void buildProject(String projectPath, boolean getBuildOutput) throws IOException, InterruptedException {
+    public static void buildProject(String projectPath, boolean getBuildOutput)
+            throws IOException, InterruptedException {
 
         ProcessBuilder projectBuilder = getProjectBuilder(projectPath);
         projectBuilder.inheritIO();
@@ -178,13 +185,16 @@ public class FeatureAdder {
         BufferedReader logBuffer = new BufferedReader(new FileReader(buildLog));
         String buildLine;
         while (((buildLine = logBuffer.readLine()) != null)) {
-            if (buildLine != null && buildLine.contains(Constants.Build.BUILD_LOG_JACOCO_COVERAGE_CHECK_SUCCESS_MESSAGE)) {
+            if (buildLine != null && buildLine.contains(
+                    Constants.Build.BUILD_LOG_JACOCO_COVERAGE_CHECK_SUCCESS_MESSAGE)) {
                 analysisLog.put(Constants.Build.BUILD_LOG_COVERAGE_CHECK_SUCCESS, Constants.Status.STATUS_TRUE);
             }
             if (buildLine != null && buildLine.contains(Constants.Build.BUILD_LOG_BUILD_SUCCESS_MESSAGE)) {
                 analysisLog.put(Constants.Build.BUILD_LOG_BUILD_SUCCESS, Constants.Status.STATUS_TRUE);
             }
-            log.debug(buildLine);
+            if (log.isDebugEnabled()) {
+                log.debug(buildLine);
+            }
         }
     }
 

@@ -59,7 +59,8 @@ public class ChildPom extends MavenPom {
      * @throws PomFileReadException  Error while reading child pom
      * @throws PomFileWriteException Error while writing child pom file
      */
-    public void inheritCoverageCheckFromParent(String coveragePerElement, String coverageThreshold, String surefireArgumentLine, String jacocoReportPath)
+    public void inheritCoverageCheckFromParent(String coveragePerElement, String coverageThreshold,
+                                               String surefireArgumentLine, String jacocoReportPath)
             throws PomFileReadException, PomFileWriteException {
 
         Document pomFile = DocumentReader.readDocument(pomFilePath);
@@ -81,8 +82,8 @@ public class ChildPom extends MavenPom {
      */
     public double getBundleCoverage() throws IOException {
 
-        String buildFolderPath = this.pomFilePath.replace(File.separator + Constants.POM_NAME, Constants.EMPTY_STRING)
-                + Constants.Build.BUILD_TARGET_FOLDER;
+        String buildFolderPath = this.pomFilePath.replace(File.separator + Constants.POM_NAME,
+                Constants.EMPTY_STRING) + Constants.Build.BUILD_TARGET_FOLDER;
         File buildFolder = new File(buildFolderPath);
         CoverageReportReader coverageReader = new CoverageReportReader(buildFolder);
         return coverageReader.getCoverageThresholdForBundle();
