@@ -151,8 +151,8 @@ RUN \
 apt-get update && apt-get -y install python-pip \
 && pip --version \
 && apt-get -y install build-essential python-dev \
-&& pip install mkdocs && mkdocs --version \
-&& pip install mkdocs-material
+&& pip install mkdocs==0.17.4 && mkdocs --version \
+&& pip install mkdocs-material==2.9.2
 
 RUN \
 apt-get install -y libxml2-dev libxslt-dev \
