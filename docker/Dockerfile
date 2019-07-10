@@ -148,13 +148,15 @@ RUN wget -P /build/software/go https://dl.google.com/go/go1.12.5.linux-amd64.tar
     && tar -xzf /build/software/go/go1.12.5.linux-amd64.tar.gz --directory /build/software/go && mv /build/software/go/go /build/software/go/go-1.12.5 && rm /build/software/go/go1.12.5.linux-amd64.tar.gz
 
 RUN \
-apt-get update && apt-get -y install python-pip \
-&& pip --version \
-&& apt-get -y install build-essential python-dev \
-&& pip install mkdocs==0.17.4 && mkdocs --version \
-&& pip install mkdocs-material==2.9.2
+apt-get update && apt-get -y install python-pip3 \
+&& pip3 --version \
+&& apt-get -y install build-essential python3-dev \
+&& pip3 install mkdocs==1.0.4 && mkdocs --version \
+&& pip3 install mkdocs-material==4.4.0
 
 RUN \
+apt-get -y install python-pip \
+&& pip --version \
 apt-get install -y libxml2-dev libxslt-dev \
 && pip install beautifulsoup4 \
 && apt-get install python-lxml
