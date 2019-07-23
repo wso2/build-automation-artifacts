@@ -1,3 +1,6 @@
+# Dockerfile is moved to https://github.com/wso2/build-docker
+
+
 # wso2-jenkins-slave
 
 WSO2 Jenkins docker container based builds are run on a Docker image built with this Dockerfile.
