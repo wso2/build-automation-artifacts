@@ -58,7 +58,7 @@ def FOLDER_PATH = "my-folder"
 def EXCLUDED_FOLDERS = ["iam-cloud"]
 
 // Set to false to actually apply changes; true = report only (safe default)
-def DRY_RUN = false
+def DRY_RUN = true
 
 // ============================================================
 // === HELPERS
