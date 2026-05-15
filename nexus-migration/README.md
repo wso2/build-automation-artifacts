@@ -32,7 +32,7 @@ Artifacts already sitting in Nexus staging can be promoted to Maven Central Publ
 
 ```
 Nexus Staging → (download) → Jenkins Agent → (move) → Nexus Releases
-                                   └── maven-central.sh → Maven Maven Central or Central Publisher Portal
+                                   └── maven-central.sh → Maven Central or Central Publisher Portal
 ```
 
 See [`nexus-staging-promotion/`](./nexus-staging-promotion/README.md) for the pipeline.
