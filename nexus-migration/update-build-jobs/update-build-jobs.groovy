@@ -285,44 +285,66 @@ def updateJob(job, boolean dryRun) {
     def requiredScripts = ["nexus-sh", "maven-central-sh"]
     def postSteps       = job.getPostbuilders()
 
-    // Print available constructors once for diagnostics (only when a script is missing)
+    // Helper: build a ScriptBuildStep for a given scriptId via reflection.
+    // Returns the step instance, or null and prints a warning if no suitable
+    // constructor is found.
     def printedConstructors = false
-
-    requiredScripts.eachWithIndex { scriptId, idx ->
-        def stepNum = idx + 5   // steps 5 and 6
-        def existing = postSteps.find {
-            it instanceof ScriptBuildStep && it.buildStepId == scriptId
+    def buildScriptStep = { scriptId, stepNum ->
+        def ctors = ScriptBuildStep.class.getConstructors()
+        def ctor  = ctors.find { it.parameterTypes.length == 1 && it.parameterTypes[0] == String }
+                  ?: ctors.find { it.parameterTypes.length == 2 && it.parameterTypes[0] == String }
+                  ?: ctors.find { it.parameterTypes.length > 0  && it.parameterTypes[0] == String }
+        if (ctor == null) {
+            if (!printedConstructors) {
+                println "  ⚠️  [${stepNum}] No suitable ScriptBuildStep constructor found."
+                println "       Available constructors:"
+                ctors.each { println "         ${it}" }
+                printedConstructors = true
+            }
+            return null
         }
+        def args = ctor.parameterTypes.collect { type ->
+            if (type == String)                              return scriptId
+            if (type == boolean || type == Boolean)          return false
+            if (type == List || type.isAssignableFrom(ArrayList)) return []
+            return null
+        }
+        return ctor.newInstance(args as Object[])
+    }
+
+    // --- 5 & 6a: ensure each script is present ---
+    requiredScripts.eachWithIndex { scriptId, idx ->
+        def stepNum  = idx + 5
+        def existing = postSteps.find { it instanceof ScriptBuildStep && it.buildStepId == scriptId }
         if (!existing) {
             println "  ➕ [${stepNum}] Adding post-build ScriptBuildStep id='${scriptId}'."
             if (!dryRun) {
-                // Discover the constructor that takes a single String (the script id)
-                def ctors = ScriptBuildStep.class.getConstructors()
-                def ctor  = ctors.find { it.parameterTypes.length == 1 && it.parameterTypes[0] == String }
-                          ?: ctors.find { it.parameterTypes.length == 2 && it.parameterTypes[0] == String }
-                          ?: ctors.find { it.parameterTypes.length > 0  && it.parameterTypes[0] == String }
-
-                if (ctor == null) {
-                    if (!printedConstructors) {
-                        println "  ⚠️  [${stepNum}] No suitable ScriptBuildStep constructor found."
-                        println "       Available constructors:"
-                        ctors.each { println "         ${it}" }
-                        printedConstructors = true
-                    }
-                } else {
-                    def args = ctor.parameterTypes.collect { type ->
-                        if (type == String)            return scriptId
-                        if (type == boolean || type == Boolean) return false
-                        if (type == List || type.isAssignableFrom(ArrayList)) return []
-                        return null
-                    }
-                    def step = ctor.newInstance(args as Object[])
-                    postSteps.add(step)
-                }
+                def step = buildScriptStep(scriptId, stepNum)
+                if (step) postSteps.add(step)
             }
             changed = true
         } else {
             println "  ✅ [${stepNum}] Post-build script '${scriptId}' already present."
+        }
+    }
+
+    // --- 6b: enforce order — nexus-sh must precede maven-central-sh ---
+    def nexusStep   = postSteps.find { it instanceof ScriptBuildStep && it.buildStepId == "nexus-sh" }
+    def centralStep = postSteps.find { it instanceof ScriptBuildStep && it.buildStepId == "maven-central-sh" }
+    if (nexusStep && centralStep) {
+        def nexusIdx   = postSteps.indexOf(nexusStep)
+        def centralIdx = postSteps.indexOf(centralStep)
+        if (nexusIdx > centralIdx) {
+            println "  🔀 [6b] Post-build scripts are in wrong order (maven-central-sh before nexus-sh). Reordering."
+            if (!dryRun) {
+                postSteps.remove(nexusStep)
+                postSteps.remove(centralStep)
+                postSteps.add(nexusStep)
+                postSteps.add(centralStep)
+            }
+            changed = true
+        } else {
+            println "  ✅ [6b] Post-build script order is correct (nexus-sh before maven-central-sh)."
         }
     }
 

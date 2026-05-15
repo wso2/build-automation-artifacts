@@ -50,7 +50,7 @@
 #                                      automatically before signing (e.g. bound via Jenkins
 #                                      Secret file credential). Imported once per build.
 #   CENTRAL_SERVER_ID                - Server ID in settings.xml to read Central credentials
-#                                      from (default: "central"). Used as fallback when
+#                                      from (default: "maven-central"). Used as fallback when
 #                                      CENTRAL_TOKEN_USERNAME / CENTRAL_TOKEN_PASSWORD are
 #                                      not set as environment variables.
 #   CLOSE_NEXUS_STAGE               - Must be "true" for Maven Central publishing to proceed.
@@ -274,6 +274,14 @@ BEARER_TOKEN=$(printf "%s:%s" "$CENTRAL_TOKEN_USERNAME" "$CENTRAL_TOKEN_PASSWORD
 GPG_KEY_ID=${GPG_KEY_ID:-}
 
 GROUP_ID=${M2RELEASE_GROUP_ID:-}
+if [[ -z "$GROUP_ID" ]]; then
+    log_error "M2RELEASE_GROUP_ID is not set."
+    log_error "Without a group ID the repository scan root broadens to the entire"
+    log_error ".repository directory and can pick up unrelated artifacts."
+    log_error "Set M2RELEASE_GROUP_ID to the Maven group ID of the project being published."
+    exit 1
+fi
+
 ARTIFACT_ID=${ARTIFACT_ID:-${M2RELEASE_ARTIFACT_ID:-$(grep -m1 "<artifactId>" pom.xml 2>/dev/null \
     | sed -e 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/' \
     || mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)}}
@@ -519,6 +527,8 @@ collect_all_artifacts() {
             [[ -z "$group_id" || -z "$artifact_id" || -z "$version" ]] && continue
             # Skip snapshot versions
             [[ "$version" == *"-SNAPSHOT" ]] && continue
+            # Skip versions that don't match the release version filter
+            [[ -n "$filter_version" && "$version" != "$filter_version" ]] && continue
 
             local pom_file="${target_dir}/${artifact_id}-${version}.pom"
             [[ -f "$pom_file" ]] || pom_file="$pom_xml"
@@ -693,7 +703,8 @@ upload_bundle() {
 
     log_info "Uploading bundle to Maven Central: $upload_url"
 
-    local response_file="/tmp/central_upload_response.txt"
+    local response_file
+    response_file=$(mktemp /tmp/central_upload_response.XXXXXX)
     local http_code
 
     http_code=$(curl -s \
@@ -736,7 +747,8 @@ poll_deployment_status() {
     local elapsed=0
 
     local status_url="${CENTRAL_API_URL}/api/v1/publisher/status?id=${deployment_id}"
-    local response_file="/tmp/central_status_response.txt"
+    local response_file
+    response_file=$(mktemp /tmp/central_status_response.XXXXXX)
 
     log_info "Polling deployment status for ID: $deployment_id"
     log_info "  (max wait: ${max_wait}s, interval: ${poll_interval}s)"
@@ -809,10 +821,11 @@ poll_deployment_status() {
 publish_deployment() {
     local deployment_id="$1"
     local publish_url="${CENTRAL_API_URL}/api/v1/publisher/deployment/${deployment_id}"
-    local response_file="/tmp/central_publish_response.txt"
 
     log_info "Publishing deployment: $deployment_id"
 
+    local response_file
+    response_file=$(mktemp /tmp/central_publish_response.XXXXXX)
     local http_code
     http_code=$(curl -s \
         -o "$response_file" \
@@ -840,10 +853,11 @@ publish_deployment() {
 drop_deployment() {
     local deployment_id="$1"
     local drop_url="${CENTRAL_API_URL}/api/v1/publisher/deployment/${deployment_id}"
-    local response_file="/tmp/central_drop_response.txt"
 
     log_warn "Dropping deployment: $deployment_id"
 
+    local response_file
+    response_file=$(mktemp /tmp/central_drop_response.XXXXXX)
     local http_code
     http_code=$(curl -s \
         -o "$response_file" \
