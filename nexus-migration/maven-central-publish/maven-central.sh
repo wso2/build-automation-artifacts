@@ -293,9 +293,10 @@ log_info "  Publishing type:  $CENTRAL_PUBLISHING_TYPE"
 # ---------------------------------------------------------------------------
 check_dependencies() {
     local missing=()
-    command -v gpg  >/dev/null 2>&1 || missing+=('gpg')
-    command -v zip  >/dev/null 2>&1 || missing+=('zip')
-    command -v curl >/dev/null 2>&1 || missing+=('curl')
+    command -v gpg     >/dev/null 2>&1 || missing+=('gpg')
+    command -v zip     >/dev/null 2>&1 || missing+=('zip')
+    command -v curl    >/dev/null 2>&1 || missing+=('curl')
+    command -v python3 >/dev/null 2>&1 || missing+=('python3')
     command -v md5sum  >/dev/null 2>&1 || \
         command -v md5    >/dev/null 2>&1 || missing+=('md5sum or md5')
     command -v sha1sum >/dev/null 2>&1 || \
@@ -688,8 +689,7 @@ upload_bundle() {
 
     local upload_url="${CENTRAL_API_URL}/api/v1/publisher/upload"
     upload_url+="?publishingType=${CENTRAL_PUBLISHING_TYPE}"
-    upload_url+="&name=$(printf '%s' "$deployment_name" | python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.stdin.read()))' 2>/dev/null \
-        || printf '%s' "$deployment_name" | sed 's/ /%20/g; s/:/%3A/g')"
+    upload_url+="&name=$(printf '%s' "$deployment_name" | python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.stdin.read()))')"
 
     log_info "Uploading bundle to Maven Central: $upload_url"
 

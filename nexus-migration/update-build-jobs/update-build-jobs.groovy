@@ -45,14 +45,14 @@ import org.jenkinsci.plugins.managedscripts.ScriptBuildStep
 
 // Mode: "single" to update one job, "folder" to update all
 //       Maven-Release jobs inside a Jenkins folder (by full path).
-def MODE = "single"   // "single" | "folder"
+def MODE = "folder"   // "single" | "folder"
 
 // Full job path for single-job mode  (e.g. "my-folder/my-job")
 def SINGLE_JOB_NAME = "test-jobs/maven-tester-support"
 
 // Jenkins folder path for folder mode  (e.g. "my-folder")
 // Every direct or nested child that has an M2ReleaseBuildWrapper will be updated.
-def FOLDER_PATH = "my-folder"
+def FOLDER_PATH = "test-jobs/test"
 
 // Folders whose jobs must never be touched (prefix match on full job name)
 def EXCLUDED_FOLDERS = ["iam-cloud"]
@@ -410,6 +410,8 @@ println "=" * 70
 int updatedCount = 0
 int skippedCount = 0
 
+int errorCount = 0
+
 jobsToProcess.each { job ->
     if (isExcluded(job, EXCLUDED_FOLDERS)) {
         println "\n🚫 Skipping excluded job: ${job.fullName}"
@@ -419,24 +421,33 @@ jobsToProcess.each { job ->
 
     println "\n🔍 Processing: ${job.fullName}"
 
-    def changed = updateJob(job, DRY_RUN)
+    try {
+        def changed = updateJob(job, DRY_RUN)
 
-    if (changed) {
-        if (!DRY_RUN) {
-            job.save()
-            println "  💾 Changes saved."
+        if (changed) {
+            if (!DRY_RUN) {
+                job.save()
+                println "  💾 Changes saved."
+            } else {
+                println "  📝 [DRY-RUN] Changes would be applied."
+            }
+            updatedCount++
         } else {
-            println "  📝 [DRY-RUN] Changes would be applied."
+            println "  🔸 No changes required."
+            skippedCount++
         }
-        updatedCount++
-    } else {
-        println "  🔸 No changes required."
-        skippedCount++
+    } catch (Exception e) {
+        println "  ❌ ERROR processing '${job.fullName}': ${e.getClass().simpleName}: ${e.getMessage()}"
+        e.printStackTrace()
+        errorCount++
     }
 }
 
 println "\n" + "=" * 70
-println "Summary: ${updatedCount} job(s) updated, ${skippedCount} skipped."
+println "Summary: ${updatedCount} job(s) updated, ${skippedCount} skipped, ${errorCount} error(s)."
+if (errorCount > 0) {
+    println "⚠️  ${errorCount} job(s) failed — see ❌ lines above for details."
+}
 if (DRY_RUN) {
     println "⚠️  DRY_RUN=true — no changes were written. Set DRY_RUN=false to apply."
 }

@@ -8,7 +8,8 @@ This repository contains scripts and pipelines for migrating Maven artifact publ
 |---|---|---|
 | `nexus3.sh` | [`nexus-publish/`](./nexus-publish/README.md) | Uploads Maven release artifacts to Nexus 3 as a Jenkins Managed Script post-build step |
 | `maven-central.sh` | [`maven-central-publish/`](./maven-central-publish/README.md) | Publishes Maven release artifacts to Maven Central via the Central Publisher Portal REST API |
-| `nexus-promotion.groovy` | [`nexus-staging-promotion/`](./nexus-staging-promotion/README.md) | Jenkins Declarative Pipeline to promote artifacts from Nexus staging directly to Maven Central |
+| `nexus-promotion.groovy` | [`manual-nexus-staging-promotion/`](./manual-nexus-staging-promotion/README.md) | Jenkins Declarative Pipeline to manually promote artifacts from Nexus staging directly to Maven Central (parameterised) |
+| `auto-nexus-promotion.groovy` | [`auto-nexus-staging-promotion/`](./auto-nexus-staging-promotion/README.md) | Jenkins Declarative Pipeline to automatically promote **all** staging artifacts to Maven Central on a scheduled cron (every 6 hours) |
 | `nexus-import-export.sh` | [`nexus-import-export-confs/`](./nexus-import-export-confs/README.md) | Exports and imports Nexus security configuration (content selectors, privileges, roles) between instances |
 | `update-build-jobs.groovy` | [`update-build-jobs/`](./update-build-jobs/README.md) | Jenkins Script Console script to bulk-update existing Maven Build Project jobs with the Maven Central publishing configuration |
 
@@ -35,7 +36,10 @@ Nexus Staging → (download) → Jenkins Agent → (move) → Nexus Releases
                                    └── maven-central.sh → Maven Central or Central Publisher Portal
 ```
 
-See [`nexus-staging-promotion/`](./nexus-staging-promotion/README.md) for the pipeline.
+Two pipelines are available:
+
+- **Manual** ([`manual-nexus-staging-promotion/`](./manual-nexus-staging-promotion/README.md)) — parameterised pipeline; promotes a specific `GROUP_ID` + `VERSION` (and optional `ARTIFACT_ID`) on demand.
+- **Automated** ([`auto-nexus-staging-promotion/`](./auto-nexus-staging-promotion/README.md)) — scheduled pipeline; discovers and promotes **all** components in the staging repository every 6 hours without user input.
 
 ### Nexus Instance Migration
 

@@ -169,14 +169,17 @@ esac
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --url)
+      [[ $# -ge 2 ]] || fail "--url requires a value"
       NEXUS_URL="$2"
       shift 2
       ;;
     --user)
+      [[ $# -ge 2 ]] || fail "--user requires a value"
       NEXUS_USER="$2"
       shift 2
       ;;
     --file)
+      [[ $# -ge 2 ]] || fail "--file requires a value"
       FILE="$2"
       shift 2
       ;;
@@ -267,10 +270,15 @@ trap 'rm -rf "$tmp_dir"' EXIT
 
 response_file="$tmp_dir/response.txt"
 
+CURL_CONNECT_TIMEOUT="${CURL_CONNECT_TIMEOUT:-10}"
+CURL_MAX_TIME="${CURL_MAX_TIME:-60}"
+
 api_get() {
   local url="$1"
 
   curl ${curl_args[@]+"${curl_args[@]}"} -sS -o "$response_file" -w "%{http_code}" \
+    --connect-timeout "$CURL_CONNECT_TIMEOUT" \
+    --max-time "$CURL_MAX_TIME" \
     -u "$NEXUS_USER:$NEXUS_PASS_VALUE" \
     -H "Accept: application/json" \
     "$url"
@@ -281,6 +289,8 @@ api_post() {
   local payload="$2"
 
   curl ${curl_args[@]+"${curl_args[@]}"} -sS -o "$response_file" -w "%{http_code}" \
+    --connect-timeout "$CURL_CONNECT_TIMEOUT" \
+    --max-time "$CURL_MAX_TIME" \
     -u "$NEXUS_USER:$NEXUS_PASS_VALUE" \
     -X POST \
     -H "Content-Type: application/json" \
@@ -294,6 +304,8 @@ api_put() {
   local payload="$2"
 
   curl ${curl_args[@]+"${curl_args[@]}"} -sS -o "$response_file" -w "%{http_code}" \
+    --connect-timeout "$CURL_CONNECT_TIMEOUT" \
+    --max-time "$CURL_MAX_TIME" \
     -u "$NEXUS_USER:$NEXUS_PASS_VALUE" \
     -X PUT \
     -H "Content-Type: application/json" \
@@ -306,6 +318,8 @@ api_delete() {
   local url="$1"
 
   curl ${curl_args[@]+"${curl_args[@]}"} -sS -o "$response_file" -w "%{http_code}" \
+    --connect-timeout "$CURL_CONNECT_TIMEOUT" \
+    --max-time "$CURL_MAX_TIME" \
     -u "$NEXUS_USER:$NEXUS_PASS_VALUE" \
     -X DELETE \
     -H "Accept: application/json" \
@@ -477,9 +491,23 @@ import_content_selectors() {
         log "Created content selector: $name"
         created=$((created + 1))
         ;;
-      400|409)
-        log "Content selector already exists, skipping: $name"
-        updated=$((updated + 1))
+      409)
+        log "Content selector already exists, updating: $name"
+        local encoded_name
+        encoded_name="$(urlencode "$name")"
+        local put_status
+        put_status="$(api_put "$CONTENT_SELECTORS_API/$encoded_name" "$selector")"
+        case "$put_status" in
+          200|204)
+            log "Updated content selector: $name"
+            updated=$((updated + 1))
+            ;;
+          *)
+            warn "Failed updating content selector '$name'. HTTP $put_status"
+            cat "$response_file" >&2
+            failed=$((failed + 1))
+            ;;
+        esac
         ;;
       *)
         warn "Failed creating content selector '$name'. HTTP $post_status"
@@ -579,7 +607,7 @@ import_privileges() {
           log "Created privilege: $name"
           created=$((created + 1))
           ;;
-        400|409)
+        409)
           log "Privilege already exists, skipping: $name"
           updated=$((updated + 1))
           ;;
@@ -679,7 +707,12 @@ import_roles() {
           log "Created role shell: $id"
           created=$((created + 1))
           ;;
-        400|409)
+        400)
+          warn "Invalid payload for role shell '$id'. HTTP 400"
+          cat "$response_file" >&2
+          failed=$((failed + 1))
+          ;;
+        409)
           if grep -q 'PARAMETER id' "$response_file" 2>/dev/null; then
             log "Role '$id' has corrupt id on server — deleting and recreating shell..."
             local delete_status
