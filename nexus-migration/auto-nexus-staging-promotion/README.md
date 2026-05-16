@@ -1,6 +1,6 @@
 # Automated Promotion Pipeline from Staging to Releases and Maven Central
 
-A Jenkins Declarative Pipeline that automatically promotes **all** Maven artifacts found in a Nexus 'staging' repository to Nexus 'releases and **Central Publisher Portal** on a scheduled basis (every 6 hours). The pipeline discovers, downloads, moves, and uploads everything. Thereafter the Admin then confirms publishing to **Maven Central** or drops the deployment on the Central Publisher Portal.
+A Jenkins Declarative Pipeline that automatically promotes **all** Maven artifacts found in a Nexus 'staging' repository to Nexus 'releases' and **Central Publisher Portal** on a scheduled basis (every 6 hours). The pipeline discovers, downloads, moves, and uploads everything. Thereafter the Admin then confirms publishing to **Maven Central** or drops the deployment on the Central Publisher Portal.
 
 ## Workflow
 
