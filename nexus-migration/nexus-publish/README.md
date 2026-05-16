@@ -1,6 +1,6 @@
 # Publish to Nexus 3
 
-A Bash script that uploads Maven release artifacts to a **Nexus Repository 3** instance via its REST API. It is registered as a **Jenkins Managed Script** and executed as a post-build step inside a **Maven Build Project** that uses the **M2 Release Plugin**.
+A Bash script that uploads Maven release artifacts to a **Nexus 3 Repository** instance via its REST API. It is registered as a **Jenkins Managed Script** and executed as a post-build step inside a **Maven Build Project** that uses the **M2 Release Plugin**.
 
 ## How It Works
 

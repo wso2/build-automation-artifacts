@@ -22,7 +22,7 @@
 // Workflow:
 //   1. Move artifact from Nexus staging → releases repository
 //   2. Download all artifacts from Nexus releases (Maven repo layout)
-//   3. Publish to Maven Central via maven-central.sh
+//   3. Publish to Maven Central (USER_MANAGED — admin confirms on Publisher Portal)
 //
 // Required Jenkins credentials:
 //   nexus-deployer-credentials   : Username/Password  – Nexus user with staging move rights

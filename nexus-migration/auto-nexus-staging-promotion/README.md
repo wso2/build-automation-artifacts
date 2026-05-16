@@ -1,6 +1,6 @@
 # Automated Promotion Pipeline from Staging to Releases and Maven Central
 
-A Jenkins Declarative Pipeline that automatically promotes **all** Maven artifacts found in a Nexus staging repository to **Maven Central** on a scheduled basis (every 6 hours). No user input is required — the pipeline discovers, downloads, moves, and uploads everything autonomously. A human then confirms or drops the deployment on the Central Publisher Portal.
+A Jenkins Declarative Pipeline that automatically promotes **all** Maven artifacts found in a Nexus 'staging' repository to Nexus 'releases and **Central Publisher Portal** on a scheduled basis (every 6 hours). The pipeline discovers, downloads, moves, and uploads everything. Thereafter the Admin then confirms publishing to **Maven Central** or drops the deployment on the Central Publisher Portal.
 
 ## Workflow
 
@@ -13,7 +13,7 @@ Nexus Staging  ──(discover)──▶  Jenkins Agent
                                       │
                                (maven-central.sh)
                                       │
-                               Central Publisher Portal  ──(human action)──▶  Maven Central
+                               Central Publisher Portal  ──(admin's action)──▶  Maven Central
 ```
 
 1. **Discover Staging Components** — paginates the Nexus `/v1/search` API to collect every unique `group:name:version` tuple present in the staging repository. If nothing is found the pipeline exits cleanly.
@@ -34,7 +34,7 @@ Adjust the `triggers { cron(...) }` block to change the frequency.
 
 ## Publishing Mode
 
-The pipeline always uses `CENTRAL_PUBLISHING_TYPE=USER_MANAGED`. Artifacts are **validated and held** on the Portal; a human must visit [central.sonatype.com/publishing/deployments](https://central.sonatype.com/publishing/deployments) to publish or drop each deployment. Change to `AUTOMATIC` if you want artifacts released immediately without manual confirmation.
+The pipeline always uses `CENTRAL_PUBLISHING_TYPE=USER_MANAGED`. Artifacts are **validated and held** on the Portal; the admin must visit [central.sonatype.com/publishing/deployments](https://central.sonatype.com/publishing/deployments) to publish or drop each deployment. Change to `AUTOMATIC` if you want artifacts released immediately without manual confirmation.
 
 ## Required Jenkins Credentials
 
