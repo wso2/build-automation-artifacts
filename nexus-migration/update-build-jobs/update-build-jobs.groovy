@@ -45,7 +45,7 @@ import org.jenkinsci.plugins.managedscripts.ScriptBuildStep
 
 // Mode: "single" to update one job, "folder" to update all
 //       Maven-Release jobs inside a Jenkins folder (by full path).
-def MODE = "folder"   // "single" | "folder"
+def MODE = "folder"   // "single" | "folder" | "list"
 
 // Full job path for single-job mode  (e.g. "my-folder/my-job")
 def SINGLE_JOB_NAME = "test-jobs/maven-tester-support"

@@ -1,6 +1,6 @@
 # Promote Staging to Releases and Maven Central
 
-A Jenkins Declarative Pipeline that promotes Maven artifacts from a **Nexus staging repository** directly to **Maven Central**. This pipeline is used for artifacts that were already released to Nexus staging and need to be published to Maven Central or Central Publisher Portal without triggering a new Maven release build.
+A Jenkins Declarative Pipeline that promotes Maven artifacts from a Nexus 'staging' repository to Nexus 'releases' repository and **Central Publisher Portal**. This pipeline is used for artifacts that were already published to Nexus 'staging' and need to be propagated to Nexus 'releases' and Central Publisher Portal manually.
 
 ## Workflow
 

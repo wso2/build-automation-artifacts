@@ -1,6 +1,6 @@
 # Update Maven Build Job Configurations
 
-A Jenkins Script Console Groovy script that **bulk-updates existing Maven/FreeStyle Jenkins jobs** to add the configuration required for publishing to Maven Central alongside the existing Nexus workflow. Run it once during the migration to avoid manually editing every job.
+A Jenkins Script Console Groovy script that **bulk-updates existing Maven Build Jenkins jobs** to add the configuration required for publishing to Nexus 3 and Maven Central. 
 
 ## What It Does
 

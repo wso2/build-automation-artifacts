@@ -1,6 +1,6 @@
 # Nexus Security Configuration Migration
 
-A Bash script for exporting and importing **Nexus Repository security configuration** between Nexus instances. Supports content selectors, privileges, and roles — useful when migrating from one Nexus version to another (tested: Nexus Repository Pro 3.66.x → 3.82.x).
+A Bash script for exporting and importing **Nexus Repository security configuration** between Nexus instances. Supports content selectors, privileges, and roles. It is useful when migrating from one Nexus version to another (tested: Nexus Repository Pro 3.66.x → 3.82.x).
 
 ## Supported Objects
 
