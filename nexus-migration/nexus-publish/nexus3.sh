@@ -233,6 +233,8 @@ collect_all_artifacts() {
                 echo "${group_id}|${artifact_id}|${version}|sources|${artifact_file}"
             elif [[ "$fname" == *"-javadoc.jar" ]]; then
                 echo "${group_id}|${artifact_id}|${version}|javadoc|${artifact_file}"
+            elif [[ "$fname" == *"-tests.jar" ]]; then
+                echo "${group_id}|${artifact_id}|${version}|tests|${artifact_file}"
             elif [[ "$fname" == *".war" ]]; then
                 echo "${group_id}|${artifact_id}|${version}|war|${artifact_file}"
             elif [[ "$fname" == *".zip" ]]; then
@@ -279,6 +281,8 @@ collect_all_artifacts() {
                     echo "${group_id}|${artifact_id}|${version}|sources|${artifact_file}"
                 elif [[ "$fname" == *"-javadoc.jar" ]]; then
                     echo "${group_id}|${artifact_id}|${version}|javadoc|${artifact_file}"
+                elif [[ "$fname" == *"-tests.jar" ]]; then
+                    echo "${group_id}|${artifact_id}|${version}|tests|${artifact_file}"
                 elif [[ "$fname" == *".war" ]]; then
                     echo "${group_id}|${artifact_id}|${version}|war|${artifact_file}"
                 elif [[ "$fname" == *".zip" ]]; then
@@ -404,6 +408,7 @@ upload_to_nexus() {
         fi
 
         local file_name extension
+        local classifier=""
         file_name=$(basename "$file_path")
 
         if [[ "$type" == "pom" ]]; then
@@ -419,6 +424,18 @@ upload_to_nexus() {
             extension="war"
         elif [[ "$type" == "zip" ]]; then
             extension="zip"
+            if [[ "$file_name" == *"-source-release.zip" ]]; then
+                classifier="source-release"
+            fi
+        elif [[ "$type" == "sources" ]]; then
+            extension="jar"
+            classifier="sources"
+        elif [[ "$type" == "javadoc" ]]; then
+            extension="jar"
+            classifier="javadoc"
+        elif [[ "$type" == "tests" ]]; then
+            extension="jar"
+            classifier="tests"
         else
             extension="jar"
         fi
@@ -428,8 +445,8 @@ upload_to_nexus() {
         curl_cmd+=" -F \"maven2.asset${asset_index}=@${file_path};filename=${file_name}\""
         curl_cmd+=" -F \"maven2.asset${asset_index}.extension=${extension}\""
 
-        if [[ "$type" == "sources" || "$type" == "javadoc" ]]; then
-            curl_cmd+=" -F \"maven2.asset${asset_index}.classifier=${type}\""
+        if [[ -n "$classifier" ]]; then
+            curl_cmd+=" -F \"maven2.asset${asset_index}.classifier=${classifier}\""
         fi
 
         ((asset_index++))
