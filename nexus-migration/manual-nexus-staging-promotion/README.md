@@ -13,7 +13,7 @@ Nexus Staging  ──(download)──▶  Jenkins Agent  ──(move)──▶  
 1. **Validate Parameters** — ensures `GROUP_ID` and `VERSION` are provided (`ARTIFACT_ID` is optional; omit it to promote all artifacts under the group and version).
 2. **Download Artifacts from Nexus** — searches the Nexus staging repository using the asset search API and downloads all artifacts (excluding hash files) into Maven local repository layout at `.repository/<group/path>/<artifactId>/<version>/`. Hash files are intentionally skipped as `maven-central.sh` regenerates them.
 3. **Move Staging → Releases** — calls the Nexus staging move API (`/service/rest/v1/staging/move/<releases-repo>`) to promote the artifacts from staging to the releases repository. This is done **after** downloading so artifacts are safely local first.
-4. **Publish to Maven Central** — runs `maven-central.sh` (provided as a Jenkins managed config file) to bundle, sign, upload, and validate the artifacts on Maven Central.
+4. **Publish to Maven Central** — runs `maven-central.sh` (provided as a Jenkins managed config file) to bundle, sign, upload, and validate the artifacts on Maven Central. Groups not under a [registered namespace](../maven-central-publish/README.md#registered-namespaces) are skipped by the script (they stay in Nexus releases) without failing the pipeline.
 5. **Cleanup** — removes the downloaded `.repository` directory from the workspace regardless of outcome.
 
 ## Parameters
@@ -61,11 +61,13 @@ Runs on a Jenkins agent with label `TEST_PRODUCT_FOCAL_ECS`. Update this label t
 | `M2RELEASE_GROUP_ID` | `params.GROUP_ID` (overridden per actual sub-group during publish) |
 | `ARTIFACT_ID` | `params.ARTIFACT_ID` |
 | `CENTRAL_PUBLISHING_TYPE` | `params.CENTRAL_PUBLISHING_TYPE` |
+| `CENTRAL_SKIPPED_GROUPS_FILE` | `$WORKSPACE/.central-skipped-groups` (the script records groups skipped for not having a registered namespace; used for the summary) |
 
 ## Post-Build Behaviour
 
 | Outcome | `USER_MANAGED` | `AUTOMATIC` |
 |---|---|---|
 | **Success** | Prints a reminder to visit [central.sonatype.com/publishing/deployments](https://central.sonatype.com/publishing/deployments) to publish or drop | Confirms artifacts were published |
+| **Success, some groups skipped** | Lists the groups waiting on the Portal and, separately, the groups not published because their namespace is not registered | Lists the published groups and, separately, the skipped groups |
 | **Failure** | Logs a failure message | Logs a failure message |
 | **Always** | Removes `.repository` directory from workspace | Same |

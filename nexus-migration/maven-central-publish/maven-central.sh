@@ -58,7 +58,12 @@
 #                                      artifacts should NOT be published to Maven Central.
 #   CENTRAL_SETTINGS_XML             - Explicit path to a settings.xml file to read
 #   MAVEN_SETTINGS_XML               - Alternative settings.xml path (lower priority)
-#   M2RELEASE_GROUP_ID               - Maven group ID of the project
+#   M2RELEASE_GROUP_ID               - Maven group ID of the project. Must be under one of
+#                                      REGISTERED_NAMESPACES (see below), otherwise Maven
+#                                      Central publishing is skipped without failing the build.
+#   CENTRAL_SKIPPED_GROUPS_FILE      - If set, the group ID is appended to this file when it
+#                                      is skipped for not being under a registered namespace
+#                                      (used by the promotion pipelines for their summaries).
 #   ARTIFACT_ID / M2RELEASE_ARTIFACT_ID - Maven artifact ID
 
 set -euo pipefail
@@ -101,6 +106,53 @@ if [[ "$IS_CLOSED" != "true" ]]; then
     exit 0
 fi
 log_info "CLOSE_NEXUS_STAGE=true — proceeding with Maven Central publishing."
+
+GROUP_ID=${M2RELEASE_GROUP_ID:-}
+if [[ -z "$GROUP_ID" ]]; then
+    log_error "M2RELEASE_GROUP_ID is not set."
+    log_error "Without a group ID the repository scan root broadens to the entire"
+    log_error ".repository directory and can pick up unrelated artifacts."
+    log_error "Set M2RELEASE_GROUP_ID to the Maven group ID of the project being published."
+    exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Only publish group IDs that fall under a namespace registered on Maven
+# Central. A group ID matches when it equals a namespace or starts with
+# "<namespace>." (e.g. org.wso2.carbon.identity matches org.wso2). Anything
+# else is skipped with a warning; this must not fail the build.
+# ---------------------------------------------------------------------------
+REGISTERED_NAMESPACES=(
+    "org.wso2"
+    "com.wso2"
+    "org.jaggeryjs"
+    "io.cellery"
+    "io.siddhi"
+    "io.ballerina"
+    "io.asgardeo"
+    "org.ballerinalang"
+    "org.ballerinax"
+)
+
+is_registered_namespace() {
+    local group_id="$1" ns
+    for ns in "${REGISTERED_NAMESPACES[@]}"; do
+        [[ "$group_id" == "$ns" || "$group_id" == "$ns".* ]] && return 0
+    done
+    return 1
+}
+
+if ! is_registered_namespace "$GROUP_ID"; then
+    log_warn "Group ID '$GROUP_ID' is not under a namespace registered on Maven Central."
+    log_warn "Registered namespaces: ${REGISTERED_NAMESPACES[*]}"
+    log_warn "The artifact cannot be published to Maven Central due to not having a registered namespace."
+    log_warn "Skipping Maven Central publishing — this does not fail the build."
+    if [[ -n "${CENTRAL_SKIPPED_GROUPS_FILE:-}" ]]; then
+        echo "$GROUP_ID" >> "$CENTRAL_SKIPPED_GROUPS_FILE"
+    fi
+    exit 0
+fi
+log_info "Group ID '$GROUP_ID' is under a registered namespace — proceeding."
 
 # ---------------------------------------------------------------------------
 # Validate required environment variables
@@ -272,15 +324,6 @@ BEARER_TOKEN=$(printf "%s:%s" "$CENTRAL_TOKEN_USERNAME" "$CENTRAL_TOKEN_PASSWORD
 # GPG key ID – optional, only set if you need to select a specific key from the keyring.
 # When GPG_HOMEDIR is set (read from settings.xml), GPG uses the default key in that keyring.
 GPG_KEY_ID=${GPG_KEY_ID:-}
-
-GROUP_ID=${M2RELEASE_GROUP_ID:-}
-if [[ -z "$GROUP_ID" ]]; then
-    log_error "M2RELEASE_GROUP_ID is not set."
-    log_error "Without a group ID the repository scan root broadens to the entire"
-    log_error ".repository directory and can pick up unrelated artifacts."
-    log_error "Set M2RELEASE_GROUP_ID to the Maven group ID of the project being published."
-    exit 1
-fi
 
 ARTIFACT_ID=${ARTIFACT_ID:-${M2RELEASE_ARTIFACT_ID:-$(grep -m1 "<artifactId>" pom.xml 2>/dev/null \
     | sed -e 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/' \
