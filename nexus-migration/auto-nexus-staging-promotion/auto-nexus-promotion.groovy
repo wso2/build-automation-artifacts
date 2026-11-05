@@ -338,6 +338,8 @@ PYEOF
         //    M2RELEASE_GROUP_ID, ARTIFACT_ID, and MVN_RELEASE_VERSION are all
         //    set via withEnv so maven-central.sh finds the correct .repository
         //    sub-directory and never falls back to `mvn help:evaluate`.
+        //    Groups not under a registered namespace are skipped by
+        //    maven-central.sh and recorded in CENTRAL_SKIPPED_GROUPS.
         // ----------------------------------------------------------------
         stage('Publish to Maven Central') {
             when {
@@ -371,6 +373,11 @@ PYEOF
                                 }
                                 .unique()
 
+                            // maven-central.sh appends each group it skips (namespace not
+                            // registered on Maven Central) to this file.
+                            def skippedFile = '.central-skipped-groups'
+                            sh "rm -f '${skippedFile}'"
+
                             groupVersionKeys.each { gvKey ->
                                 def gvp      = gvKey.split('[|]')
                                 def grp      = gvp[0]
@@ -380,10 +387,21 @@ PYEOF
                                 withEnv([
                                     "M2RELEASE_GROUP_ID=${grp}",
                                     "MVN_RELEASE_VERSION=${ver}",
-                                    "ARTIFACT_ID=${artLabel}"
+                                    "ARTIFACT_ID=${artLabel}",
+                                    "CENTRAL_SKIPPED_GROUPS_FILE=${env.WORKSPACE}/${skippedFile}"
                                 ]) {
                                     sh 'bash "$MAVEN_CENTRAL_SCRIPT"'
                                 }
+                            }
+
+                            def skippedGroups = fileExists(skippedFile)
+                                ? readFile(skippedFile).split('\n').collect { it.trim() }.findAll { it }.unique()
+                                : []
+                            sh "rm -f '${skippedFile}'"
+                            env.CENTRAL_SKIPPED_GROUPS = skippedGroups.join(',')
+
+                            if (skippedGroups) {
+                                echo "⚠️  Not published to Maven Central (namespace not registered): ${skippedGroups.join(', ')}"
                             }
                         }
                     }
@@ -399,20 +417,35 @@ PYEOF
         success {
             script {
                 if (env.COMPONENTS_CSV?.trim()) {
-                    def summary = env.COMPONENTS_CSV.split('\n')
+                    def skippedGroups = env.CENTRAL_SKIPPED_GROUPS?.trim()
+                        ? env.CENTRAL_SKIPPED_GROUPS.split(',').toList()
+                        : []
+                    def components = env.COMPONENTS_CSV.split('\n')
                         .findAll { it.trim() }
-                        .collect { line ->
-                            def p = line.trim().split('[|]')
-                            "  • ${p[0]}:${p[1]}:${p[2]}"
-                        }.join('\n')
-                    echo """
-=============================================================
-  ✅ Artifacts validated and waiting on Publisher Portal.
+                        .collect { it.trim().split('[|]') }
+                    def published = components.findAll { !(it[0] in skippedGroups) }
+                        .collect { p -> "  • ${p[0]}:${p[1]}:${p[2]}" }.join('\n')
+                    def skipped = components.findAll { it[0] in skippedGroups }
+                        .collect { p -> "  • ${p[0]}:${p[1]}:${p[2]}" }.join('\n')
+
+                    def summary = published
+                        ? """  ✅ Artifacts validated and waiting on Publisher Portal.
   Components promoted:
-${summary}
+${published}
 
   Visit https://central.sonatype.com/publishing/deployments
-  to publish or drop each deployment.
+  to publish or drop each deployment."""
+                        : "  ⚠️  No components were published to Maven Central."
+                    if (skipped) {
+                        summary += """
+
+  ⚠️  Moved to Nexus releases but NOT published to Maven Central
+  (group ID is not under a registered namespace):
+${skipped}"""
+                    }
+                    echo """
+=============================================================
+${summary}
 =============================================================
 """
                 }

@@ -372,6 +372,8 @@ PYEOF
         //        does not fall back to `mvn help:evaluate`
         //    All artifact IDs under that group are discovered automatically by
         //    collect_all_artifacts via recursive .pom file scanning.
+        //    Groups not under a registered namespace are skipped by
+        //    maven-central.sh and recorded in CENTRAL_SKIPPED_GROUPS.
         // ----------------------------------------------------------------
         stage('Publish to Maven Central') {
             steps {
@@ -388,6 +390,12 @@ PYEOF
                     ]) {
                         script {
                             def actualGroups = env.ACTUAL_GROUPS_CSV.split(',').toList()
+
+                            // maven-central.sh appends each group it skips (namespace not
+                            // registered on Maven Central) to this file.
+                            def skippedFile = '.central-skipped-groups'
+                            sh "rm -f '${skippedFile}'"
+
                             actualGroups.each { grp ->
                                 // Use the last segment as a non-empty ARTIFACT_ID label
                                 // (maven-central.sh only uses it for the deployment name;
@@ -396,10 +404,21 @@ PYEOF
                                 echo "🚀 Publishing ${grp}:${params.VERSION} to Maven Central..."
                                 withEnv([
                                     "M2RELEASE_GROUP_ID=${grp}",
-                                    "ARTIFACT_ID=${artLabel}"
+                                    "ARTIFACT_ID=${artLabel}",
+                                    "CENTRAL_SKIPPED_GROUPS_FILE=${env.WORKSPACE}/${skippedFile}"
                                 ]) {
                                     sh 'bash "$MAVEN_CENTRAL_SCRIPT"'
                                 }
+                            }
+
+                            def skippedGroups = fileExists(skippedFile)
+                                ? readFile(skippedFile).split('\n').collect { it.trim() }.findAll { it }.unique()
+                                : []
+                            sh "rm -f '${skippedFile}'"
+                            env.CENTRAL_SKIPPED_GROUPS = skippedGroups.join(',')
+
+                            if (skippedGroups) {
+                                echo "⚠️  Not published to Maven Central (namespace not registered): ${skippedGroups.join(', ')}"
                             }
                         }
                     }
@@ -414,16 +433,48 @@ PYEOF
     post {
         success {
             script {
-                if (params.CENTRAL_PUBLISHING_TYPE == 'USER_MANAGED') {
-                    echo """
+                def skippedGroups = env.CENTRAL_SKIPPED_GROUPS?.trim()
+                    ? env.CENTRAL_SKIPPED_GROUPS.split(',').toList()
+                    : []
+                def publishedGroups = env.ACTUAL_GROUPS_CSV.split(',').toList() - skippedGroups
+
+                if (!skippedGroups) {
+                    if (params.CENTRAL_PUBLISHING_TYPE == 'USER_MANAGED') {
+                        echo """
 =============================================================
   ✅ Artifacts validated and waiting on Publisher Portal.
   Visit https://central.sonatype.com/publishing/deployments
   to publish or drop the deployment.
 =============================================================
 """
+                    } else {
+                        echo "✅ Artifacts published to Maven Central successfully."
+                    }
                 } else {
-                    echo "✅ Artifacts published to Maven Central successfully."
+                    def published = publishedGroups.collect { "  • ${it}:${params.VERSION}" }.join('\n')
+                    def skipped   = skippedGroups.collect { "  • ${it}:${params.VERSION}" }.join('\n')
+                    def summary
+                    if (!publishedGroups) {
+                        summary = "  ⚠️  Nothing was published to Maven Central."
+                    } else if (params.CENTRAL_PUBLISHING_TYPE == 'USER_MANAGED') {
+                        summary = """  ✅ Artifacts validated and waiting on Publisher Portal:
+${published}
+
+  Visit https://central.sonatype.com/publishing/deployments
+  to publish or drop the deployment."""
+                    } else {
+                        summary = """  ✅ Artifacts published to Maven Central successfully:
+${published}"""
+                    }
+                    echo """
+=============================================================
+${summary}
+
+  ⚠️  Moved to Nexus releases but NOT published to Maven Central
+  (group ID is not under a registered namespace):
+${skipped}
+=============================================================
+"""
                 }
             }
         }

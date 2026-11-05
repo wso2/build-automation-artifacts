@@ -19,7 +19,7 @@ Nexus Staging  ──(discover)──▶  Jenkins Agent
 1. **Discover Staging Components** — paginates the Nexus `/v1/search` API to collect every unique `group:name:version` tuple present in the staging repository. If nothing is found the pipeline exits cleanly.
 2. **Download Artifacts from Nexus** — for each discovered component, fetches all assets (excluding hash files) into Maven local-repository layout at `.repository/<group/path>/<artifactId>/<version>/`. Checksums are intentionally skipped; `maven-central.sh` regenerates them.
 3. **Move Staging → Releases** — calls the Nexus staging move API (`/service/rest/v1/staging/move/<releases-repo>`) once per unique `group:version` pair. Artifacts are moved **after** downloading so they are safely local first.
-4. **Publish to Maven Central** — for each unique `group:version` pair, invokes `maven-central.sh` (Jenkins managed config file) once with `M2RELEASE_GROUP_ID`, `MVN_RELEASE_VERSION`, and `ARTIFACT_ID` set via `withEnv`. Uses `CENTRAL_PUBLISHING_TYPE=USER_MANAGED` so artifacts are validated and held on the Portal without auto-releasing.
+4. **Publish to Maven Central** — for each unique `group:version` pair, invokes `maven-central.sh` (Jenkins managed config file) once with `M2RELEASE_GROUP_ID`, `MVN_RELEASE_VERSION`, and `ARTIFACT_ID` set via `withEnv`. Uses `CENTRAL_PUBLISHING_TYPE=USER_MANAGED` so artifacts are validated and held on the Portal without auto-releasing. Groups not under a [registered namespace](../maven-central-publish/README.md#registered-namespaces) are skipped by the script (they stay in Nexus releases) without failing the pipeline.
 5. **Cleanup** — removes the `.repository` directory from the workspace regardless of pipeline outcome.
 
 ## Schedule
@@ -68,6 +68,7 @@ Runs on a Jenkins agent with label `TEST_PRODUCT_FOCAL_ECS`. Update this label i
 | `M2RELEASE_GROUP_ID` | overwritten per group:version | Set to the group ID of the current group:version pair |
 | `ARTIFACT_ID` | overwritten per group:version | Derived as the last dot-segment of the group ID (e.g. `carbon.identity` → `identity`) |
 | `CENTRAL_PUBLISHING_TYPE` | `USER_MANAGED` | Controls whether artifacts are auto-released or held for review |
+| `CENTRAL_SKIPPED_GROUPS_FILE` | `$WORKSPACE/.central-skipped-groups` | The script records groups it skipped for not having a registered namespace here; the pipeline uses it for the summary |
 
 ## Differences from Manual Pipeline
 
@@ -82,6 +83,6 @@ Runs on a Jenkins agent with label `TEST_PRODUCT_FOCAL_ECS`. Update this label i
 
 | Outcome | Action |
 |---|---|
-| **Success** | Prints a summary of promoted components and a link to the Publisher Portal |
+| **Success** | Prints a summary of promoted components and a link to the Publisher Portal, plus a separate list of components that were moved to Nexus releases but not published to Maven Central because their group ID is not under a registered namespace |
 | **Failure** | Logs a failure message with instructions to check the build log |
 | **Always** | Removes the `.repository` directory from the workspace |

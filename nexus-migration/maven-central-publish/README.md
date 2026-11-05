@@ -5,13 +5,14 @@ A Bash script that publishes Maven release artifacts to [Maven Central](https://
 ## How It Works
 
 1. **Guard checks** — exits silently if `IS_M2RELEASEBUILD` is not `true`, or if `CLOSE_NEXUS_STAGE` is not `true` (staging-only builds are skipped).
-2. **Credential resolution** — reads Central portal token from environment variables (`CENTRAL_TOKEN_USERNAME` / `CENTRAL_TOKEN_PASSWORD`). Falls back to reading a Maven `settings.xml` file (path resolved from `CENTRAL_SETTINGS_XML`, `MAVEN_SETTINGS_XML`, or the default `~/.m2/settings.xml`).
-3. **GPG configuration** — reads `gpg.homedir` and `gpg.passphrase` from the active Maven profile in `settings.xml`. If a `GPG_KEY_FILE` is provided, it is imported and trusted automatically before signing.
-4. **Artifact discovery** — scans for release artifacts in several locations (custom `artifacts/` dir, `target/checkout/`, Maven local repository `.repository/`) supporting both Maven repository layout (`.pom` files) and project checkout layout (`pom.xml` files).
-5. **Bundle assembly** — copies all discovered artifacts into a temporary directory in Maven repository layout, generates `.md5` and `.sha1` checksums, and attaches GPG `.asc` signatures (reusing existing signatures when available, or signing fresh).
-6. **Upload** — POSTs the ZIP bundle to the Central Publisher Portal (`/api/v1/publisher/upload`).
-7. **Status polling** — polls `/api/v1/publisher/status` until the deployment reaches a terminal state (`VALIDATED`, `PUBLISHED`, or `FAILED`).
-8. **Cleanup** — drops the deployment on failure; removes temp files on exit.
+2. **Namespace check** — publishes only when `M2RELEASE_GROUP_ID` is under a namespace registered on Maven Central (see [Registered Namespaces](#registered-namespaces)). Otherwise it logs a warning that the artifact cannot be published to Maven Central and exits with success, so the build still passes.
+3. **Credential resolution** — reads Central portal token from environment variables (`CENTRAL_TOKEN_USERNAME` / `CENTRAL_TOKEN_PASSWORD`). Falls back to reading a Maven `settings.xml` file (path resolved from `CENTRAL_SETTINGS_XML`, `MAVEN_SETTINGS_XML`, or the default `~/.m2/settings.xml`).
+4. **GPG configuration** — reads `gpg.homedir` and `gpg.passphrase` from the active Maven profile in `settings.xml`. If a `GPG_KEY_FILE` is provided, it is imported and trusted automatically before signing.
+5. **Artifact discovery** — scans for release artifacts in several locations (custom `artifacts/` dir, `target/checkout/`, Maven local repository `.repository/`) supporting both Maven repository layout (`.pom` files) and project checkout layout (`pom.xml` files).
+6. **Bundle assembly** — copies all discovered artifacts into a temporary directory in Maven repository layout, generates `.md5` and `.sha1` checksums, and attaches GPG `.asc` signatures (reusing existing signatures when available, or signing fresh).
+7. **Upload** — POSTs the ZIP bundle to the Central Publisher Portal (`/api/v1/publisher/upload`).
+8. **Status polling** — polls `/api/v1/publisher/status` until the deployment reaches a terminal state (`VALIDATED`, `PUBLISHED`, or `FAILED`).
+9. **Cleanup** — drops the deployment on failure; removes temp files on exit.
 
 ## Requirements
 
@@ -44,8 +45,27 @@ A Bash script that publishes Maven release artifacts to [Maven Central](https://
 | `GPG_KEY_ID` | — | Specific GPG key ID to use for signing |
 | `GPG_PASSPHRASE` | — | GPG key passphrase |
 | `GPG_KEY_FILE` | — | Path to an armored GPG private key file to import before signing |
-| `M2RELEASE_GROUP_ID` | — | Maven group ID of the project |
+| `M2RELEASE_GROUP_ID` | — | Maven group ID of the project; must be under a [registered namespace](#registered-namespaces) to publish |
 | `ARTIFACT_ID` / `M2RELEASE_ARTIFACT_ID` | — | Maven artifact ID |
+| `CENTRAL_SKIPPED_GROUPS_FILE` | — | If set, the group ID is appended to this file when it is skipped for not being under a registered namespace (used by the promotion pipelines for their summaries) |
+
+## Registered Namespaces
+
+Only group IDs under a namespace registered on Maven Central are published. These are listed in `REGISTERED_NAMESPACES` in `maven-central.sh`:
+
+- `org.wso2`
+- `com.wso2`
+- `org.jaggeryjs`
+- `io.cellery`
+- `io.siddhi`
+- `io.ballerina`
+- `io.asgardeo`
+- `org.ballerinalang`
+- `org.ballerinax`
+
+A group ID matches when it equals a namespace or starts with the namespace followed by a `.`. For example, `org.wso2.carbon.identity.saml.common` matches `org.wso2`, but `org.wso2x.foo` does not.
+
+When the group ID matches none of them, the script logs a warning that the artifact cannot be published to Maven Central due to not having a registered namespace, skips publishing, and exits with code `0` so the build does not fail. To publish a new namespace, register it on the [Central Publisher Portal](https://central.sonatype.com/publishing/namespaces) first, then add it to `REGISTERED_NAMESPACES`.
 
 ## Publishing Types
 
